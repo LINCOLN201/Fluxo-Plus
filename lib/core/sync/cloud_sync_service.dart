@@ -15,12 +15,28 @@ class CloudSyncService {
 
   Future<void> signIn(String email, String password) async {
     _requireClient();
-    await _client!.auth.signInWithPassword(email: email, password: password);
+    try {
+      await _client!.auth.signInWithPassword(email: email, password: password);
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (_) {
+      throw const CloudSyncException(
+        'Não foi possível conectar. Verifique sua internet e tente novamente.',
+      );
+    }
   }
 
   Future<void> signUp(String email, String password) async {
     _requireClient();
-    await _client!.auth.signUp(email: email, password: password);
+    try {
+      await _client!.auth.signUp(email: email, password: password);
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (_) {
+      throw const CloudSyncException(
+        'Não foi possível criar a conta. Verifique sua internet.',
+      );
+    }
   }
 
   Future<void> signOut() async => _client?.auth.signOut();
@@ -65,4 +81,34 @@ class CloudSyncService {
     if (user == null) throw StateError('Entre na sua conta primeiro.');
     return user;
   }
+
+  String _friendlyAuthMessage(String message) {
+    final value = message.toLowerCase();
+    if (value.contains('invalid login credentials')) {
+      return 'E-mail ou senha incorretos.';
+    }
+    if (value.contains('email not confirmed')) {
+      return 'Confirme o e-mail recebido antes de entrar.';
+    }
+    if (value.contains('already registered') ||
+        value.contains('already been registered')) {
+      return 'Este e-mail já possui uma conta.';
+    }
+    if (value.contains('rate limit')) {
+      return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    }
+    if (value.contains('password')) {
+      return 'A senha não atende aos requisitos de segurança.';
+    }
+    return 'Não foi possível autenticar: $message';
+  }
+}
+
+class CloudSyncException implements Exception {
+  const CloudSyncException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
