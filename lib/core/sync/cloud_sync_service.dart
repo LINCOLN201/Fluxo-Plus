@@ -62,6 +62,23 @@ class CloudSyncService {
     }
   }
 
+  Future<void> verifyEmailCode(String email, String code) async {
+    _requireClient();
+    try {
+      await _client!.auth.verifyOTP(
+        email: email,
+        token: code.trim(),
+        type: OtpType.signup,
+      );
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (_) {
+      throw const CloudSyncException(
+        'Não foi possível validar o código. Verifique sua internet.',
+      );
+    }
+  }
+
   Future<void> signOut() async => _client?.auth.signOut();
 
   Future<DateTime> uploadBackup() async {
@@ -119,6 +136,10 @@ class CloudSyncService {
     }
     if (value.contains('rate limit')) {
       return 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+    }
+    if (value.contains('token') &&
+        (value.contains('expired') || value.contains('invalid'))) {
+      return 'Código inválido ou expirado. Solicite um novo código.';
     }
     if (value.contains('password')) {
       return 'A senha não atende aos requisitos de segurança.';

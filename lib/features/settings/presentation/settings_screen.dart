@@ -319,16 +319,20 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
       ),
     );
     if (confirmed != true) return;
-    await _run(() async {
+    final accountEmail = email.text.trim();
+    final succeeded = await _run(() async {
       if (createAccount) {
-        await widget.service.signUp(email.text.trim(), password.text);
+        await widget.service.signUp(accountEmail, password.text);
       } else {
-        await widget.service.signIn(email.text.trim(), password.text);
+        await widget.service.signIn(accountEmail, password.text);
       }
     },
         createAccount
-            ? 'Conta criada. Confirme o e-mail, se solicitado.'
+            ? 'Código de confirmação enviado por e-mail.'
             : 'Conectado.');
+    if (createAccount && succeeded && mounted) {
+      await _confirmEmailCode(accountEmail);
+    }
   }
 
   Future<void> _resendConfirmation() async {
@@ -365,13 +369,70 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
       ),
     );
     if (confirmed != true) return;
+    final accountEmail = email.text.trim();
+    final succeeded = await _run(
+      () => widget.service.resendConfirmation(accountEmail),
+      'Novo código enviado por e-mail.',
+    );
+    if (succeeded && mounted) await _confirmEmailCode(accountEmail);
+  }
+
+  Future<void> _confirmEmailCode(String email) async {
+    final code = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar e-mail'),
+        content: Form(
+          key: key,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Digite o código de 6 dígitos enviado para $email.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: code,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: const InputDecoration(
+                  labelText: 'Código de confirmação',
+                ),
+                validator: (value) => (value?.trim().length ?? 0) == 6
+                    ? null
+                    : 'Informe os 6 dígitos',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Confirmar depois'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (key.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
     await _run(
-      () => widget.service.resendConfirmation(email.text.trim()),
-      'Novo e-mail enviado. Use somente o link mais recente.',
+      () => widget.service.verifyEmailCode(email, code.text),
+      'E-mail confirmado. Sincronização conectada.',
     );
   }
 
-  Future<void> _run(Future<void> Function() action, String success) async {
+  Future<bool> _run(
+    Future<void> Function() action,
+    String success,
+  ) async {
     setState(() => _busy = true);
     try {
       await action();
@@ -380,12 +441,14 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
             .showSnackBar(SnackBar(content: Text(success)));
         setState(() {});
       }
+      return true;
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Não foi possível concluir: $error')),
         );
       }
+      return false;
     } finally {
       if (mounted) setState(() => _busy = false);
     }
