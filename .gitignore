@@ -1,0 +1,28 @@
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+coverage/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Platform-generated
+android/.gradle/
+android/local.properties
+ios/Pods/
+macos/Pods/
+
+# Secrets and local databases
+.env
+*.db
+*.sqlite
+*.sqlite3
+
+# Local toolchain
+.tools/
