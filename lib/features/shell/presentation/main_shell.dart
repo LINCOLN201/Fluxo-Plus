@@ -16,6 +16,7 @@ import '../../goals/presentation/goals_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../transactions/presentation/transactions_screen.dart';
 import '../../../core/sync/cloud_sync_service.dart';
+import '../../../core/update/update_service.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -31,6 +32,7 @@ class MainShell extends StatefulWidget {
     required this.cloudSyncService,
     required this.biometricEnabled,
     required this.onBiometricChanged,
+    required this.updateService,
   });
 
   final DashboardRepository dashboardRepository;
@@ -44,6 +46,7 @@ class MainShell extends StatefulWidget {
   final CloudSyncService cloudSyncService;
   final bool biometricEnabled;
   final Future<bool> Function(bool) onBiometricChanged;
+  final UpdateService updateService;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -100,6 +103,7 @@ class _MainShellState extends State<MainShell> {
           cloudSyncService: widget.cloudSyncService,
           biometricEnabled: widget.biometricEnabled,
           onBiometricChanged: widget.onBiometricChanged,
+          updateService: widget.updateService,
         ),
     };
   }

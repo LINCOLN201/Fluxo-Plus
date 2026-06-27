@@ -19,6 +19,9 @@ class UpdateService {
 
   bool get isConfigured => _repository.contains('/');
 
+  Future<String> currentVersion() async =>
+      (await PackageInfo.fromPlatform()).version;
+
   Future<AppUpdate?> check() async {
     if (!isConfigured) return null;
 
@@ -29,11 +32,15 @@ class UpdateService {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     ).timeout(const Duration(seconds: 8));
-    if (response.statusCode != 200) return null;
+    if (response.statusCode != 200) {
+      throw StateError(
+        'Servidor de atualizações indisponível (${response.statusCode}).',
+      );
+    }
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     final tag = (data['tag_name'] as String? ?? '').replaceFirst('v', '');
-    final current = (await PackageInfo.fromPlatform()).version;
+    final current = await currentVersion();
     if (!_isNewer(tag, current)) return null;
 
     final assets = (data['assets'] as List<dynamic>? ?? const [])

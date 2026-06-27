@@ -54,6 +54,7 @@ class FluxoApp extends StatefulWidget {
 class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   bool? _onboardingComplete;
   bool _updateChecked = false;
+  DateTime? _lastUpdateCheck;
   ThemeMode _themeMode = ThemeMode.dark;
   bool _biometricEnabled = false;
   bool _unlocked = true;
@@ -80,6 +81,13 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             .then<void>((_) {})
             .catchError((_) {}),
       );
+    }
+    if (state == AppLifecycleState.resumed &&
+        (_lastUpdateCheck == null ||
+            DateTime.now().difference(_lastUpdateCheck!) >
+                const Duration(minutes: 15))) {
+      _updateChecked = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdates());
     }
   }
 
@@ -131,6 +139,7 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   Future<void> _checkForUpdates() async {
     if (_updateChecked || !widget.updateService.isConfigured) return;
     _updateChecked = true;
+    _lastUpdateCheck = DateTime.now();
     try {
       final update = await widget.updateService.check();
       if (update != null && mounted) {
@@ -213,6 +222,7 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             cloudSyncService: widget.cloudSyncService,
             biometricEnabled: _biometricEnabled,
             onBiometricChanged: _changeBiometric,
+            updateService: widget.updateService,
           ),
       },
     );

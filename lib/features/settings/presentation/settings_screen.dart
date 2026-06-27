@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/sync/cloud_sync_service.dart';
+import '../../../core/update/update_prompt.dart';
+import '../../../core/update/update_service.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -11,6 +13,7 @@ class SettingsScreen extends StatelessWidget {
     required this.cloudSyncService,
     required this.biometricEnabled,
     required this.onBiometricChanged,
+    required this.updateService,
   });
 
   final ThemeMode themeMode;
@@ -18,6 +21,7 @@ class SettingsScreen extends StatelessWidget {
   final CloudSyncService cloudSyncService;
   final bool biometricEnabled;
   final Future<bool> Function(bool) onBiometricChanged;
+  final UpdateService updateService;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +75,13 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(height: 24),
+          Text(
+            'Atualizações',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          _UpdatePanel(service: updateService),
           const SizedBox(height: 24),
           Text(
             'Segurança',
@@ -162,6 +173,76 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _UpdatePanel extends StatefulWidget {
+  const _UpdatePanel({required this.service});
+
+  final UpdateService service;
+
+  @override
+  State<_UpdatePanel> createState() => _UpdatePanelState();
+}
+
+class _UpdatePanelState extends State<_UpdatePanel> {
+  bool _checking = false;
+
+  Future<void> _check() async {
+    setState(() => _checking = true);
+    try {
+      final update = await widget.service.check();
+      if (!mounted) return;
+      if (update == null) {
+        final version = await widget.service.currentVersion();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Você já está na versão mais recente: $version')),
+        );
+      } else {
+        await showUpdatePrompt(
+          context,
+          update: update,
+          service: widget.service,
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Falha ao verificar: $error')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _checking = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: FutureBuilder<String>(
+        future: widget.service.currentVersion(),
+        builder: (context, snapshot) => ListTile(
+          leading: const Icon(Icons.system_update_rounded),
+          title: const Text('Atualização pela internet'),
+          subtitle: Text(
+            snapshot.hasData
+                ? 'Versão instalada: ${snapshot.data}'
+                : 'Consultando versão instalada…',
+          ),
+          trailing: FilledButton(
+            onPressed: _checking ? null : _check,
+            child: _checking
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Verificar'),
+          ),
+        ),
       ),
     );
   }
