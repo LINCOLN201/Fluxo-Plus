@@ -52,6 +52,7 @@ class FluxoApp extends StatefulWidget {
 }
 
 class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool? _onboardingComplete;
   bool _updateChecked = false;
   DateTime? _lastUpdateCheck;
@@ -142,14 +143,21 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     _lastUpdateCheck = DateTime.now();
     try {
       final update = await widget.updateService.check();
-      if (update != null && mounted) {
+      final navigatorContext = _navigatorKey.currentContext;
+      if (update != null &&
+          navigatorContext != null &&
+          navigatorContext.mounted) {
         await showUpdatePrompt(
-          context,
+          navigatorContext,
           update: update,
           service: widget.updateService,
         );
+      } else if (update != null && navigatorContext == null) {
+        _updateChecked = false;
+        Future<void>.delayed(const Duration(seconds: 2), _checkForUpdates);
       }
-    } catch (_) {
+    } catch (error) {
+      debugPrint('Falha ao verificar atualizações: $error');
       // Atualizações nunca impedem o uso offline do aplicativo.
     }
   }
@@ -190,10 +198,11 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_onboardingComplete == true) {
+    if (_onboardingComplete == true && _unlocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdates());
     }
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
