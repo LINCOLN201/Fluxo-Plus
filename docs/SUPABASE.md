@@ -9,8 +9,11 @@ meio de Row Level Security (RLS).
 1. Crie um projeto no Supabase.
 2. Abra o SQL Editor e execute `supabase/schema.sql`.
 3. Em Authentication, habilite Email/Password.
-4. Copie a Project URL e a Publishable Key.
-5. Para um build local:
+4. Em Authentication → URL Configuration, defina:
+   - Site URL: `https://github.com/LINCOLN201/Fluxo-Plus`
+   - Redirect URLs: `https://github.com/LINCOLN201/Fluxo-Plus`
+5. Copie a Project URL e a Publishable Key.
+6. Para um build local:
 
 ```powershell
 flutter build apk --release `
@@ -28,6 +31,8 @@ A chave usada no cliente deve ser a **Publishable Key**, nunca `service_role`.
 ## Operação
 
 - O usuário cria uma conta ou entra em Configurações.
+- Com confirmação de e-mail ativa, use apenas o link mais recente. Links
+  expirados ou já utilizados retornam `otp_expired`.
 - **Enviar backup** grava o snapshot imediatamente.
 - O app também envia um backup ao ir para segundo plano.
 - **Restaurar** substitui o banco local pelo último snapshot da conta.

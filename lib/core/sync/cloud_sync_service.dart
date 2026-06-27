@@ -7,6 +7,8 @@ class CloudSyncService {
 
   final AppDatabase _database;
   final SupabaseClient? _client;
+  static const confirmationRedirect =
+      'https://github.com/LINCOLN201/Fluxo-Plus';
 
   bool get isConfigured => _client != null;
   User? get currentUser => _client?.auth.currentUser;
@@ -29,12 +31,33 @@ class CloudSyncService {
   Future<void> signUp(String email, String password) async {
     _requireClient();
     try {
-      await _client!.auth.signUp(email: email, password: password);
+      await _client!.auth.signUp(
+        email: email,
+        password: password,
+        emailRedirectTo: confirmationRedirect,
+      );
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (_) {
       throw const CloudSyncException(
         'Não foi possível criar a conta. Verifique sua internet.',
+      );
+    }
+  }
+
+  Future<void> resendConfirmation(String email) async {
+    _requireClient();
+    try {
+      await _client!.auth.resend(
+        type: OtpType.signup,
+        email: email,
+        emailRedirectTo: confirmationRedirect,
+      );
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (_) {
+      throw const CloudSyncException(
+        'Não foi possível reenviar. Verifique sua internet.',
       );
     }
   }

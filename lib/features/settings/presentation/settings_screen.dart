@@ -331,6 +331,46 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
             : 'Conectado.');
   }
 
+  Future<void> _resendConfirmation() async {
+    final email = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reenviar confirmação'),
+        content: Form(
+          key: key,
+          child: TextFormField(
+            controller: email,
+            autofocus: true,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'E-mail da conta'),
+            validator: (value) => value != null && value.contains('@')
+                ? null
+                : 'Informe um e-mail válido',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (key.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Reenviar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await _run(
+      () => widget.service.resendConfirmation(email.text.trim()),
+      'Novo e-mail enviado. Use somente o link mais recente.',
+    );
+  }
+
   Future<void> _run(Future<void> Function() action, String success) async {
     setState(() => _busy = true);
     try {
@@ -383,9 +423,14 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
                     : 'Backup protegido pela sua conta.',
               ),
               trailing: user == null
-                  ? FilledButton(
-                      onPressed: _busy ? null : _authenticate,
-                      child: const Text('Entrar'),
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FilledButton(
+                          onPressed: _busy ? null : _authenticate,
+                          child: const Text('Entrar'),
+                        ),
+                      ],
                     )
                   : TextButton(
                       onPressed: _busy
@@ -395,6 +440,15 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
                       child: const Text('Sair'),
                     ),
             ),
+            if (user == null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: _busy ? null : _resendConfirmation,
+                  icon: const Icon(Icons.mark_email_unread_outlined),
+                  label: const Text('Reenviar confirmação'),
+                ),
+              ),
             if (user != null) ...[
               const Divider(),
               Row(
