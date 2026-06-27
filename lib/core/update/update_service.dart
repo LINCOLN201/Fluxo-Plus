@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'app_update.dart';
@@ -16,6 +18,7 @@ class UpdateService {
 
   final http.Client _client;
   final String _repository;
+  static const _installer = MethodChannel('br.com.fluxoplus.app/installer');
 
   bool get isConfigured => _repository.contains('/');
 
@@ -70,6 +73,55 @@ class UpdateService {
         mode: LaunchMode.externalApplication,
       );
 
+  Future<InstallResult> downloadAndInstall(
+    AppUpdate update, {
+    void Function(double progress)? onProgress,
+  }) async {
+    if (!Platform.isAndroid) {
+      return await openDownload(update)
+          ? InstallResult.externalDownload
+          : InstallResult.failed;
+    }
+
+    final response = await _client
+        .send(http.Request('GET', update.downloadUrl))
+        .timeout(const Duration(seconds: 20));
+    if (response.statusCode != HttpStatus.ok) {
+      throw StateError(
+        'Não foi possível baixar a atualização (${response.statusCode}).',
+      );
+    }
+
+    final directory = await getTemporaryDirectory();
+    final file = File(
+      '${directory.path}${Platform.pathSeparator}'
+      'fluxo-plus-${update.version}.apk',
+    );
+    final sink = file.openWrite();
+    var received = 0;
+    final total = response.contentLength ?? 0;
+    try {
+      await for (final chunk in response.stream) {
+        sink.add(chunk);
+        received += chunk.length;
+        if (total > 0) onProgress?.call(received / total);
+      }
+    } finally {
+      await sink.close();
+    }
+    onProgress?.call(1);
+
+    final result = await _installer.invokeMethod<String>(
+      'installApk',
+      {'path': file.path},
+    );
+    return switch (result) {
+      'started' => InstallResult.installerStarted,
+      'permission_required' => InstallResult.permissionRequired,
+      _ => InstallResult.failed,
+    };
+  }
+
   bool _isNewer(String candidate, String current) {
     final next = _parts(candidate);
     final installed = _parts(current);
@@ -89,4 +141,11 @@ class UpdateService {
   }
 
   void close() => _client.close();
+}
+
+enum InstallResult {
+  installerStarted,
+  permissionRequired,
+  externalDownload,
+  failed,
 }
