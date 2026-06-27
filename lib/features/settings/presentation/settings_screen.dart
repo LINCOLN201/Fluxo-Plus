@@ -391,19 +391,19 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Digite o código de 6 dígitos enviado para $email.'),
+              Text('Digite o código de 8 dígitos enviado para $email.'),
               const SizedBox(height: 16),
               TextFormField(
                 controller: code,
                 autofocus: true,
                 keyboardType: TextInputType.number,
-                maxLength: 6,
+                maxLength: 8,
                 decoration: const InputDecoration(
                   labelText: 'Código de confirmação',
                 ),
-                validator: (value) => (value?.trim().length ?? 0) == 6
+                validator: (value) => (value?.trim().length ?? 0) == 8
                     ? null
-                    : 'Informe os 6 dígitos',
+                    : 'Informe os 8 dígitos',
               ),
             ],
           ),
