@@ -15,10 +15,14 @@ class DashboardScreen extends StatefulWidget {
     super.key,
     required this.repository,
     required this.onAddTransaction,
+    required this.updateAvailable,
+    required this.onNotifications,
   });
 
   final DashboardRepository repository;
   final VoidCallback onAddTransaction;
+  final bool updateAvailable;
+  final VoidCallback onNotifications;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -61,6 +65,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     summary: snapshot.requireData,
                     onRefresh: _refresh,
                     dark: dark,
+                    updateAvailable: widget.updateAvailable,
+                    onNotifications: widget.onNotifications,
                   )
                 : _DesktopDashboard(
                     summary: snapshot.requireData,
@@ -239,11 +245,15 @@ class _MobileDashboard extends StatelessWidget {
     required this.summary,
     required this.onRefresh,
     required this.dark,
+    required this.updateAvailable,
+    required this.onNotifications,
   });
 
   final DashboardSummary summary;
   final Future<void> Function() onRefresh;
   final bool dark;
+  final bool updateAvailable;
+  final VoidCallback onNotifications;
 
   @override
   Widget build(BuildContext context) {
@@ -277,9 +287,31 @@ class _MobileDashboard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.notifications_none_rounded,
-                    color: dark ? Colors.white : AppColors.text,
+                  IconButton(
+                    onPressed: () {
+                      if (updateAvailable) {
+                        onNotifications();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Nenhuma atualização pendente.'),
+                          ),
+                        );
+                      }
+                    },
+                    tooltip: updateAvailable
+                        ? 'Atualização disponível'
+                        : 'Tudo atualizado',
+                    icon: Badge(
+                      isLabelVisible: updateAvailable,
+                      backgroundColor: AppColors.warning,
+                      child: Icon(
+                        updateAvailable
+                            ? Icons.notifications_active_rounded
+                            : Icons.notifications_none_rounded,
+                        color: dark ? Colors.white : AppColors.text,
+                      ),
+                    ),
                   ),
                 ],
               ),

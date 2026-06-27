@@ -33,8 +33,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Fluxo+ 9.9.9 disponível'), findsOneWidget);
-    expect(find.text('Instalar agora'), findsOneWidget);
+    expect(find.text('Fluxo+ 9.9.9'), findsOneWidget);
+    expect(find.text('Atualizar agora'), findsOneWidget);
     service.close();
   });
 }

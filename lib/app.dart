@@ -8,6 +8,7 @@ import 'core/constants/app_constants.dart';
 import 'core/database/app_database.dart';
 import 'core/theme/app_theme.dart';
 import 'core/update/update_prompt.dart';
+import 'core/update/app_update.dart';
 import 'core/update/update_service.dart';
 import 'core/security/biometric_service.dart';
 import 'core/sync/cloud_sync_service.dart';
@@ -56,6 +57,7 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   bool? _onboardingComplete;
   bool _updateChecked = false;
   DateTime? _lastUpdateCheck;
+  AppUpdate? _availableUpdate;
   ThemeMode _themeMode = ThemeMode.dark;
   bool _biometricEnabled = false;
   bool _unlocked = true;
@@ -89,6 +91,10 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
                 const Duration(minutes: 15))) {
       _updateChecked = false;
       WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdates());
+    }
+    if (state == AppLifecycleState.resumed &&
+        widget.cloudSyncService.currentUser != null) {
+      unawaited(_syncSilently());
     }
   }
 
@@ -125,6 +131,9 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
         },
       );
       if (biometricEnabled) await _unlock();
+      if (widget.cloudSyncService.currentUser != null) {
+        unawaited(_syncSilently());
+      }
     }
   }
 
@@ -137,25 +146,21 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     if (mounted) setState(() => _onboardingComplete = true);
   }
 
+  Future<void> _syncSilently() async {
+    try {
+      await widget.cloudSyncService.synchronize();
+    } catch (error) {
+      debugPrint('Sincronização adiada: $error');
+    }
+  }
+
   Future<void> _checkForUpdates() async {
     if (_updateChecked || !widget.updateService.isConfigured) return;
     _updateChecked = true;
     _lastUpdateCheck = DateTime.now();
     try {
       final update = await widget.updateService.check();
-      final navigatorContext = _navigatorKey.currentContext;
-      if (update != null &&
-          navigatorContext != null &&
-          navigatorContext.mounted) {
-        await showUpdatePrompt(
-          navigatorContext,
-          update: update,
-          service: widget.updateService,
-        );
-      } else if (update != null && navigatorContext == null) {
-        _updateChecked = false;
-        Future<void>.delayed(const Duration(seconds: 2), _checkForUpdates);
-      }
+      if (mounted) setState(() => _availableUpdate = update);
     } catch (error) {
       debugPrint('Falha ao verificar atualizações: $error');
       // Atualizações nunca impedem o uso offline do aplicativo.
@@ -232,8 +237,21 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             biometricEnabled: _biometricEnabled,
             onBiometricChanged: _changeBiometric,
             updateService: widget.updateService,
+            availableUpdate: _availableUpdate,
+            onOpenUpdate: _openAvailableUpdate,
           ),
       },
+    );
+  }
+
+  Future<void> _openAvailableUpdate() async {
+    final update = _availableUpdate;
+    final context = _navigatorKey.currentContext;
+    if (update == null || context == null || !context.mounted) return;
+    await showUpdatePrompt(
+      context,
+      update: update,
+      service: widget.updateService,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/sync/cloud_sync_service.dart';
@@ -14,6 +15,7 @@ class SettingsScreen extends StatelessWidget {
     required this.biometricEnabled,
     required this.onBiometricChanged,
     required this.updateService,
+    required this.onDataChanged,
   });
 
   final ThemeMode themeMode;
@@ -22,6 +24,7 @@ class SettingsScreen extends StatelessWidget {
   final bool biometricEnabled;
   final Future<bool> Function(bool) onBiometricChanged;
   final UpdateService updateService;
+  final VoidCallback onDataChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -41,18 +44,41 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: 12),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Tema do aplicativo',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'O Fluxo+ usa o modo escuro por padrão.',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: .14),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          themeMode == ThemeMode.dark
+                              ? Icons.nightlight_round
+                              : Icons.wb_sunny_rounded,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tema do aplicativo',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            SizedBox(height: 3),
+                            Text('Escolha como o Fluxo+ aparece para você.'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 18),
                   SegmentedButton<ThemeMode>(
@@ -116,7 +142,10 @@ class SettingsScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          _CloudSyncPanel(service: cloudSyncService),
+          _CloudSyncPanel(
+            service: cloudSyncService,
+            onDataChanged: onDataChanged,
+          ),
           const SizedBox(height: 24),
           Text(
             'Privacidade e dados',
@@ -138,14 +167,6 @@ class SettingsScreen extends StatelessWidget {
                   trailing: const Icon(Icons.check_circle_rounded,
                       color: AppColors.primary),
                 ),
-                const Divider(height: 1),
-                const ListTile(
-                  leading: Icon(Icons.cloud_done_outlined),
-                  title: Text('Offline-first'),
-                  subtitle: Text(
-                    'A nuvem é opcional; o SQLite continua funcionando offline.',
-                  ),
-                ),
               ],
             ),
           ),
@@ -155,7 +176,7 @@ class SettingsScreen extends StatelessWidget {
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'Fluxo+',
-                applicationVersion: '0.1.0',
+                applicationVersion: '0.2.0',
                 applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
                 children: const [
                   SizedBox(height: 12),
@@ -249,9 +270,13 @@ class _UpdatePanelState extends State<_UpdatePanel> {
 }
 
 class _CloudSyncPanel extends StatefulWidget {
-  const _CloudSyncPanel({required this.service});
+  const _CloudSyncPanel({
+    required this.service,
+    required this.onDataChanged,
+  });
 
   final CloudSyncService service;
+  final VoidCallback onDataChanged;
 
   @override
   State<_CloudSyncPanel> createState() => _CloudSyncPanelState();
@@ -259,6 +284,17 @@ class _CloudSyncPanel extends StatefulWidget {
 
 class _CloudSyncPanelState extends State<_CloudSyncPanel> {
   bool _busy = false;
+  late Future<DateTime?> _lastSync;
+
+  @override
+  void initState() {
+    super.initState();
+    _lastSync = widget.service.lastSyncAt();
+  }
+
+  void _refreshLastSync() {
+    if (mounted) setState(() => _lastSync = widget.service.lastSyncAt());
+  }
 
   Future<void> _authenticate() async {
     final email = TextEditingController();
@@ -440,6 +476,7 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(success)));
         setState(() {});
+        _refreshLastSync();
       }
       return true;
     } catch (error) {
@@ -483,7 +520,7 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
               subtitle: Text(
                 user == null
                     ? 'Entre para sincronizar seus dispositivos.'
-                    : 'Backup protegido pela sua conta.',
+                    : 'Android e computador usam o mesmo backup.',
               ),
               trailing: user == null
                   ? Column(
@@ -514,6 +551,22 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
               ),
             if (user != null) ...[
               const Divider(),
+              FutureBuilder<DateTime?>(
+                future: _lastSync,
+                builder: (context, snapshot) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.schedule_rounded),
+                  title: const Text('Última sincronização'),
+                  subtitle: Text(
+                    snapshot.data == null
+                        ? 'Ainda não sincronizado'
+                        : DateFormat(
+                            'dd/MM/yyyy HH:mm',
+                            'pt_BR',
+                          ).format(snapshot.data!.toLocal()),
+                  ),
+                ),
+              ),
               Row(
                 children: [
                   Expanded(
@@ -521,10 +574,11 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
                       onPressed: _busy
                           ? null
                           : () => _run(() async {
-                                await widget.service.uploadBackup();
-                              }, 'Backup enviado para a nuvem.'),
-                      icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Enviar backup'),
+                                await widget.service.synchronize();
+                                widget.onDataChanged();
+                              }, 'Dispositivos sincronizados.'),
+                      icon: const Icon(Icons.sync_rounded),
+                      label: const Text('Sincronizar'),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -534,7 +588,8 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
                           ? null
                           : () => _run(() async {
                                 await widget.service.restoreBackup();
-                              }, 'Backup restaurado. Reinicie para atualizar tudo.'),
+                                widget.onDataChanged();
+                              }, 'Backup restaurado neste dispositivo.'),
                       icon: const Icon(Icons.cloud_download_outlined),
                       label: const Text('Restaurar'),
                     ),

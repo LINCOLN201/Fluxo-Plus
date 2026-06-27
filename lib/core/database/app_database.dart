@@ -128,12 +128,13 @@ class AppDatabase {
       'categories',
       'transactions',
       'goals',
-      'settings',
     ];
     final snapshot = <String, dynamic>{};
     for (final table in tables) {
       snapshot[table] = await db.query(table);
     }
+    // Preferências de tema, biometria e onboarding pertencem ao dispositivo.
+    snapshot['settings'] = <Map<String, Object?>>[];
     snapshot['exported_at'] = DateTime.now().toUtc().toIso8601String();
     snapshot['schema_version'] = AppConstants.databaseVersion;
     return snapshot;
@@ -145,9 +146,8 @@ class AppDatabase {
       'categories',
       'transactions',
       'goals',
-      'settings',
     ];
-    for (final table in tables) {
+    for (final table in [...tables, 'settings']) {
       if (snapshot[table] is! List) {
         throw const FormatException('Backup inválido ou incompleto.');
       }
@@ -157,7 +157,6 @@ class AppDatabase {
       await txn.delete('goals');
       await txn.delete('categories');
       await txn.delete('accounts');
-      await txn.delete('settings');
       for (final table in tables) {
         for (final raw in snapshot[table] as List<dynamic>) {
           await txn.insert(table, Map<String, Object?>.from(raw as Map));

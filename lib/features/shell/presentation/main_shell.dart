@@ -17,6 +17,7 @@ import '../../reports/presentation/reports_screen.dart';
 import '../../transactions/presentation/transactions_screen.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/update/update_service.dart';
+import '../../../core/update/app_update.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -33,6 +34,8 @@ class MainShell extends StatefulWidget {
     required this.biometricEnabled,
     required this.onBiometricChanged,
     required this.updateService,
+    required this.availableUpdate,
+    required this.onOpenUpdate,
   });
 
   final DashboardRepository dashboardRepository;
@@ -47,6 +50,8 @@ class MainShell extends StatefulWidget {
   final bool biometricEnabled;
   final Future<bool> Function(bool) onBiometricChanged;
   final UpdateService updateService;
+  final AppUpdate? availableUpdate;
+  final VoidCallback onOpenUpdate;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -55,6 +60,7 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
   int _dashboardRevision = 0;
+  bool _showMobileMore = false;
 
   static const _items = [
     (Icons.grid_view_rounded, 'Dashboard'),
@@ -88,6 +94,8 @@ class _MainShellState extends State<MainShell> {
           key: ValueKey(_dashboardRevision),
           repository: widget.dashboardRepository,
           onAddTransaction: _addTransaction,
+          updateAvailable: widget.availableUpdate != null,
+          onNotifications: widget.onOpenUpdate,
         ),
       1 => TransactionsScreen(
           repository: widget.transactionRepository,
@@ -104,6 +112,7 @@ class _MainShellState extends State<MainShell> {
           biometricEnabled: widget.biometricEnabled,
           onBiometricChanged: widget.onBiometricChanged,
           updateService: widget.updateService,
+          onDataChanged: () => setState(() => _dashboardRevision++),
         ),
     };
   }
@@ -118,18 +127,32 @@ class _MainShellState extends State<MainShell> {
           return Scaffold(
             backgroundColor:
                 dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
-            body: _page(),
+            body: _showMobileMore
+                ? _MobileMore(
+                    onSelected: (index) => setState(() {
+                      _selectedIndex = index;
+                      _showMobileMore = false;
+                    }),
+                  )
+                : _page(),
             bottomNavigationBar: _MobileNavigation(
               dark: dark,
-              selectedIndex: switch (_selectedIndex) {
-                0 => 0,
-                1 => 1,
-                4 => 2,
-                _ => 3,
-              },
-              onSelected: (value) => setState(
-                () => _selectedIndex = const [0, 1, 4, 6][value],
-              ),
+              selectedIndex: _showMobileMore
+                  ? 3
+                  : switch (_selectedIndex) {
+                      0 => 0,
+                      1 => 1,
+                      4 => 2,
+                      _ => 3,
+                    },
+              onSelected: (value) => setState(() {
+                if (value == 3) {
+                  _showMobileMore = true;
+                } else {
+                  _showMobileMore = false;
+                  _selectedIndex = const [0, 1, 4][value];
+                }
+              }),
               onAdd: _addTransaction,
             ),
           );
@@ -148,6 +171,56 @@ class _MainShellState extends State<MainShell> {
           ),
         );
       },
+    );
+  }
+}
+
+class _MobileMore extends StatelessWidget {
+  const _MobileMore({required this.onSelected});
+
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    const options = [
+      (
+        2,
+        Icons.account_balance_wallet_outlined,
+        'Contas',
+        'Saldos e carteiras'
+      ),
+      (3, Icons.track_changes_rounded, 'Metas', 'Acompanhe seus objetivos'),
+      (5, Icons.category_outlined, 'Categorias', 'Organize seus lançamentos'),
+      (6, Icons.settings_outlined, 'Configurações', 'Tema, segurança e nuvem'),
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mais'),
+        automaticallyImplyLeading: false,
+      ),
+      body: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          final item = options[index];
+          return Card(
+            child: ListTile(
+              onTap: () => onSelected(item.$1),
+              leading: CircleAvatar(
+                backgroundColor: AppColors.primary.withValues(alpha: .14),
+                child: Icon(item.$2, color: AppColors.primary),
+              ),
+              title: Text(
+                item.$3,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              subtitle: Text(item.$4),
+              trailing: const Icon(Icons.chevron_right_rounded),
+            ),
+          );
+        },
+      ),
     );
   }
 }

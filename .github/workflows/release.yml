@@ -41,6 +41,7 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           flutter build apk --release \
             --build-name="$VERSION" \
+            --build-number="${{ github.run_number }}" \
             --dart-define=UPDATE_REPOSITORY=${{ github.repository }} \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -67,6 +68,7 @@ jobs:
           $version = "${{ github.ref_name }}".TrimStart("v")
           flutter build windows --release `
             --build-name="$version" `
+            --build-number="${{ github.run_number }}" `
             --dart-define=UPDATE_REPOSITORY=${{ github.repository }} `
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} `
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}

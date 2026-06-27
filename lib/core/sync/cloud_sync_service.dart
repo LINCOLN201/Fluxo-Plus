@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../database/app_database.dart';
 
@@ -19,6 +20,7 @@ class CloudSyncService {
     _requireClient();
     try {
       await _client!.auth.signInWithPassword(email: email, password: password);
+      await synchronize();
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (_) {
@@ -70,6 +72,7 @@ class CloudSyncService {
         token: code.trim(),
         type: OtpType.signup,
       );
+      await synchronize();
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (_) {
@@ -89,6 +92,7 @@ class CloudSyncService {
       'payload': await _database.exportSnapshot(),
       'updated_at': now.toIso8601String(),
     });
+    await _saveLastSync(now);
     return now;
   }
 
@@ -105,8 +109,56 @@ class CloudSyncService {
     await _database.restoreSnapshot(
       Map<String, dynamic>.from(row['payload'] as Map),
     );
-    return DateTime.parse(row['updated_at'] as String).toLocal();
+    final updatedAt = DateTime.parse(row['updated_at'] as String).toLocal();
+    await _saveLastSync(DateTime.now());
+    return updatedAt;
   }
+
+  Future<DateTime?> lastSyncAt() async {
+    final rows = await _database.db.query(
+      'settings',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: ['last_sync_at'],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return DateTime.tryParse(rows.first['value'] as String);
+  }
+
+  Future<SyncResult> synchronize() async {
+    final user = _requireUser();
+    final row = await _client!
+        .from('user_backups')
+        .select('payload, updated_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+    if (row == null) {
+      return SyncResult(SyncDirection.uploaded, await uploadBackup());
+    }
+
+    final cloudUpdated = DateTime.parse(row['updated_at'] as String).toLocal();
+    final lastSync = await lastSyncAt();
+    if (lastSync == null ||
+        cloudUpdated.isAfter(lastSync.add(const Duration(seconds: 2)))) {
+      await _database.restoreSnapshot(
+        Map<String, dynamic>.from(row['payload'] as Map),
+      );
+      final now = DateTime.now();
+      await _saveLastSync(now);
+      return SyncResult(SyncDirection.downloaded, cloudUpdated);
+    }
+    return SyncResult(SyncDirection.uploaded, await uploadBackup());
+  }
+
+  Future<void> _saveLastSync(DateTime value) => _database.db.insert(
+        'settings',
+        {
+          'key': 'last_sync_at',
+          'value': value.toLocal().toIso8601String(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
 
   SupabaseClient _requireClient() {
     if (_client == null) {
@@ -146,6 +198,15 @@ class CloudSyncService {
     }
     return 'Não foi possível autenticar: $message';
   }
+}
+
+enum SyncDirection { uploaded, downloaded }
+
+class SyncResult {
+  const SyncResult(this.direction, this.at);
+
+  final SyncDirection direction;
+  final DateTime at;
 }
 
 class CloudSyncException implements Exception {
