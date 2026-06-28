@@ -18,6 +18,8 @@ import '../../transactions/presentation/transactions_screen.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/update/update_service.dart';
 import '../../../core/update/app_update.dart';
+import '../../../core/premium/premium_service.dart';
+import '../../premium/presentation/premium_screen.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -36,6 +38,7 @@ class MainShell extends StatefulWidget {
     required this.updateService,
     required this.availableUpdate,
     required this.onOpenUpdate,
+    required this.premiumService,
   });
 
   final DashboardRepository dashboardRepository;
@@ -52,6 +55,7 @@ class MainShell extends StatefulWidget {
   final UpdateService updateService;
   final AppUpdate? availableUpdate;
   final VoidCallback onOpenUpdate;
+  final PremiumService premiumService;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -70,6 +74,7 @@ class _MainShellState extends State<MainShell> {
     (Icons.bar_chart_rounded, 'Relatórios'),
     (Icons.category_outlined, 'Categorias'),
     (Icons.settings_outlined, 'Configurações'),
+    (Icons.workspace_premium_outlined, 'Premium'),
   ];
 
   Future<void> _addTransaction() async {
@@ -105,7 +110,7 @@ class _MainShellState extends State<MainShell> {
       3 => GoalsScreen(repository: widget.goalRepository),
       4 => ReportsScreen(repository: widget.reportRepository),
       5 => CategoriesScreen(repository: widget.categoryRepository),
-      _ => SettingsScreen(
+      6 => SettingsScreen(
           themeMode: widget.themeMode,
           onThemeChanged: widget.onThemeChanged,
           cloudSyncService: widget.cloudSyncService,
@@ -114,6 +119,7 @@ class _MainShellState extends State<MainShell> {
           updateService: widget.updateService,
           onDataChanged: () => setState(() => _dashboardRevision++),
         ),
+      _ => PremiumScreen(service: widget.premiumService),
     };
   }
 
@@ -192,6 +198,12 @@ class _MobileMore extends StatelessWidget {
       (3, Icons.track_changes_rounded, 'Metas', 'Acompanhe seus objetivos'),
       (5, Icons.category_outlined, 'Categorias', 'Organize seus lançamentos'),
       (6, Icons.settings_outlined, 'Configurações', 'Tema, segurança e nuvem'),
+      (
+        7,
+        Icons.workspace_premium_outlined,
+        'Fluxo+ Premium',
+        'Nuvem, automação e análises avançadas'
+      ),
     ];
     return Scaffold(
       appBar: AppBar(

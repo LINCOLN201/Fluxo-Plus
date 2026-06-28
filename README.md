@@ -24,6 +24,7 @@ no roadmap, mas não fazem parte desta versão.
 - moeda e datas no padrão brasileiro;
 - schema preparado para contas, categorias, transações, metas e configurações;
 - arquitetura por features, com persistência e regras fora das telas.
+- estrutura inicial do Fluxo+ Premium, sem cobranças ou bloqueios ativos.
 
 Todas as áreas do MVP estão conectadas ao banco local e funcionam sem internet.
 
@@ -101,6 +102,9 @@ Para habilitar autenticação, sincronização e backup em nuvem, consulte
 [docs/SUPABASE.md](docs/SUPABASE.md) e execute o schema com RLS incluído no
 projeto.
 
+O modelo comercial e a separação entre recursos gratuitos e serviços Premium
+estão documentados em [docs/MONETIZATION.md](docs/MONETIZATION.md).
+
 ## Estrutura
 
 ```text
@@ -123,22 +127,21 @@ lib/
     └── widgets/
 ```
 
-O Supabase não é dependência do projeto e nenhuma informação sai do
-dispositivo.
+Sem login, nenhuma informação financeira sai do dispositivo. Quando o usuário
+opta pela sincronização, o Supabase armazena um snapshot protegido por RLS.
 
 ## Próximos passos
 
-1. Biometria, PIN e backup local criptografado.
+1. PIN e backup local criptografado.
 2. Migrações avançadas, testes de repositório e testes de interface.
-3. Sincronização opcional e criptografada via Supabase, sem remover o modo
-   offline.
+3. Histórico de backups e sincronização granular com resolução de conflitos.
 4. Web/PWA com uma estratégia de armazenamento compatível.
 
 ## Segurança e privacidade
 
-Esta versão não possui login, pagamentos, analytics ou sincronização remota.
-Dados financeiros são locais. Antes de produção, o roadmap prevê criptografia,
-backup seguro, bloqueio biométrico e uma política de privacidade.
+O projeto não possui pagamentos ou analytics. Login e sincronização são
+opcionais; o modo local continua disponível. Antes de produção comercial,
+serão necessárias política de privacidade, termos e revisão de criptografia.
 
 ## Licença
 

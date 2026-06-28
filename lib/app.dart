@@ -12,6 +12,7 @@ import 'core/update/app_update.dart';
 import 'core/update/update_service.dart';
 import 'core/security/biometric_service.dart';
 import 'core/sync/cloud_sync_service.dart';
+import 'core/premium/premium_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
 import 'features/accounts/data/account_repository.dart';
 import 'features/categories/data/category_repository.dart';
@@ -35,6 +36,7 @@ class FluxoApp extends StatefulWidget {
     required this.reportRepository,
     required this.cloudSyncService,
     required this.biometricService,
+    required this.premiumService,
   });
 
   final AppDatabase database;
@@ -47,6 +49,7 @@ class FluxoApp extends StatefulWidget {
   final ReportRepository reportRepository;
   final CloudSyncService cloudSyncService;
   final BiometricService biometricService;
+  final PremiumService premiumService;
 
   @override
   State<FluxoApp> createState() => _FluxoAppState();
@@ -239,6 +242,7 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             updateService: widget.updateService,
             availableUpdate: _availableUpdate,
             onOpenUpdate: _openAvailableUpdate,
+            premiumService: widget.premiumService,
           ),
       },
     );

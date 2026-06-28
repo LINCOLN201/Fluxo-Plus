@@ -7,7 +7,8 @@ meio de Row Level Security (RLS).
 ## Configuração
 
 1. Crie um projeto no Supabase.
-2. Abra o SQL Editor e execute `supabase/schema.sql`.
+2. Abra o SQL Editor e execute `supabase/schema.sql`. O script também prepara
+   as assinaturas Premium com RLS e acesso somente para leitura pelo cliente.
 3. Em Authentication, habilite Email/Password.
 4. Em Authentication → URL Configuration, defina:
    - Site URL: `https://github.com/LINCOLN201/Fluxo-Plus`
@@ -37,6 +38,14 @@ A chave usada no cliente deve ser a **Publishable Key**, nunca `service_role`.
 - O app também envia um backup ao ir para segundo plano.
 - **Restaurar** substitui o banco local pelo último snapshot da conta.
 - Sem conexão, o SQLite funciona normalmente.
+
+## Premium
+
+A tabela `premium_subscriptions` não aceita gravações vindas do APK ou do
+aplicativo Windows. Futuramente, somente um webhook seguro do provedor de
+pagamentos deverá alterar plano, status e período de validade. O cliente
+consulta apenas a assinatura do próprio usuário e mantém um cache local para
+continuar funcionando offline.
 
 O modelo atual usa estratégia de último backup válido. Sincronização granular
 com resolução de conflitos por registro pode ser adicionada numa versão futura.
