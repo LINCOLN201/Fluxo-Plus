@@ -39,13 +39,40 @@ Cadastre estes Actions Secrets no GitHub:
 - `ANDROID_KEY_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 
-## 3. Publicar
+## 3. Fluxo de desenvolvimento
 
-Atualize a versão do `pubspec.yaml`, faça commit e crie uma tag igual:
+Toda alteração deve começar na branch `dev`:
 
 ```powershell
+git switch dev
+git pull origin dev
+```
+
+Cada push para `dev` executa o workflow
+`.github/workflows/quality.yml`, que valida:
+
+- formatação;
+- análise estática;
+- testes automatizados;
+- compilação de APK de teste;
+- compilação do aplicativo Windows de teste.
+
+Os builds de teste ficam disponíveis como artefatos temporários por sete dias.
+Não crie uma tag enquanto essas verificações estiverem pendentes ou falhando.
+
+Quando todas as verificações passarem, abra um Pull Request de `dev` para
+`main`. A `main` representa exclusivamente código validado e pronto para uma
+futura publicação.
+
+## 4. Publicar
+
+Depois do Pull Request aprovado e integrado à `main`, atualize a versão do
+`pubspec.yaml`, valide novamente e crie uma tag igual:
+
+```powershell
+git switch main
+git pull origin main
 git tag v0.2.0
-git push origin main
 git push origin v0.2.0
 ```
 
@@ -57,6 +84,8 @@ O workflow `.github/workflows/release.yml` executa análise e testes, gera:
 
 O `--build-name` usa a própria tag. Isso garante que o app instalado reconheça
 corretamente a próxima versão.
+
+Resumindo: `dev` → CI verde → Pull Request → `main` → tag → publicação.
 
 ## Comportamento da atualização
 

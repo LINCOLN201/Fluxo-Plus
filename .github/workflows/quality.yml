@@ -1,12 +1,19 @@
-name: Qualidade
+name: Validar desenvolvimento
 
 on:
   push:
-    branches: ['**']
+    branches:
+      - dev
   pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   flutter:
+    name: Validação Flutter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +22,46 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      - name: Compilar APK de teste
+        run: >
+          flutter build apk --debug
+          --dart-define=UPDATE_REPOSITORY=${{ github.repository }}
+          --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-dev-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+  windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Compilar Windows de teste
+        shell: pwsh
+        run: |
+          flutter build windows --debug `
+            --dart-define=UPDATE_REPOSITORY=${{ github.repository }} `
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} `
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - name: Compactar build de teste
+        shell: pwsh
+        run: >
+          Compress-Archive
+          -Path build/windows/x64/runner/Debug/*
+          -DestinationPath fluxo-plus-dev-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-dev-windows
+          path: fluxo-plus-dev-windows.zip
+          retention-days: 7

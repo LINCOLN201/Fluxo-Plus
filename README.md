@@ -105,6 +105,15 @@ projeto.
 O modelo comercial e a separação entre recursos gratuitos e serviços Premium
 estão documentados em [docs/MONETIZATION.md](docs/MONETIZATION.md).
 
+## Fluxo de contribuição
+
+O desenvolvimento acontece na branch `dev`. Cada alteração passa por análise,
+testes e builds Android/Windows antes de entrar na `main`. A publicação só é
+iniciada depois da integração validada, por meio de uma tag de versão.
+
+Consulte [docs/RELEASES.md](docs/RELEASES.md) para o fluxo completo:
+`dev` → CI → Pull Request → `main` → release.
+
 ## Estrutura
 
 ```text
