@@ -87,6 +87,10 @@ corretamente a próxima versão.
 
 Resumindo: `dev` → CI verde → Pull Request → `main` → tag → publicação.
 
+O workflow de release também verifica se o commit marcado pela tag pertence à
+`main`. Uma tag criada diretamente na `dev` será recusada e não produzirá APK,
+Windows ou GitHub Release.
+
 ## Comportamento da atualização
 
 - Android: baixa o APK e o sistema solicita confirmação para instalar. O Android
