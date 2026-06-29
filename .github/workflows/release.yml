@@ -9,8 +9,24 @@ permissions:
   contents: write
 
 jobs:
+  verify-main:
+    name: Confirmar tag na main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verificar origem da versão
+        run: |
+          git fetch origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "A tag não pertence à branch main. Publicação bloqueada."
+            exit 1
+          fi
+
   android:
     name: APK Android
+    needs: verify-main
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +70,7 @@ jobs:
 
   windows:
     name: Windows
+    needs: verify-main
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
