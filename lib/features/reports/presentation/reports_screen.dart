@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/formatters.dart';
 import '../data/report_repository.dart';
 
@@ -33,6 +34,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
 
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return _month.year == now.year && _month.month == now.month;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,186 +53,50 @@ class _ReportsScreenState extends State<ReportsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           final report = snapshot.requireData;
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(_reload);
+              await _report;
+            },
+            child: LayoutBuilder(
+              builder: (context, constraints) => ListView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: constraints.maxWidth > 900
+                      ? (constraints.maxWidth - 860) / 2
+                      : 16,
+                  vertical: 10,
+                ),
                 children: [
-                  IconButton(
-                    onPressed: () => _moveMonth(-1),
-                    icon: const Icon(Icons.chevron_left),
+                  _MonthNavigator(
+                    month: _month,
+                    canGoForward: !_isCurrentMonth,
+                    onPrevious: () => _moveMonth(-1),
+                    onNext: () => _moveMonth(1),
                   ),
-                  SizedBox(
-                    width: 180,
-                    child: Text(
-                      DateFormat('MMMM / yyyy', 'pt_BR').format(_month),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
+                  const SizedBox(height: 16),
+                  _ResultHero(report: report),
+                  const SizedBox(height: 12),
+                  _MetricGrid(report: report),
+                  const SizedBox(height: 20),
+                  _SectionHeader(
+                    title: 'Receitas e despesas',
+                    subtitle: 'Comparação do que entrou e saiu no período',
                   ),
-                  IconButton(
-                    onPressed: _month.year == DateTime.now().year &&
-                            _month.month == DateTime.now().month
-                        ? null
-                        : () => _moveMonth(1),
-                    icon: const Icon(Icons.chevron_right),
+                  const SizedBox(height: 10),
+                  _ComparisonCard(report: report),
+                  const SizedBox(height: 20),
+                  _SectionHeader(
+                    title: 'Para onde foi o dinheiro',
+                    subtitle: report.categories.isEmpty
+                        ? 'Ainda não há despesas neste mês'
+                        : '${report.categories.length} categorias com lançamentos',
                   ),
+                  const SizedBox(height: 10),
+                  _CategoryCard(report: report),
+                  const SizedBox(height: 28),
                 ],
               ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(22),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: report.result >= 0
-                        ? const [Color(0xFF08743E), AppColors.primary]
-                        : const [Color(0xFF9F2323), AppColors.expense],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Resultado do mês',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      AppFormatters.currency(report.result),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      report.result >= 0
-                          ? 'Você gastou menos do que recebeu.'
-                          : 'As despesas ultrapassaram as receitas.',
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final cards = [
-                    _ReportMetric(
-                      title: 'Receitas',
-                      value: report.income,
-                      color: AppColors.primary,
-                    ),
-                    _ReportMetric(
-                      title: 'Despesas',
-                      value: report.expense,
-                      color: AppColors.expense,
-                    ),
-                  ];
-                  return Row(
-                    children: cards
-                        .map(
-                          (card) => Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 5),
-                              child: card,
-                            ),
-                          ),
-                        )
-                        .toList(),
-                  );
-                },
-              ),
-              const SizedBox(height: 18),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Receita x despesa',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 22),
-                      _ComparisonBar(
-                        income: report.income,
-                        expense: report.expense,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Despesas por categoria',
-                        style: TextStyle(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 16),
-                      if (report.categories.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 26),
-                          child: Center(
-                            child: Text('Sem despesas neste período'),
-                          ),
-                        )
-                      else
-                        ...report.categories.map((item) {
-                          final percentage = report.expense == 0
-                              ? 0.0
-                              : item.amount / report.expense;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        color: Color(item.color),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 9),
-                                    Expanded(child: Text(item.name)),
-                                    Text(
-                                      AppFormatters.currency(item.amount),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 7),
-                                LinearProgressIndicator(
-                                  value: percentage,
-                                  color: Color(item.color),
-                                  backgroundColor:
-                                      Color(item.color).withValues(alpha: .12),
-                                  minHeight: 7,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ],
-                            ),
-                          );
-                        }),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+            ),
           );
         },
       ),
@@ -234,34 +104,225 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 }
 
-class _ReportMetric extends StatelessWidget {
-  const _ReportMetric({
-    required this.title,
-    required this.value,
-    required this.color,
+class _MonthNavigator extends StatelessWidget {
+  const _MonthNavigator({
+    required this.month,
+    required this.canGoForward,
+    required this.onPrevious,
+    required this.onNext,
   });
 
-  final String title;
+  final DateTime month;
+  final bool canGoForward;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton.filledTonal(
+          onPressed: onPrevious,
+          icon: const Icon(Icons.chevron_left_rounded),
+          tooltip: 'Mês anterior',
+        ),
+        Expanded(
+          child: Column(
+            children: [
+              Text(
+                DateFormat('MMMM', 'pt_BR').format(month),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              Text(
+                '${month.year}',
+                style: const TextStyle(color: AppColors.muted),
+              ),
+            ],
+          ),
+        ),
+        IconButton.filledTonal(
+          onPressed: canGoForward ? onNext : null,
+          icon: const Icon(Icons.chevron_right_rounded),
+          tooltip: 'Próximo mês',
+        ),
+      ],
+    );
+  }
+}
+
+class _ResultHero extends StatelessWidget {
+  const _ResultHero({required this.report});
+
+  final MonthlyReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final positive = report.result >= 0;
+    final rate = report.savingsRate;
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: positive
+              ? const [Color(0xFF075F34), AppColors.primary]
+              : const [Color(0xFF8F2525), AppColors.expense],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: (positive ? AppColors.primary : AppColors.expense)
+                .withValues(alpha: .24),
+            blurRadius: 22,
+            offset: const Offset(0, 9),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Resultado previsto do mês',
+                  style: TextStyle(color: Colors.white70),
+                ),
+              ),
+              Icon(
+                positive
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_down_rounded,
+                color: Colors.white,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            AppFormatters.currency(report.result),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 30,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            positive
+                ? rate > 0
+                    ? 'Você preservou ${(rate * 100).toStringAsFixed(0)}% das receitas previstas.'
+                    : 'Receitas e despesas estão equilibradas.'
+                : 'Faltam ${AppFormatters.currency(report.result.abs())} para equilibrar o mês.',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MetricGrid extends StatelessWidget {
+  const _MetricGrid({required this.report});
+
+  final MonthlyReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 680 ? 3 : 2;
+        final width = (constraints.maxWidth - (columns - 1) * 10) / columns;
+        final metrics = [
+          (
+            'Receitas',
+            report.income,
+            AppColors.primary,
+            Icons.south_west_rounded,
+            '${AppFormatters.currency(report.receivedIncome)} recebidos'
+          ),
+          (
+            'Despesas',
+            report.expense,
+            AppColors.expense,
+            Icons.north_east_rounded,
+            '${AppFormatters.currency(report.paidExpense)} pagos'
+          ),
+          (
+            'A pagar',
+            report.pendingExpense,
+            AppColors.warning,
+            Icons.schedule_rounded,
+            '${report.transactionCount} lançamentos no mês'
+          ),
+        ];
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: metrics
+              .map(
+                (item) => SizedBox(
+                  width: width,
+                  child: _MetricCard(
+                    label: item.$1,
+                    value: item.$2,
+                    color: item.$3,
+                    icon: item.$4,
+                    detail: item.$5,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+}
+
+class _MetricCard extends StatelessWidget {
+  const _MetricCard({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+    required this.detail,
+  });
+
+  final String label;
   final double value;
   final Color color;
+  final IconData icon;
+  final String detail;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: EdgeInsets.zero,
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 8),
-            Text(
-              AppFormatters.currency(value),
-              style: TextStyle(
-                color: color,
-                fontSize: 21,
-                fontWeight: FontWeight.w800,
+            Icon(icon, color: color, size: 21),
+            const SizedBox(height: 10),
+            Text(label, style: const TextStyle(color: AppColors.muted)),
+            const SizedBox(height: 4),
+            FittedBox(
+              child: Text(
+                AppFormatters.currency(value),
+                style: TextStyle(
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              detail,
+              maxLines: 2,
+              style: const TextStyle(fontSize: 10, color: AppColors.muted),
             ),
           ],
         ),
@@ -270,27 +331,77 @@ class _ReportMetric extends StatelessWidget {
   }
 }
 
-class _ComparisonBar extends StatelessWidget {
-  const _ComparisonBar({required this.income, required this.expense});
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, required this.subtitle});
 
-  final double income;
-  final double expense;
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
-    final max = income > expense ? income : expense;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _bar('Receitas', income, max, AppColors.primary),
-        const SizedBox(height: 18),
-        _bar('Despesas', expense, max, AppColors.expense),
+        Text(
+          title,
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+        ),
+        Text(subtitle, style: const TextStyle(color: AppColors.muted)),
       ],
     );
   }
+}
 
-  Widget _bar(String label, double value, double max, Color color) {
+class _ComparisonCard extends StatelessWidget {
+  const _ComparisonCard({required this.report});
+
+  final MonthlyReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    final max = report.income > report.expense ? report.income : report.expense;
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            _ComparisonRow(
+              label: 'Receitas',
+              value: report.income,
+              max: max,
+              color: AppColors.primary,
+            ),
+            const SizedBox(height: 20),
+            _ComparisonRow(
+              label: 'Despesas',
+              value: report.expense,
+              max: max,
+              color: AppColors.expense,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ComparisonRow extends StatelessWidget {
+  const _ComparisonRow({
+    required this.label,
+    required this.value,
+    required this.max,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final double max;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
@@ -309,12 +420,95 @@ class _ComparisonBar extends StatelessWidget {
         const SizedBox(height: 8),
         LinearProgressIndicator(
           value: max == 0 ? 0 : value / max,
-          minHeight: 14,
+          minHeight: 12,
           borderRadius: BorderRadius.circular(8),
           color: color,
           backgroundColor: color.withValues(alpha: .12),
         ),
       ],
+    );
+  }
+}
+
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({required this.report});
+
+  final MonthlyReport report;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: report.categories.isEmpty
+            ? const Padding(
+                padding: EdgeInsets.symmetric(vertical: 30),
+                child: Center(child: Text('Sem despesas neste período')),
+              )
+            : Column(
+                children: report.categories.map((item) {
+                  final percentage =
+                      report.expense == 0 ? 0.0 : item.amount / report.expense;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 18),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 18,
+                              backgroundColor:
+                                  Color(item.color).withValues(alpha: .14),
+                              child: Icon(
+                                CategoryIcons.resolve(item.icon),
+                                size: 18,
+                                color: Color(item.color),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  Text(
+                                    '${(percentage * 100).toStringAsFixed(0)}% das despesas',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              AppFormatters.currency(item.amount),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: percentage,
+                          minHeight: 7,
+                          borderRadius: BorderRadius.circular(8),
+                          color: Color(item.color),
+                          backgroundColor:
+                              Color(item.color).withValues(alpha: .10),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+      ),
     );
   }
 }

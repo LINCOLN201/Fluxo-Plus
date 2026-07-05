@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/models/category.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -17,12 +18,16 @@ class DashboardScreen extends StatefulWidget {
     required this.onAddTransaction,
     required this.updateAvailable,
     required this.onNotifications,
+    required this.onOpenTransactions,
+    this.userName,
   });
 
   final DashboardRepository repository;
   final VoidCallback onAddTransaction;
   final bool updateAvailable;
   final VoidCallback onNotifications;
+  final ValueChanged<TransactionType?> onOpenTransactions;
+  final String? userName;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -67,12 +72,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     dark: dark,
                     updateAvailable: widget.updateAvailable,
                     onNotifications: widget.onNotifications,
+                    onOpenTransactions: widget.onOpenTransactions,
+                    userName: widget.userName,
                   )
                 : _DesktopDashboard(
                     summary: snapshot.requireData,
                     onRefresh: _refresh,
                     onAddTransaction: widget.onAddTransaction,
                     dark: dark,
+                    onOpenTransactions: widget.onOpenTransactions,
+                    onNotifications: widget.onNotifications,
+                    updateAvailable: widget.updateAvailable,
                   );
           },
         );
@@ -87,12 +97,18 @@ class _DesktopDashboard extends StatelessWidget {
     required this.onRefresh,
     required this.onAddTransaction,
     required this.dark,
+    required this.onOpenTransactions,
+    required this.onNotifications,
+    required this.updateAvailable,
   });
 
   final DashboardSummary summary;
   final Future<void> Function() onRefresh;
   final VoidCallback onAddTransaction;
   final bool dark;
+  final ValueChanged<TransactionType?> onOpenTransactions;
+  final VoidCallback onNotifications;
+  final bool updateAvailable;
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +139,20 @@ class _DesktopDashboard extends StatelessWidget {
                         ],
                       ),
                     ),
+                    IconButton(
+                      onPressed: onNotifications,
+                      tooltip: 'Avisos e vencimentos',
+                      icon: Badge(
+                        isLabelVisible:
+                            updateAvailable || summary.pendingAlerts > 0,
+                        label: summary.pendingAlerts > 0
+                            ? Text('${summary.pendingAlerts}')
+                            : null,
+                        backgroundColor: AppColors.expense,
+                        child: const Icon(Icons.notifications_none_rounded),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     _MonthButton(),
                     const SizedBox(width: 12),
                     FilledButton.icon(
@@ -151,10 +181,11 @@ class _DesktopDashboard extends StatelessWidget {
                 delegate: SliverChildListDelegate([
                   _MetricCard(
                     dark: dark,
-                    label: 'Saldo total',
-                    value: summary.balance,
-                    color: AppColors.primaryDark,
-                    icon: Icons.account_balance_wallet_outlined,
+                    label: 'Despesas totais',
+                    value: summary.monthExpense,
+                    color: AppColors.expense,
+                    icon: Icons.receipt_long_outlined,
+                    onTap: () => onOpenTransactions(TransactionType.expense),
                   ),
                   _MetricCard(
                     dark: dark,
@@ -162,13 +193,15 @@ class _DesktopDashboard extends StatelessWidget {
                     value: summary.monthIncome,
                     color: AppColors.primary,
                     icon: Icons.south_west_rounded,
+                    onTap: () => onOpenTransactions(TransactionType.income),
                   ),
                   _MetricCard(
                     dark: dark,
-                    label: 'Despesas',
-                    value: summary.monthExpense,
-                    color: AppColors.expense,
-                    icon: Icons.north_east_rounded,
+                    label: 'Saldo total',
+                    value: summary.balance,
+                    color: AppColors.primaryDark,
+                    icon: Icons.account_balance_wallet_outlined,
+                    onTap: () => onOpenTransactions(null),
                   ),
                   _MetricCard(
                     dark: dark,
@@ -247,6 +280,8 @@ class _MobileDashboard extends StatelessWidget {
     required this.dark,
     required this.updateAvailable,
     required this.onNotifications,
+    required this.onOpenTransactions,
+    this.userName,
   });
 
   final DashboardSummary summary;
@@ -254,6 +289,8 @@ class _MobileDashboard extends StatelessWidget {
   final bool dark;
   final bool updateAvailable;
   final VoidCallback onNotifications;
+  final ValueChanged<TransactionType?> onOpenTransactions;
+  final String? userName;
 
   @override
   Widget build(BuildContext context) {
@@ -273,7 +310,7 @@ class _MobileDashboard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Olá! 👋',
+                          _greeting(userName),
                           style: TextStyle(
                             color: dark ? Colors.white : AppColors.text,
                             fontSize: 22,
@@ -281,30 +318,22 @@ class _MobileDashboard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'Tenha um ótimo dia!',
+                          _dayMessage(),
                           style: TextStyle(color: Color(0xFF91A0AA)),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      if (updateAvailable) {
-                        onNotifications();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Nenhuma atualização pendente.'),
-                          ),
-                        );
-                      }
-                    },
-                    tooltip: updateAvailable
-                        ? 'Atualização disponível'
-                        : 'Tudo atualizado',
+                    onPressed: onNotifications,
+                    tooltip: 'Avisos e vencimentos',
                     icon: Badge(
-                      isLabelVisible: updateAvailable,
-                      backgroundColor: AppColors.warning,
+                      isLabelVisible:
+                          updateAvailable || summary.pendingAlerts > 0,
+                      label: summary.pendingAlerts > 0
+                          ? Text('${summary.pendingAlerts}')
+                          : null,
+                      backgroundColor: AppColors.expense,
                       child: Icon(
                         updateAvailable
                             ? Icons.notifications_active_rounded
@@ -316,46 +345,59 @@ class _MobileDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 22),
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF08743E), AppColors.primary],
+              GestureDetector(
+                onTap: () => onOpenTransactions(TransactionType.expense),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF922D2A), AppColors.expense],
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33E53935),
+                        blurRadius: 24,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x3D0F9D58),
-                      blurRadius: 24,
-                      offset: Offset(0, 10),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Saldo total',
-                      style: TextStyle(color: Color(0xFFD9F5E4)),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      AppFormatters.currency(summary.balance),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w800,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Despesas totais do mês',
+                              style: TextStyle(color: Color(0xFFFFE3E3)),
+                            ),
+                          ),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Seus dados estão seguros neste dispositivo',
-                      style: TextStyle(
-                        color: Color(0xFFC4F0D5),
-                        fontSize: 11,
+                      const SizedBox(height: 7),
+                      Text(
+                        AppFormatters.currency(summary.monthExpense),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Toque para ver os vencimentos',
+                        style: TextStyle(
+                          color: Color(0xFFFFD0D0),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -368,16 +410,18 @@ class _MobileDashboard extends StatelessWidget {
                       value: summary.monthIncome,
                       color: AppColors.primary,
                       icon: Icons.arrow_upward_rounded,
+                      onTap: () => onOpenTransactions(TransactionType.income),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _MobileMetric(
                       dark: dark,
-                      label: 'Despesas',
-                      value: summary.monthExpense,
-                      color: AppColors.expense,
-                      icon: Icons.arrow_downward_rounded,
+                      label: 'Saldo total',
+                      value: summary.balance,
+                      color: AppColors.primaryDark,
+                      icon: Icons.account_balance_wallet_outlined,
+                      onTap: () => onOpenTransactions(null),
                     ),
                   ),
                 ],
@@ -417,6 +461,26 @@ class _MobileDashboard extends StatelessWidget {
   }
 }
 
+String _greeting(String? userName) {
+  final hour = DateTime.now().hour;
+  final period = hour < 12
+      ? 'Bom dia'
+      : hour < 18
+          ? 'Boa tarde'
+          : 'Boa noite';
+  final firstName = userName?.trim().split(RegExp(r'\s+')).first;
+  return firstName == null || firstName.isEmpty
+      ? '$period! 👋'
+      : '$period, $firstName! 👋';
+}
+
+String _dayMessage() {
+  final hour = DateTime.now().hour;
+  if (hour < 12) return 'Vamos organizar o seu dia financeiro?';
+  if (hour < 18) return 'Veja o que ainda precisa da sua atenção.';
+  return 'Feche o dia sabendo que está tudo em ordem.';
+}
+
 class _MetricCard extends StatelessWidget {
   const _MetricCard({
     required this.label,
@@ -424,6 +488,7 @@ class _MetricCard extends StatelessWidget {
     required this.color,
     required this.icon,
     required this.dark,
+    this.onTap,
   });
 
   final String label;
@@ -431,58 +496,63 @@ class _MetricCard extends StatelessWidget {
   final Color color;
   final IconData icon;
   final bool dark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: _lightDecoration(dark: dark),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: AppColors.muted,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: _lightDecoration(dark: dark),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: .1),
-                  shape: BoxShape.circle,
+                Container(
+                  padding: const EdgeInsets.all(7),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: .1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 18),
                 ),
-                child: Icon(icon, color: color, size: 18),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              AppFormatters.currency(value),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: dark ? Colors.white : AppColors.text,
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
               ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            AppFormatters.currency(value),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: dark ? Colors.white : AppColors.text,
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
             ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            value >= 0 ? '● Atualizado agora' : '● Atenção ao orçamento',
-            style: TextStyle(
-              color: value >= 0 ? AppColors.primary : AppColors.expense,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+            const SizedBox(height: 5),
+            Text(
+              value >= 0 ? '● Atualizado agora' : '● Atenção ao orçamento',
+              style: TextStyle(
+                color: value >= 0 ? AppColors.primary : AppColors.expense,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -495,6 +565,7 @@ class _MobileMetric extends StatelessWidget {
     required this.color,
     required this.icon,
     required this.dark,
+    this.onTap,
   });
 
   final String label;
@@ -502,34 +573,39 @@ class _MobileMetric extends StatelessWidget {
   final Color color;
   final IconData icon;
   final bool dark;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: dark ? const Color(0xFF111E27) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: .35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label, style: TextStyle(color: color, fontSize: 12)),
-          const SizedBox(height: 8),
-          FittedBox(
-            child: Text(
-              AppFormatters.currency(value),
-              style: TextStyle(
-                color: dark ? Colors.white : AppColors.text,
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: dark ? const Color(0xFF111E27) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: .35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: TextStyle(color: color, fontSize: 12)),
+            const SizedBox(height: 8),
+            FittedBox(
+              child: Text(
+                AppFormatters.currency(value),
+                style: TextStyle(
+                  color: dark ? Colors.white : AppColors.text,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 5),
-          Icon(icon, size: 14, color: color),
-        ],
+            const SizedBox(height: 5),
+            Icon(icon, size: 14, color: color),
+          ],
+        ),
       ),
     );
   }
@@ -819,7 +895,7 @@ class _TransactionList extends StatelessWidget {
                 radius: 18,
                 backgroundColor: color.withValues(alpha: .15),
                 child: Icon(
-                  income ? Icons.south_west_rounded : Icons.north_east_rounded,
+                  CategoryIcons.resolve(item.categoryIcon),
                   color: color,
                   size: 18,
                 ),
@@ -840,7 +916,9 @@ class _TransactionList extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      item.categoryName,
+                      '${item.categoryName}'
+                      '${item.installmentCount > 1 ? ' • ${item.installmentNumber}/${item.installmentCount}' : ''}'
+                      '${item.isPaid ? ' • concluído' : ' • vence ${AppFormatters.date(item.date)}'}',
                       style: const TextStyle(
                         color: AppColors.muted,
                         fontSize: 11,

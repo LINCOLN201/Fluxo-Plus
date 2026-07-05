@@ -103,13 +103,6 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Atualizações',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 12),
-          _UpdatePanel(service: updateService),
-          const SizedBox(height: 24),
-          Text(
             'Segurança',
             style: Theme.of(context).textTheme.titleLarge,
           ),
@@ -170,13 +163,15 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(height: 18),
+          _UpdatePanel(service: updateService),
           const SizedBox(height: 24),
           Card(
             child: ListTile(
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'Fluxo+',
-                applicationVersion: '0.3.0',
+                applicationVersion: '0.4.0',
                 applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
                 children: const [
                   SizedBox(height: 12),
@@ -297,6 +292,7 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
   }
 
   Future<void> _authenticate() async {
+    final name = TextEditingController();
     final email = TextEditingController();
     final password = TextEditingController();
     var createAccount = false;
@@ -311,6 +307,19 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                if (createAccount) ...[
+                  TextFormField(
+                    controller: name,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Como podemos chamar você?',
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? 'Informe seu nome'
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextFormField(
                   controller: email,
                   keyboardType: TextInputType.emailAddress,
@@ -358,7 +367,11 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
     final accountEmail = email.text.trim();
     final succeeded = await _run(() async {
       if (createAccount) {
-        await widget.service.signUp(accountEmail, password.text);
+        await widget.service.signUp(
+          accountEmail,
+          password.text,
+          name: name.text,
+        );
       } else {
         await widget.service.signIn(accountEmail, password.text);
       }

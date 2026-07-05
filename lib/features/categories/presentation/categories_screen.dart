@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/category_icons.dart';
 import '../../../shared/models/category.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/category_repository.dart';
@@ -28,6 +29,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   Future<void> _edit([Category? category]) async {
     final name = TextEditingController(text: category?.name);
     var type = category?.type ?? TransactionType.expense;
+    var icon = category?.icon ?? 'category';
     final key = GlobalKey<FormState>();
     final saved = await showDialog<bool>(
       context: context,
@@ -63,6 +65,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   onSelectionChanged: (value) =>
                       setDialogState(() => type = value.first),
                 ),
+                const SizedBox(height: 14),
+                DropdownButtonFormField<String>(
+                  initialValue: icon,
+                  decoration: const InputDecoration(
+                    labelText: 'Ícone',
+                    prefixIcon: Icon(Icons.auto_awesome_outlined),
+                  ),
+                  items: CategoryIcons.choices
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.$1,
+                          child: Row(
+                            children: [
+                              Icon(item.$2, size: 20),
+                              const SizedBox(width: 10),
+                              Text(item.$3),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) =>
+                      setDialogState(() => icon = value ?? 'category'),
+                ),
               ],
             ),
           ),
@@ -87,7 +113,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         id: category?.id,
         name: name.text.trim(),
         type: type,
-        icon: category?.icon ?? 'category',
+        icon: icon,
         color: category?.color ??
             (type == TransactionType.income
                 ? AppColors.primary.toARGB32()
@@ -156,8 +182,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   onTap: () => _edit(item),
                   leading: CircleAvatar(
                     backgroundColor: Color(item.color).withValues(alpha: .16),
-                    child:
-                        Icon(Icons.category_rounded, color: Color(item.color)),
+                    child: Icon(
+                      CategoryIcons.resolve(item.icon),
+                      color: Color(item.color),
+                    ),
                   ),
                   title: Text(
                     item.name,

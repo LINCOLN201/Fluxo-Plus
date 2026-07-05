@@ -2,20 +2,25 @@
 
 Aplicativo open source de finanças pessoais, moderno e offline-first, feito com
 Flutter. O Fluxo+ mantém os dados no dispositivo e foi desenhado para Android,
-iOS, Windows, macOS e Linux. Web/PWA e sincronização opcional com Supabase estão
-no roadmap, mas não fazem parte desta versão.
+iOS, Windows, macOS e Linux. Web/PWA permanece no roadmap; a sincronização
+opcional com Supabase já está disponível sem retirar o funcionamento offline.
 
 ## O que já funciona
 
 - splash e onboarding persistente;
-- dashboard responsivo com saldo, receitas, despesas, economia e lançamentos
-  recentes calculados diretamente no SQLite;
-- cadastro de receita ou despesa com valor, categoria, conta, data e descrição;
-- listagem, edição, exclusão e filtros de transações por mês, tipo e categoria;
+- dashboard responsivo com despesas, receitas, saldo e próximos vencimentos
+  calculados diretamente no SQLite;
+- receitas e despesas com nome, vencimento, status pago/pendente e parcelas;
+- cálculo do valor total e geração automática dos vencimentos mensais;
+- listagem por prioridade de vencimento e filtros por mês, tipo, categoria e
+  status;
+- central de avisos para contas vencidas ou próximas do vencimento, com baixa
+  rápida;
 - contas com saldo inicial, saldo calculado e proteção de histórico;
-- categorias padrão e personalizadas para receitas e despesas;
+- categorias padrão e personalizadas com ícones;
 - metas financeiras com prazo e acompanhamento de progresso;
-- relatórios mensais de receita x despesa e gastos por categoria;
+- relatórios mensais responsivos com resultado, valores pagos, pendências,
+  receita x despesa e gastos por categoria;
 - temas escuro (padrão) e claro, com preferência salva localmente;
 - SQLite real em Android/iOS (`sqflite`) e desktop
   (`sqflite_common_ffi`);
