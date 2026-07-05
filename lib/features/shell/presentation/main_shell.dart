@@ -220,17 +220,17 @@ class _MainShellState extends State<MainShell> {
                         4 => 2,
                         _ => 3,
                       },
-              onSelected: (value) => setState(() {
-                if (value == 3) {
-                  _showMobileMore = true;
-                } else {
-                  _showMobileMore = false;
-                  if (value == 1) {
-                    _transactionType = null;
-                    _transactionRevision++;
+                onSelected: (value) => setState(() {
+                  if (value == 3) {
+                    _showMobileMore = true;
+                  } else {
+                    _showMobileMore = false;
+                    if (value == 1) {
+                      _transactionType = null;
+                      _transactionRevision++;
+                    }
+                    _selectedIndex = const [0, 1, 4][value];
                   }
-                  _selectedIndex = const [0, 1, 4][value];
-                }
                 }),
                 onAdd: _addTransaction,
               ),
@@ -241,15 +241,15 @@ class _MainShellState extends State<MainShell> {
             body: Row(
               children: [
                 _DesktopSidebar(
-                dark: dark,
-                selectedIndex: _selectedIndex,
-                onSelected: (value) => setState(() {
-                  if (value == 1) {
-                    _transactionType = null;
-                    _transactionRevision++;
-                  }
-                  _selectedIndex = value;
-                }),
+                  dark: dark,
+                  selectedIndex: _selectedIndex,
+                  onSelected: (value) => setState(() {
+                    if (value == 1) {
+                      _transactionType = null;
+                      _transactionRevision++;
+                    }
+                    _selectedIndex = value;
+                  }),
                 ),
                 Expanded(child: _page()),
               ],
