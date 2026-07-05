@@ -10,7 +10,9 @@ class ReportRepository {
     final end = DateTime(month.year, month.month + 1);
     final totals = await _database.db.rawQuery(
       '''
-      SELECT type, SUM(amount) AS total
+      SELECT type, SUM(amount) AS total,
+             SUM(CASE WHEN is_paid = 1 THEN amount ELSE 0 END) AS completed,
+             COUNT(*) AS quantity
       FROM transactions
       WHERE date >= ? AND date < ?
       GROUP BY type
@@ -19,7 +21,7 @@ class ReportRepository {
     );
     final categories = await _database.db.rawQuery(
       '''
-      SELECT c.name, c.color, SUM(t.amount) AS total
+      SELECT c.name, c.color, c.icon, SUM(t.amount) AS total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       WHERE t.type = 'expense' AND t.date >= ? AND t.date < ?
@@ -30,11 +32,17 @@ class ReportRepository {
     );
     var income = 0.0;
     var expense = 0.0;
+    var receivedIncome = 0.0;
+    var paidExpense = 0.0;
+    var transactionCount = 0;
     for (final row in totals) {
+      transactionCount += (row['quantity'] as num).toInt();
       if (row['type'] == 'income') {
         income = (row['total'] as num).toDouble();
+        receivedIncome = (row['completed'] as num).toDouble();
       } else {
         expense = (row['total'] as num).toDouble();
+        paidExpense = (row['completed'] as num).toDouble();
       }
     }
     return MonthlyReport(
@@ -46,9 +54,13 @@ class ReportRepository {
               name: row['name'] as String,
               color: row['color'] as int,
               amount: (row['total'] as num).toDouble(),
+              icon: row['icon'] as String,
             ),
           )
           .toList(),
+      receivedIncome: receivedIncome,
+      paidExpense: paidExpense,
+      transactionCount: transactionCount,
     );
   }
 }
@@ -58,13 +70,21 @@ class MonthlyReport {
     required this.income,
     required this.expense,
     required this.categories,
+    required this.receivedIncome,
+    required this.paidExpense,
+    required this.transactionCount,
   });
 
   final double income;
   final double expense;
   final List<ReportCategory> categories;
+  final double receivedIncome;
+  final double paidExpense;
+  final int transactionCount;
 
   double get result => income - expense;
+  double get pendingExpense => expense - paidExpense;
+  double get savingsRate => income == 0 ? 0 : result / income;
 }
 
 class ReportCategory {
@@ -72,9 +92,11 @@ class ReportCategory {
     required this.name,
     required this.color,
     required this.amount,
+    required this.icon,
   });
 
   final String name;
   final int color;
   final double amount;
+  final String icon;
 }

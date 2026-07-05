@@ -13,6 +13,27 @@ class CloudSyncService {
 
   bool get isConfigured => _client != null;
   User? get currentUser => _client?.auth.currentUser;
+  String? get displayName {
+    final user = currentUser;
+    if (user == null) return null;
+    final metadata = user.userMetadata;
+    final value = metadata?['full_name'] ?? metadata?['name'];
+    if (value is String && value.trim().isNotEmpty) return value.trim();
+    final emailName = user.email?.split('@').first.replaceAll(
+          RegExp(r'[._-]+'),
+          ' ',
+        );
+    if (emailName == null || emailName.trim().isEmpty) return null;
+    return emailName
+        .trim()
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map(
+          (part) =>
+              '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
+        )
+        .join(' ');
+  }
 
   Stream<AuthState>? get authChanges => _client?.auth.onAuthStateChange;
 
@@ -30,13 +51,20 @@ class CloudSyncService {
     }
   }
 
-  Future<void> signUp(String email, String password) async {
+  Future<void> signUp(
+    String email,
+    String password, {
+    String? name,
+  }) async {
     _requireClient();
     try {
       await _client!.auth.signUp(
         email: email,
         password: password,
         emailRedirectTo: confirmationRedirect,
+        data: name == null || name.trim().isEmpty
+            ? null
+            : {'full_name': name.trim()},
       );
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));

@@ -28,6 +28,7 @@ class AppDatabase {
         version: AppConstants.databaseVersion,
         onConfigure: (database) => database.execute('PRAGMA foreign_keys = ON'),
         onCreate: _create,
+        onUpgrade: _upgrade,
       ),
     );
   }
@@ -61,6 +62,10 @@ class AppDatabase {
           account_id INTEGER NOT NULL,
           date TEXT NOT NULL,
           description TEXT NOT NULL DEFAULT '',
+          is_paid INTEGER NOT NULL DEFAULT 1,
+          installment_group TEXT,
+          installment_number INTEGER NOT NULL DEFAULT 1,
+          installment_count INTEGER NOT NULL DEFAULT 1,
           created_at TEXT NOT NULL,
           FOREIGN KEY(category_id) REFERENCES categories(id),
           FOREIGN KEY(account_id) REFERENCES accounts(id)
@@ -85,6 +90,10 @@ class AppDatabase {
       await txn.execute(
         'CREATE INDEX idx_transactions_date ON transactions(date)',
       );
+      await txn.execute(
+        'CREATE INDEX idx_transactions_due_status '
+        'ON transactions(is_paid, date)',
+      );
 
       final now = DateTime.now().toIso8601String();
       await txn.insert('accounts', {
@@ -102,6 +111,8 @@ class AppDatabase {
         ('Transporte', 'expense', 'directions_car', 0xFF0284C7),
         ('Saúde', 'expense', 'medical_services', 0xFFDB2777),
         ('Lazer', 'expense', 'celebration', 0xFFF59E0B),
+        ('Cartão de crédito', 'expense', 'credit_card', 0xFF7C3AED),
+        ('Internet', 'expense', 'wifi', 0xFF0284C7),
         ('Outras despesas', 'expense', 'more_horiz', 0xFF64748B),
       ];
       for (final category in categories) {
@@ -114,6 +125,90 @@ class AppDatabase {
         });
       }
       await txn.insert('settings', {'key': 'theme', 'value': 'dark'});
+    });
+  }
+
+  Future<void> _upgrade(
+    Database database,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      await database.transaction((txn) async {
+        await txn.execute(
+          'ALTER TABLE transactions '
+          'ADD COLUMN is_paid INTEGER NOT NULL DEFAULT 1',
+        );
+        await txn.execute(
+          'ALTER TABLE transactions ADD COLUMN installment_group TEXT',
+        );
+        await txn.execute(
+          'ALTER TABLE transactions '
+          'ADD COLUMN installment_number INTEGER NOT NULL DEFAULT 1',
+        );
+        await txn.execute(
+          'ALTER TABLE transactions '
+          'ADD COLUMN installment_count INTEGER NOT NULL DEFAULT 1',
+        );
+        await txn.execute(
+          'CREATE INDEX idx_transactions_due_status '
+          'ON transactions(is_paid, date)',
+        );
+        await _ensureCategory(
+          txn,
+          name: 'Cartão de crédito',
+          icon: 'credit_card',
+          color: 0xFF7C3AED,
+        );
+        await _ensureCategory(
+          txn,
+          name: 'Internet',
+          icon: 'wifi',
+          color: 0xFF0284C7,
+        );
+        const iconUpdates = {
+          'Alimentação': 'restaurant',
+          'Moradia': 'home',
+          'Transporte': 'directions_car',
+          'Saúde': 'medical_services',
+          'Lazer': 'celebration',
+          'Outras despesas': 'more_horiz',
+          'Salário': 'payments',
+          'Freelance': 'work',
+          'Outras receitas': 'add_circle',
+        };
+        for (final entry in iconUpdates.entries) {
+          await txn.update(
+            'categories',
+            {'icon': entry.value},
+            where: 'name = ?',
+            whereArgs: [entry.key],
+          );
+        }
+      });
+    }
+  }
+
+  Future<void> _ensureCategory(
+    DatabaseExecutor database, {
+    required String name,
+    required String icon,
+    required int color,
+  }) async {
+    final existing = await database.query(
+      'categories',
+      columns: ['id'],
+      where: 'name = ? AND type = ?',
+      whereArgs: [name, 'expense'],
+      limit: 1,
+    );
+    if (existing.isNotEmpty) return;
+    await database.insert('categories', {
+      'name': name,
+      'type': 'expense',
+      'icon': icon,
+      'color': color,
+      'is_default': 1,
     });
   }
 

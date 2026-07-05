@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../dashboard/data/dashboard_repository.dart';
@@ -20,6 +21,8 @@ import '../../../core/update/update_service.dart';
 import '../../../core/update/app_update.dart';
 import '../../../core/premium/premium_service.dart';
 import '../../premium/presentation/premium_screen.dart';
+import '../../notifications/presentation/notification_center_screen.dart';
+import '../../../shared/models/category.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({
@@ -65,6 +68,8 @@ class _MainShellState extends State<MainShell> {
   int _selectedIndex = 0;
   int _dashboardRevision = 0;
   bool _showMobileMore = false;
+  TransactionType? _transactionType;
+  int _transactionRevision = 0;
 
   static const _items = [
     (Icons.grid_view_rounded, 'Dashboard'),
@@ -93,6 +98,59 @@ class _MainShellState extends State<MainShell> {
     }
   }
 
+  void _openTransactions(TransactionType? type) {
+    setState(() {
+      _transactionType = type;
+      _transactionRevision++;
+      _selectedIndex = 1;
+      _showMobileMore = false;
+    });
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (_) => NotificationCenterScreen(
+          repository: widget.transactionRepository,
+          availableUpdate: widget.availableUpdate,
+          onOpenUpdate: widget.onOpenUpdate,
+          onChanged: () => setState(() => _dashboardRevision++),
+        ),
+      ),
+    );
+    if (mounted) setState(() => _dashboardRevision++);
+  }
+
+  Future<void> _handleBack() async {
+    if (_showMobileMore || _selectedIndex != 0) {
+      setState(() {
+        _showMobileMore = false;
+        _selectedIndex = 0;
+      });
+      return;
+    }
+    final exit = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Sair do Fluxo+?'),
+        content: const Text(
+          'Se preferir continuar, suas finanças permanecem abertas e seguras.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Continuar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Sair'),
+          ),
+        ],
+      ),
+    );
+    if (exit == true) await SystemNavigator.pop();
+  }
+
   Widget _page() {
     return switch (_selectedIndex) {
       0 => DashboardScreen(
@@ -100,11 +158,15 @@ class _MainShellState extends State<MainShell> {
           repository: widget.dashboardRepository,
           onAddTransaction: _addTransaction,
           updateAvailable: widget.availableUpdate != null,
-          onNotifications: widget.onOpenUpdate,
+          onNotifications: _openNotifications,
+          onOpenTransactions: _openTransactions,
+          userName: widget.cloudSyncService.displayName,
         ),
       1 => TransactionsScreen(
+          key: ValueKey(_transactionRevision),
           repository: widget.transactionRepository,
           onChanged: () => setState(() => _dashboardRevision++),
+          initialType: _transactionType,
         ),
       2 => AccountsScreen(repository: widget.accountRepository),
       3 => GoalsScreen(repository: widget.goalRepository),
@@ -126,112 +188,248 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final desktop = constraints.maxWidth >= 980;
-        if (!desktop) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) _handleBack();
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final desktop = constraints.maxWidth >= 980;
+          if (!desktop) {
+            return Scaffold(
+              backgroundColor:
+                  dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
+              body: _showMobileMore
+                  ? _MobileMore(
+                      userName: widget.cloudSyncService.displayName,
+                      email: widget.cloudSyncService.currentUser?.email,
+                      onSelected: (index) => setState(() {
+                        _selectedIndex = index;
+                        _showMobileMore = false;
+                      }),
+                    )
+                  : _page(),
+              bottomNavigationBar: _MobileNavigation(
+                dark: dark,
+                selectedIndex: _showMobileMore
+                    ? 3
+                    : switch (_selectedIndex) {
+                        0 => 0,
+                        1 => 1,
+                        4 => 2,
+                        _ => 3,
+                      },
+                onSelected: (value) => setState(() {
+                  if (value == 3) {
+                    _showMobileMore = true;
+                  } else {
+                    _showMobileMore = false;
+                    if (value == 1) {
+                      _transactionType = null;
+                      _transactionRevision++;
+                    }
+                    _selectedIndex = const [0, 1, 4][value];
+                  }
+                }),
+                onAdd: _addTransaction,
+              ),
+            );
+          }
+
           return Scaffold(
-            backgroundColor:
-                dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
-            body: _showMobileMore
-                ? _MobileMore(
-                    onSelected: (index) => setState(() {
-                      _selectedIndex = index;
-                      _showMobileMore = false;
-                    }),
-                  )
-                : _page(),
-            bottomNavigationBar: _MobileNavigation(
-              dark: dark,
-              selectedIndex: _showMobileMore
-                  ? 3
-                  : switch (_selectedIndex) {
-                      0 => 0,
-                      1 => 1,
-                      4 => 2,
-                      _ => 3,
-                    },
-              onSelected: (value) => setState(() {
-                if (value == 3) {
-                  _showMobileMore = true;
-                } else {
-                  _showMobileMore = false;
-                  _selectedIndex = const [0, 1, 4][value];
-                }
-              }),
-              onAdd: _addTransaction,
+            body: Row(
+              children: [
+                _DesktopSidebar(
+                  dark: dark,
+                  selectedIndex: _selectedIndex,
+                  onSelected: (value) => setState(() {
+                    if (value == 1) {
+                      _transactionType = null;
+                      _transactionRevision++;
+                    }
+                    _selectedIndex = value;
+                  }),
+                ),
+                Expanded(child: _page()),
+              ],
             ),
           );
-        }
-
-        return Scaffold(
-          body: Row(
-            children: [
-              _DesktopSidebar(
-                dark: dark,
-                selectedIndex: _selectedIndex,
-                onSelected: (value) => setState(() => _selectedIndex = value),
-              ),
-              Expanded(child: _page()),
-            ],
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }
 
 class _MobileMore extends StatelessWidget {
-  const _MobileMore({required this.onSelected});
+  const _MobileMore({
+    required this.onSelected,
+    required this.userName,
+    required this.email,
+  });
 
   final ValueChanged<int> onSelected;
+  final String? userName;
+  final String? email;
 
   @override
   Widget build(BuildContext context) {
-    const options = [
-      (
-        2,
-        Icons.account_balance_wallet_outlined,
-        'Contas',
-        'Saldos e carteiras'
-      ),
-      (3, Icons.track_changes_rounded, 'Metas', 'Acompanhe seus objetivos'),
-      (5, Icons.category_outlined, 'Categorias', 'Organize seus lançamentos'),
-      (6, Icons.settings_outlined, 'Configurações', 'Tema, segurança e nuvem'),
-      (
-        7,
-        Icons.workspace_premium_outlined,
-        'Fluxo+ Premium',
-        'Nuvem, automação e análises avançadas'
-      ),
-    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mais'),
         automaticallyImplyLeading: false,
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: options.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (context, index) {
-          final item = options[index];
-          return Card(
-            child: ListTile(
-              onTap: () => onSelected(item.$1),
-              leading: CircleAvatar(
-                backgroundColor: AppColors.primary.withValues(alpha: .14),
-                child: Icon(item.$2, color: AppColors.primary),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0B6B3A), AppColors.primary],
               ),
-              title: Text(
-                item.$3,
-                style: const TextStyle(fontWeight: FontWeight.w800),
-              ),
-              subtitle: Text(item.$4),
-              trailing: const Icon(Icons.chevron_right_rounded),
+              borderRadius: BorderRadius.circular(18),
             ),
-          );
-        },
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 27,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.person_rounded,
+                    color: AppColors.primaryDark,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        userName ?? 'Seu espaço financeiro',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        email ?? 'Dados protegidos neste dispositivo',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: Color(0xFFD4F4DF)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          const _MoreSectionTitle(
+            title: 'Organize sua vida financeira',
+            subtitle: 'Tudo que você usa no dia a dia',
+          ),
+          const SizedBox(height: 10),
+          _MoreTile(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'Contas e carteiras',
+            subtitle: 'Acompanhe onde está o seu dinheiro',
+            onTap: () => onSelected(2),
+          ),
+          _MoreTile(
+            icon: Icons.category_outlined,
+            title: 'Categorias',
+            subtitle: 'Crie e personalize seus tipos de gasto',
+            onTap: () => onSelected(5),
+          ),
+          _MoreTile(
+            icon: Icons.track_changes_rounded,
+            title: 'Metas',
+            subtitle: 'Transforme planos em progresso',
+            onTap: () => onSelected(3),
+          ),
+          const SizedBox(height: 22),
+          const _MoreSectionTitle(
+            title: 'Conta e aplicativo',
+            subtitle: 'Preferências, segurança e recursos',
+          ),
+          const SizedBox(height: 10),
+          _MoreTile(
+            icon: Icons.workspace_premium_outlined,
+            title: 'Fluxo+ Premium',
+            subtitle: 'Nuvem, automação e análises avançadas',
+            onTap: () => onSelected(7),
+            highlighted: true,
+          ),
+          _MoreTile(
+            icon: Icons.settings_outlined,
+            title: 'Configurações',
+            subtitle: 'Tema, segurança, backup e privacidade',
+            onTap: () => onSelected(6),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MoreSectionTitle extends StatelessWidget {
+  const _MoreSectionTitle({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+class _MoreTile extends StatelessWidget {
+  const _MoreTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.highlighted = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = highlighted ? AppColors.warning : AppColors.primary;
+    return Card(
+      margin: const EdgeInsets.only(bottom: 9),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+        leading: CircleAvatar(
+          backgroundColor: color.withValues(alpha: .14),
+          child: Icon(icon, color: color),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right_rounded),
       ),
     );
   }

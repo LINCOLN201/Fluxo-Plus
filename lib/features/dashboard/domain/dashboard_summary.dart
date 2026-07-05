@@ -8,6 +8,7 @@ class DashboardSummary {
     required this.recentTransactions,
     required this.monthlyFlow,
     required this.categorySpending,
+    required this.pendingAlerts,
   });
 
   final double balance;
@@ -16,6 +17,7 @@ class DashboardSummary {
   final List<TransactionListItem> recentTransactions;
   final List<MonthlyFlow> monthlyFlow;
   final List<CategorySpending> categorySpending;
+  final int pendingAlerts;
 
   double get savings => monthIncome - monthExpense;
 }
@@ -52,6 +54,10 @@ class TransactionListItem {
     required this.description,
     required this.categoryName,
     required this.date,
+    required this.isPaid,
+    required this.categoryIcon,
+    required this.installmentNumber,
+    required this.installmentCount,
   });
 
   final int id;
@@ -60,4 +66,8 @@ class TransactionListItem {
   final String description;
   final String categoryName;
   final DateTime date;
+  final bool isPaid;
+  final String categoryIcon;
+  final int installmentNumber;
+  final int installmentCount;
 }

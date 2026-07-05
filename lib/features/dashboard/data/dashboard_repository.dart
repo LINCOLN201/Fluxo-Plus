@@ -15,7 +15,11 @@ class DashboardRepository {
       SELECT
         COALESCE((SELECT SUM(initial_balance) FROM accounts), 0) +
         COALESCE(SUM(
-          CASE WHEN type = 'income' THEN amount ELSE -amount END
+          CASE
+            WHEN is_paid = 0 THEN 0
+            WHEN type = 'income' THEN amount
+            ELSE -amount
+          END
         ), 0) AS balance
       FROM transactions
     ''');
@@ -29,13 +33,33 @@ class DashboardRepository {
       [start.toIso8601String(), end.toIso8601String()],
     );
     final recentRows = await _database.db.rawQuery('''
-      SELECT t.id, t.type, t.amount, t.description, t.date,
-             c.name AS category_name
+      SELECT t.id, t.type, t.amount, t.description, t.date, t.is_paid,
+             t.installment_number, t.installment_count,
+             c.name AS category_name, c.icon AS category_icon
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
-      ORDER BY t.date DESC, t.id DESC
+      ORDER BY
+        CASE WHEN t.is_paid = 0 THEN 0 ELSE 1 END,
+        CASE WHEN t.is_paid = 0 THEN t.date END ASC,
+        CASE WHEN t.is_paid = 1 THEN t.date END DESC,
+        t.id DESC
       LIMIT 5
     ''');
+    final alertRows = await _database.db.rawQuery(
+      '''
+      SELECT COUNT(*) AS total
+      FROM transactions
+      WHERE type = 'expense' AND is_paid = 0
+        AND date < ?
+      ''',
+      [
+        DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day + 8,
+        ).toIso8601String(),
+      ],
+    );
     final historyStart = DateTime(month.year, month.month - 4);
     final historyRows = await _database.db.rawQuery(
       '''
@@ -102,6 +126,10 @@ class DashboardRepository {
               description: row['description'] as String,
               categoryName: row['category_name'] as String,
               date: DateTime.parse(row['date'] as String),
+              isPaid: (row['is_paid'] as int) == 1,
+              categoryIcon: row['category_icon'] as String,
+              installmentNumber: row['installment_number'] as int,
+              installmentCount: row['installment_count'] as int,
             ),
           )
           .toList(),
@@ -115,6 +143,7 @@ class DashboardRepository {
             ),
           )
           .toList(),
+      pendingAlerts: (alertRows.first['total'] as num).toInt(),
     );
   }
 }
