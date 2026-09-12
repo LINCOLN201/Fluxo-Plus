@@ -217,6 +217,11 @@ class AppDatabase {
     _database = null;
   }
 
+  Future<bool> hasLocalData() async {
+    final rows = await db.rawQuery('SELECT COUNT(*) AS n FROM transactions');
+    return (rows.first['n'] as int? ?? 0) > 0;
+  }
+
   Future<Map<String, dynamic>> exportSnapshot() async {
     const tables = [
       'accounts',
