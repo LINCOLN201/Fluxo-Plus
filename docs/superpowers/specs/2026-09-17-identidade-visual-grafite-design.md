@@ -90,3 +90,14 @@ Sem lógica nova — é puramente visual. Validação:
 
 - Descontentamento com o visual mais "frio"/monocromático do grafite comparado ao verde atual — mitigado pela escolha ter sido feita com mockups reais, não abstrata.
 - Contraste insuficiente no tema claro se os tons "a validar" não forem ajustados com cuidado — mitigado pelo passo de validação AA explícito acima.
+
+## Adendo pós-implementação (2026-09-20)
+
+- **Tokens fora das tabelas originais:** `onPrimary` (escuro `#0A0A0B`, claro `#FFFFFF`) e, no claro, `textMutedDim` `#9A9A96` (apenas decorativo; hoje `textMutedDim` não é usado em `lib/`).
+- **Valores finais validados no tema claro** (razão de contraste sobre a respectiva superfície): `primary`/`income` `#4A7010` (5,81:1; o `#5C8A16` sugerido não passa AA), `expense` `#C22B2B` (5,72:1), `warning` `#8A5A00` (5,93:1). O `warning` escuro `#F2B84B` foi mantido.
+- **`textMuted` claro sobre `surfaceElevated`** dá 4,45:1 (abaixo de AA); por isso cabeçalhos usam `surface` + `border` (regra E3).
+- **R6 — cards "hero":** quatro cards (dashboard mobile de despesas, resultado em relatórios, total em contas, cabeçalho do premium) deixaram de ser gradientes full-bleed e passaram a `surface` chapado com borda semântica. É uma mudança de tratamento além da matiz, aprovada como parte do reskin porque gradientes terminando no acento lima quebravam o contraste do texto.
+- **Tema escuro** ganhou `textTheme`, `cardTheme` e temas de navegação que não tinha (cards com elevação 0, raio 20 e borda).
+- **`update_prompt`:** gradiente do cabeçalho temperado (`lerp` de `background` para `primary` a .35; título/subtítulo em `textPrimary`). Cores padrão de NOVAS categorias são persistidas independentes do tema (claro: receita `#4A7010` / despesa `#C22B2B`).
+- **ADIAMENTO CONHECIDO (decisão pendente com o dono do produto):** as 11 categorias padrão semeadas em `lib/core/database/app_database.dart` (~linhas 106-116) ainda usam a paleta pré-Grafite (`#0F9D58`, `#0B6B3A`, `#E53935`, …) e bancos existentes mantêm as cores gravadas; alterá-las para usuários existentes exigiria migração de dados (fora de escopo: `lib/core/database` está proibido). `_LockScreen` (`lib/app.dart`) e `EmptyState` não estavam na lista "Onde aplica" e continuam usando cores do esquema derivadas da semente.
+- **Validação efetivamente realizada:** testes unitários de valores dos tokens e de contraste WCAG, testes de widget do registro do tema e uma passada de renderização headless (82 combinações tela × tema × tamanho, zero exceções em tempo de execução) no lugar do QA manual.
