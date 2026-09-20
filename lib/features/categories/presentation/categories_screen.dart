@@ -116,8 +116,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         icon: icon,
         color: category?.color ??
             (type == TransactionType.income
-                ? AppColors.primary.toARGB32()
-                : AppColors.expense.toARGB32()),
+                // Stored in the DB: must be theme-independent (fixed values).
+                ? AppColors.light.income.toARGB32()
+                : AppColors.light.expense.toARGB32()),
         isDefault: category?.isDefault ?? false,
       ),
     );

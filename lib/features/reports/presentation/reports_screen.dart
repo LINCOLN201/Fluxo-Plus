@@ -138,7 +138,7 @@ class _MonthNavigator extends StatelessWidget {
               ),
               Text(
                 '${month.year}',
-                style: const TextStyle(color: AppColors.muted),
+                style: TextStyle(color: context.colors.textMuted),
               ),
             ],
           ),
@@ -162,48 +162,38 @@ class _ResultHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final positive = report.result >= 0;
     final rate = report.savingsRate;
+    final semantic = positive ? context.colors.income : context.colors.expense;
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: positive
-              ? const [Color(0xFF075F34), AppColors.primary]
-              : const [Color(0xFF8F2525), AppColors.expense],
-        ),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: (positive ? AppColors.primary : AppColors.expense)
-                .withValues(alpha: .24),
-            blurRadius: 22,
-            offset: const Offset(0, 9),
-          ),
-        ],
+        border: Border.all(color: semantic.withValues(alpha: .35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
                   'Resultado previsto do mês',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: context.colors.textMuted),
                 ),
               ),
               Icon(
                 positive
                     ? Icons.trending_up_rounded
                     : Icons.trending_down_rounded,
-                color: Colors.white,
+                color: semantic,
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             AppFormatters.currency(report.result),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: semantic,
               fontSize: 30,
               fontWeight: FontWeight.w800,
             ),
@@ -215,7 +205,7 @@ class _ResultHero extends StatelessWidget {
                     ? 'Você preservou ${(rate * 100).toStringAsFixed(0)}% das receitas previstas.'
                     : 'Receitas e despesas estão equilibradas.'
                 : 'Faltam ${AppFormatters.currency(report.result.abs())} para equilibrar o mês.',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: context.colors.textMuted),
           ),
         ],
       ),
@@ -238,21 +228,21 @@ class _MetricGrid extends StatelessWidget {
           (
             'Receitas',
             report.income,
-            AppColors.primary,
+            context.colors.income,
             Icons.south_west_rounded,
             '${AppFormatters.currency(report.receivedIncome)} recebidos'
           ),
           (
             'Despesas',
             report.expense,
-            AppColors.expense,
+            context.colors.expense,
             Icons.north_east_rounded,
             '${AppFormatters.currency(report.paidExpense)} pagos'
           ),
           (
             'A pagar',
             report.pendingExpense,
-            AppColors.warning,
+            context.colors.warning,
             Icons.schedule_rounded,
             '${report.transactionCount} lançamentos no mês'
           ),
@@ -306,7 +296,7 @@ class _MetricCard extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 21),
             const SizedBox(height: 10),
-            Text(label, style: const TextStyle(color: AppColors.muted)),
+            Text(label, style: TextStyle(color: context.colors.textMuted)),
             const SizedBox(height: 4),
             FittedBox(
               child: Text(
@@ -322,7 +312,7 @@ class _MetricCard extends StatelessWidget {
             Text(
               detail,
               maxLines: 2,
-              style: const TextStyle(fontSize: 10, color: AppColors.muted),
+              style: TextStyle(fontSize: 10, color: context.colors.textMuted),
             ),
           ],
         ),
@@ -346,7 +336,7 @@ class _SectionHeader extends StatelessWidget {
           title,
           style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
         ),
-        Text(subtitle, style: const TextStyle(color: AppColors.muted)),
+        Text(subtitle, style: TextStyle(color: context.colors.textMuted)),
       ],
     );
   }
@@ -370,14 +360,14 @@ class _ComparisonCard extends StatelessWidget {
               label: 'Receitas',
               value: report.income,
               max: max,
-              color: AppColors.primary,
+              color: context.colors.income,
             ),
             const SizedBox(height: 20),
             _ComparisonRow(
               label: 'Despesas',
               value: report.expense,
               max: max,
-              color: AppColors.expense,
+              color: context.colors.expense,
             ),
           ],
         ),
@@ -479,9 +469,9 @@ class _CategoryCard extends StatelessWidget {
                                   ),
                                   Text(
                                     '${(percentage * 100).toStringAsFixed(0)}% das despesas',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 11,
-                                      color: AppColors.muted,
+                                      color: context.colors.textMuted,
                                     ),
                                   ),
                                 ],

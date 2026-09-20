@@ -94,7 +94,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.expense,
+              foregroundColor: context.colors.onPrimary,
+            ),
             child: const Text('Excluir'),
           ),
         ],
@@ -335,7 +338,7 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final transaction = record.transaction;
     final income = transaction.type == TransactionType.income;
-    final color = income ? AppColors.primary : AppColors.expense;
+    final color = income ? context.colors.income : context.colors.expense;
     final today = DateUtils.dateOnly(DateTime.now());
     final dueDate = DateUtils.dateOnly(transaction.date);
     final overdue = !transaction.isPaid && dueDate.isBefore(today);
@@ -389,16 +392,16 @@ class _TransactionCard extends StatelessWidget {
                                   ? 'Vencido'
                                   : 'Pendente',
                           color: transaction.isPaid
-                              ? AppColors.primary
+                              ? context.colors.income
                               : overdue
-                                  ? AppColors.expense
-                                  : AppColors.warning,
+                                  ? context.colors.expense
+                                  : context.colors.warning,
                         ),
                         Text(
                           '${income ? 'Data' : 'Vence'} ${AppFormatters.date(transaction.date)}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.muted,
+                            color: context.colors.textMuted,
                           ),
                         ),
                       ],
