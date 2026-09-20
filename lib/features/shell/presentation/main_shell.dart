@@ -444,9 +444,9 @@ class _DesktopSidebar extends StatelessWidget {
     return Container(
       width: 238,
       decoration: BoxDecoration(
+        color: context.colors.surface,
         border: Border(right: BorderSide(color: context.colors.border)),
       ),
-      color: context.colors.surface,
       child: SafeArea(
         child: Column(
           children: [
