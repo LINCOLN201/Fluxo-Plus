@@ -141,21 +141,21 @@ class _AccountsScreenState extends State<AccountsScreen> {
             padding: const EdgeInsets.all(20),
             children: [
               Card(
-                color: AppColors.primaryDark,
+                color: context.colors.surface,
                 child: Padding(
                   padding: const EdgeInsets.all(22),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Saldo em todas as contas',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: context.colors.textMuted),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         AppFormatters.currency(total),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.primary,
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
                         ),
@@ -169,11 +169,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 (item) => Card(
                   child: ListTile(
                     onTap: () => _edit(item.account),
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFE4F7EB),
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          context.colors.primary.withValues(alpha: .16),
                       child: Icon(
                         Icons.account_balance_wallet_rounded,
-                        color: AppColors.primary,
+                        color: context.colors.primary,
                       ),
                     ),
                     title: Text(
@@ -186,8 +187,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       children: [
                         Text(
                           AppFormatters.currency(item.balance),
-                          style: const TextStyle(
-                            color: AppColors.primary,
+                          style: TextStyle(
+                            color: context.colors.primary,
                             fontWeight: FontWeight.w800,
                           ),
                         ),

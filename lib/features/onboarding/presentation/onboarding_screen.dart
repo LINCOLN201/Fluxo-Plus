@@ -21,14 +21,14 @@ class OnboardingScreen extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(28),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Color(0xFFDDF5E8),
+                      color: context.colors.primary.withValues(alpha: .16),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.insights_rounded,
                       size: 72,
-                      color: AppColors.primary,
+                      color: context.colors.primary,
                     ),
                   ),
                   const SizedBox(height: 36),

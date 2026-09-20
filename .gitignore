@@ -26,3 +26,6 @@ macos/Pods/
 
 # Local toolchain
 .tools/
+
+# Brainstorming companion mockups (ephemeral)
+.superpowers/

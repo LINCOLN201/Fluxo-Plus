@@ -72,27 +72,27 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
           final alerts = snapshot.requireData;
           final hasUpdate = widget.availableUpdate != null;
           if (alerts.isEmpty && !hasUpdate) {
-            return const Center(
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(32),
+                padding: const EdgeInsets.all(32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.notifications_none_rounded,
                       size: 64,
-                      color: AppColors.primary,
+                      color: context.colors.primary,
                     ),
-                    SizedBox(height: 16),
-                    Text(
+                    const SizedBox(height: 16),
+                    const Text(
                       'Tudo em dia por aqui',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    SizedBox(height: 6),
-                    Text(
+                    const SizedBox(height: 6),
+                    const Text(
                       'Quando uma conta estiver perto do vencimento, '
                       'ela aparecerá aqui.',
                       textAlign: TextAlign.center,
@@ -109,10 +109,10 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                 Card(
                   child: ListTile(
                     onTap: widget.onOpenUpdate,
-                    leading: const CircleAvatar(
-                      backgroundColor: AppColors.primary,
+                    leading: CircleAvatar(
+                      backgroundColor: context.colors.primary,
                       child: Icon(Icons.system_update_rounded,
-                          color: Colors.white),
+                          color: context.colors.onPrimary),
                     ),
                     title: Text(
                       'Fluxo+ ${widget.availableUpdate!.version} disponível',
@@ -175,7 +175,8 @@ class _AlertCard extends StatelessWidget {
         : difference == 0
             ? 'Vence hoje'
             : 'Vence em $difference dia${difference == 1 ? '' : 's'}';
-    final statusColor = overdue ? AppColors.expense : AppColors.warning;
+    final statusColor =
+        overdue ? context.colors.expense : context.colors.warning;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(

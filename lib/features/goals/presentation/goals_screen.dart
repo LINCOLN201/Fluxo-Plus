@@ -153,7 +153,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.expense),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.expense,
+              foregroundColor: context.colors.onPrimary,
+            ),
             child: const Text('Excluir'),
           ),
         ],
@@ -221,11 +224,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
-                                backgroundColor: Color(0xFFE4F7EB),
+                              CircleAvatar(
+                                backgroundColor: context.colors.primary
+                                    .withValues(alpha: .16),
                                 child: Icon(
                                   Icons.flag_rounded,
-                                  color: AppColors.primary,
+                                  color: context.colors.primary,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -270,8 +274,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
                             children: [
                               Text(
                                 '${(goal.progress * 100).toStringAsFixed(0)}%',
-                                style: const TextStyle(
-                                  color: AppColors.primary,
+                                style: TextStyle(
+                                  color: context.colors.primary,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),

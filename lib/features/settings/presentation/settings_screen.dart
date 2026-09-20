@@ -54,14 +54,14 @@ class SettingsScreen extends StatelessWidget {
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: .14),
+                          color: context.colors.primary.withValues(alpha: .14),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
                           themeMode == ThemeMode.dark
                               ? Icons.nightlight_round
                               : Icons.wb_sunny_rounded,
-                          color: AppColors.primary,
+                          color: context.colors.primary,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -149,16 +149,16 @@ class SettingsScreen extends StatelessWidget {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.lock_outline_rounded,
-                    color: AppColors.primary,
+                    color: context.colors.primary,
                   ),
                   title: const Text('Dados locais'),
                   subtitle: const Text(
                     'Suas informações permanecem neste dispositivo.',
                   ),
-                  trailing: const Icon(Icons.check_circle_rounded,
-                      color: AppColors.primary),
+                  trailing: Icon(Icons.check_circle_rounded,
+                      color: context.colors.primary),
                 ),
               ],
             ),
@@ -171,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'Fluxo+',
-                applicationVersion: '0.4.0',
+                applicationVersion: '0.5.0',
                 applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
                 children: const [
                   SizedBox(height: 12),
@@ -182,7 +182,7 @@ class SettingsScreen extends StatelessWidget {
               ),
               leading: Icon(
                 dark ? Icons.nightlight_round : Icons.wb_sunny_outlined,
-                color: AppColors.primary,
+                color: context.colors.primary,
               ),
               title: const Text('Fluxo+'),
               subtitle: const Text('Open source • Licença MIT'),
@@ -252,9 +252,12 @@ class _UpdatePanelState extends State<_UpdatePanel> {
           trailing: FilledButton(
             onPressed: _checking ? null : _check,
             child: _checking
-                ? const SizedBox.square(
+                ? SizedBox.square(
                     dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.colors.onPrimary,
+                    ),
                   )
                 : const Text('Verificar'),
           ),
@@ -527,7 +530,7 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
               contentPadding: EdgeInsets.zero,
               leading: Icon(
                 user == null ? Icons.cloud_off_outlined : Icons.cloud_done,
-                color: user == null ? null : AppColors.primary,
+                color: user == null ? null : context.colors.primary,
               ),
               title: Text(user?.email ?? 'Conecte sua conta'),
               subtitle: Text(

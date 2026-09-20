@@ -9,7 +9,7 @@ class CloudSyncService {
   final AppDatabase _database;
   final SupabaseClient? _client;
   static const confirmationRedirect =
-      'https://github.com/LINCOLN201/Fluxo-Plus';
+      'https://github.com/fluxoecossistema/fluxo-plus';
 
   bool get isConfigured => _client != null;
   User? get currentUser => _client?.auth.currentUser;
@@ -154,6 +154,10 @@ class CloudSyncService {
     return DateTime.tryParse(rows.first['value'] as String);
   }
 
+  // Dispositivo é sempre a fonte da verdade — nunca sobrescreve dados locais
+  // automaticamente. A restauração só acontece quando o banco local está vazio
+  // (primeiro uso em um dispositivo novo) ou quando o usuário aciona
+  // explicitamente via restoreBackup().
   Future<SyncResult> synchronize() async {
     final user = _requireUser();
     final row = await _client!
@@ -165,17 +169,18 @@ class CloudSyncService {
       return SyncResult(SyncDirection.uploaded, await uploadBackup());
     }
 
-    final cloudUpdated = DateTime.parse(row['updated_at'] as String).toLocal();
-    final lastSync = await lastSyncAt();
-    if (lastSync == null ||
-        cloudUpdated.isAfter(lastSync.add(const Duration(seconds: 2)))) {
+    // Dispositivo novo sem dados locais: restaura o backup automaticamente.
+    final hasData = await _database.hasLocalData();
+    if (!hasData) {
       await _database.restoreSnapshot(
         Map<String, dynamic>.from(row['payload'] as Map),
       );
-      final now = DateTime.now();
-      await _saveLastSync(now);
+      final cloudUpdated =
+          DateTime.parse(row['updated_at'] as String).toLocal();
+      await _saveLastSync(DateTime.now());
       return SyncResult(SyncDirection.downloaded, cloudUpdated);
     }
+
     return SyncResult(SyncDirection.uploaded, await uploadBackup());
   }
 

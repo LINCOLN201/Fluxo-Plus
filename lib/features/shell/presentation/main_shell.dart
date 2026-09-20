@@ -187,7 +187,6 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -198,8 +197,7 @@ class _MainShellState extends State<MainShell> {
           final desktop = constraints.maxWidth >= 980;
           if (!desktop) {
             return Scaffold(
-              backgroundColor:
-                  dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
+              backgroundColor: context.colors.background,
               body: _showMobileMore
                   ? _MobileMore(
                       userName: widget.cloudSyncService.displayName,
@@ -211,7 +209,6 @@ class _MainShellState extends State<MainShell> {
                     )
                   : _page(),
               bottomNavigationBar: _MobileNavigation(
-                dark: dark,
                 selectedIndex: _showMobileMore
                     ? 3
                     : switch (_selectedIndex) {
@@ -241,7 +238,6 @@ class _MainShellState extends State<MainShell> {
             body: Row(
               children: [
                 _DesktopSidebar(
-                  dark: dark,
                   selectedIndex: _selectedIndex,
                   onSelected: (value) => setState(() {
                     if (value == 1) {
@@ -285,19 +281,18 @@ class _MobileMore extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0B6B3A), AppColors.primary],
-              ),
+              color: context.colors.surface,
+              border: Border.all(color: context.colors.border),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Row(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 27,
-                  backgroundColor: Colors.white,
+                  backgroundColor: context.colors.primary,
                   child: Icon(
                     Icons.person_rounded,
-                    color: AppColors.primaryDark,
+                    color: context.colors.onPrimary,
                     size: 30,
                   ),
                 ),
@@ -308,8 +303,8 @@ class _MobileMore extends StatelessWidget {
                     children: [
                       Text(
                         userName ?? 'Seu espaço financeiro',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.textPrimary,
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                         ),
@@ -319,7 +314,7 @@ class _MobileMore extends StatelessWidget {
                         email ?? 'Dados protegidos neste dispositivo',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: Color(0xFFD4F4DF)),
+                        style: TextStyle(color: context.colors.textMuted),
                       ),
                     ],
                   ),
@@ -414,7 +409,7 @@ class _MoreTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = highlighted ? AppColors.warning : AppColors.primary;
+    final color = highlighted ? context.colors.warning : context.colors.primary;
     return Card(
       margin: const EdgeInsets.only(bottom: 9),
       child: ListTile(
@@ -437,33 +432,31 @@ class _MoreTile extends StatelessWidget {
 
 class _DesktopSidebar extends StatelessWidget {
   const _DesktopSidebar({
-    required this.dark,
     required this.selectedIndex,
     required this.onSelected,
   });
 
   final int selectedIndex;
-  final bool dark;
   final ValueChanged<int> onSelected;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 238,
-      decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: Color(0xFF26343D))),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        border: Border(right: BorderSide(color: context.colors.border)),
       ),
-      color: dark ? const Color(0xFF111E27) : Colors.white,
       child: SafeArea(
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 28, 24, 24),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               child: Row(
                 children: [
-                  _FluxoMark(size: 34),
-                  SizedBox(width: 12),
-                  Text(
+                  const _FluxoMark(size: 34),
+                  const SizedBox(width: 12),
+                  const Text(
                     'Fluxo',
                     style: TextStyle(
                       fontSize: 26,
@@ -475,7 +468,7 @@ class _DesktopSidebar extends StatelessWidget {
                     '+',
                     style: TextStyle(
                       fontSize: 28,
-                      color: AppColors.primary,
+                      color: context.colors.primary,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -491,8 +484,9 @@ class _DesktopSidebar extends StatelessWidget {
                   final item = _MainShellState._items[index];
                   final selected = selectedIndex == index;
                   return Material(
-                    color:
-                        selected ? const Color(0xFFE4F7EB) : Colors.transparent,
+                    color: selected
+                        ? context.colors.primary.withValues(alpha: .16)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     child: InkWell(
                       onTap: () => onSelected(index),
@@ -508,10 +502,8 @@ class _DesktopSidebar extends StatelessWidget {
                               item.$1,
                               size: 20,
                               color: selected
-                                  ? AppColors.primaryDark
-                                  : dark
-                                      ? const Color(0xFF9AA8B1)
-                                      : const Color(0xFF41505C),
+                                  ? context.colors.primary
+                                  : context.colors.textMuted,
                             ),
                             const SizedBox(width: 14),
                             Text(
@@ -521,10 +513,8 @@ class _DesktopSidebar extends StatelessWidget {
                                     ? FontWeight.w700
                                     : FontWeight.w600,
                                 color: selected
-                                    ? AppColors.primaryDark
-                                    : dark
-                                        ? const Color(0xFFE8EEF2)
-                                        : AppColors.text,
+                                    ? context.colors.primary
+                                    : context.colors.textPrimary,
                               ),
                             ),
                           ],
@@ -536,20 +526,25 @@ class _DesktopSidebar extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            const Padding(
-              padding: EdgeInsets.all(20),
+            Padding(
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: Color(0xFFE4F7EB),
-                    child: Icon(Icons.person_outline, color: AppColors.primary),
+                    backgroundColor: context.colors.primary.withValues(
+                      alpha: .16,
+                    ),
+                    child: Icon(
+                      Icons.person_outline,
+                      color: context.colors.primary,
+                    ),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        const Text(
                           'Meu perfil',
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
@@ -557,7 +552,7 @@ class _DesktopSidebar extends StatelessWidget {
                           'Dados locais',
                           style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.muted,
+                            color: context.colors.textMuted,
                           ),
                         ),
                       ],
@@ -575,14 +570,12 @@ class _DesktopSidebar extends StatelessWidget {
 
 class _MobileNavigation extends StatelessWidget {
   const _MobileNavigation({
-    required this.dark,
     required this.selectedIndex,
     required this.onSelected,
     required this.onAdd,
   });
 
   final int selectedIndex;
-  final bool dark;
   final ValueChanged<int> onSelected;
   final VoidCallback onAdd;
 
@@ -597,17 +590,16 @@ class _MobileNavigation extends StatelessWidget {
     return Container(
       height: 76,
       decoration: BoxDecoration(
-        color: dark ? const Color(0xFF111E27) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: dark ? const Color(0xFF22313B) : const Color(0xFFE2E8EE),
-          ),
-        ),
+        color: context.colors.surface,
+        border: Border(top: BorderSide(color: context.colors.border)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          ...List.generate(2, (index) => _mobileItem(items[index], index)),
+          ...List.generate(
+            2,
+            (index) => _mobileItem(context, items[index], index),
+          ),
           Semantics(
             button: true,
             label: 'Nova transação',
@@ -617,31 +609,34 @@ class _MobileNavigation extends StatelessWidget {
               child: Container(
                 width: 52,
                 height: 52,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.primary,
+                  color: context.colors.primary,
                   boxShadow: [
                     BoxShadow(
-                      color: Color(0x660F9D58),
+                      color: context.colors.primary.withValues(alpha: .4),
                       blurRadius: 18,
-                      offset: Offset(0, 5),
+                      offset: const Offset(0, 5),
                     ),
                   ],
                 ),
-                child: const Icon(Icons.add_rounded, color: Colors.white),
+                child: Icon(
+                  Icons.add_rounded,
+                  color: context.colors.onPrimary,
+                ),
               ),
             ),
           ),
           ...List.generate(
             2,
-            (offset) => _mobileItem(items[offset + 2], offset + 2),
+            (offset) => _mobileItem(context, items[offset + 2], offset + 2),
           ),
         ],
       ),
     );
   }
 
-  Widget _mobileItem((IconData, String) item, int index) {
+  Widget _mobileItem(BuildContext context, (IconData, String) item, int index) {
     final selected = selectedIndex == index;
     return InkWell(
       onTap: () => onSelected(index),
@@ -652,14 +647,17 @@ class _MobileNavigation extends StatelessWidget {
           children: [
             Icon(
               item.$1,
-              color: selected ? AppColors.primary : const Color(0xFF82909A),
+              color:
+                  selected ? context.colors.primary : context.colors.textMuted,
             ),
             const SizedBox(height: 4),
             Text(
               item.$2,
               style: TextStyle(
                 fontSize: 10,
-                color: selected ? AppColors.primary : const Color(0xFF82909A),
+                color: selected
+                    ? context.colors.primary
+                    : context.colors.textMuted,
               ),
             ),
           ],
@@ -685,9 +683,9 @@ class _FluxoMark extends StatelessWidget {
             child: Container(
               width: size * .78,
               height: size * .28,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: context.colors.primary,
+                borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(12),
                   bottomLeft: Radius.circular(12),
                 ),
@@ -701,11 +699,9 @@ class _FluxoMark extends StatelessWidget {
               child: Container(
                 width: size * .32,
                 height: size * .7,
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primaryDark],
-                  ),
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                decoration: BoxDecoration(
+                  color: context.colors.primary,
+                  borderRadius: const BorderRadius.all(Radius.circular(10)),
                 ),
               ),
             ),
