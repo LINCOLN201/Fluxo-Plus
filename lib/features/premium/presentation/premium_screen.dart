@@ -115,11 +115,11 @@ class _PremiumScreenState extends State<PremiumScreen> {
                 label: const Text('Quero conhecer o Premium'),
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'O aplicativo local continuará gratuito e open source. '
                 'A cobrança será ativada somente após integração oficial.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.muted, fontSize: 12),
+                style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
             ],
           );
@@ -139,17 +139,14 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF07140D), Color(0xFF08743E)],
-        ),
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
+        border: Border.all(color: context.colors.border),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x330F9D58),
+            color: context.colors.primary.withValues(alpha: .2),
             blurRadius: 28,
-            offset: Offset(0, 12),
+            offset: const Offset(0, 12),
           ),
         ],
       ),
@@ -159,12 +156,12 @@ class _Hero extends StatelessWidget {
             width: 64,
             height: 64,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: .12),
+              color: context.colors.warning.withValues(alpha: .14),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.workspace_premium_rounded,
-              color: Color(0xFFFFD54F),
+              color: context.colors.warning,
               size: 36,
             ),
           ),
@@ -175,8 +172,8 @@ class _Hero extends StatelessWidget {
               children: [
                 Text(
                   entitlement.label,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                   ),
@@ -186,7 +183,7 @@ class _Hero extends StatelessWidget {
                   entitlement.isActive
                       ? 'Seus recursos Premium estão ativos.'
                       : 'Mais automação, nuvem e inteligência financeira.',
-                  style: const TextStyle(color: Color(0xFFC8EED8)),
+                  style: TextStyle(color: context.colors.textMuted),
                 ),
               ],
             ),
@@ -216,7 +213,7 @@ class _PlanCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: featured
-            ? const BorderSide(color: AppColors.primary, width: 2)
+            ? BorderSide(color: context.colors.primary, width: 2)
             : BorderSide.none,
       ),
       child: Padding(
@@ -247,7 +244,7 @@ class _PlanCard extends StatelessWidget {
                 fontWeight: FontWeight.w900,
               ),
             ),
-            Text(detail, style: const TextStyle(color: AppColors.muted)),
+            Text(detail, style: TextStyle(color: context.colors.textMuted)),
           ],
         ),
       ),
@@ -290,8 +287,9 @@ class _Benefits extends StatelessWidget {
             for (var index = 0; index < groups.length; index++) ...[
               ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: AppColors.primary.withValues(alpha: .14),
-                  child: Icon(groups[index].$1, color: AppColors.primary),
+                  backgroundColor:
+                      context.colors.primary.withValues(alpha: .14),
+                  child: Icon(groups[index].$1, color: context.colors.primary),
                 ),
                 title: Text(
                   groups[index].$2,

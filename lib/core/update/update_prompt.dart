@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
 import 'app_update.dart';
 import 'update_service.dart';
 
@@ -93,11 +94,14 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(26, 28, 26, 24),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF07120D), Color(0xFF0B6B3A)],
+                      colors: [
+                        AppColors.dark.background,
+                        AppColors.dark.primary
+                      ],
                     ),
                   ),
                   child: Column(
@@ -128,9 +132,9 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Nova versão disponível',
-                        style: TextStyle(color: Color(0xFFC8EED8)),
+                        style: TextStyle(color: AppColors.dark.textMuted),
                       ),
                     ],
                   ),
