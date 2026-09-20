@@ -142,13 +142,6 @@ class _Hero extends StatelessWidget {
         color: context.colors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: context.colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.primary.withValues(alpha: .2),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
       ),
       child: Row(
         children: [

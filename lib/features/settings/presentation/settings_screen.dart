@@ -252,9 +252,12 @@ class _UpdatePanelState extends State<_UpdatePanel> {
           trailing: FilledButton(
             onPressed: _checking ? null : _check,
             child: _checking
-                ? const SizedBox.square(
+                ? SizedBox.square(
                     dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: context.colors.onPrimary,
+                    ),
                   )
                 : const Text('Verificar'),
           ),

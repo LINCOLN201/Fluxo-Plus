@@ -151,6 +151,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Screen is forced dark: use AppColors.dark.* below this wrapper (the
+    // context sits above the Theme) and context.colors only below the Theme.
     return Theme(
       data: AppTheme.dark(),
       child: Scaffold(
@@ -360,6 +362,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                               backgroundColor: _type == TransactionType.income
                                   ? AppColors.dark.income
                                   : AppColors.dark.expense,
+                              foregroundColor: AppColors.dark.onPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             icon: _saving

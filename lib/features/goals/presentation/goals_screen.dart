@@ -153,8 +153,10 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style:
-                FilledButton.styleFrom(backgroundColor: context.colors.expense),
+            style: FilledButton.styleFrom(
+              backgroundColor: context.colors.expense,
+              foregroundColor: context.colors.onPrimary,
+            ),
             child: const Text('Excluir'),
           ),
         ],

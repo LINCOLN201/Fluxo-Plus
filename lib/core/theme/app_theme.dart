@@ -9,8 +9,21 @@ abstract final class AppTheme {
       seedColor: colors.primary,
       brightness: Brightness.light,
       primary: colors.primary,
+      onPrimary: colors.onPrimary,
       surface: colors.surface,
+      onSurface: colors.textPrimary,
+      onSurfaceVariant: colors.textMuted,
+      surfaceContainerLowest: colors.background,
+      surfaceContainerLow: colors.surface,
+      surfaceContainer: colors.surface,
+      // Light: elevated (#F0F0EE) + textMuted is 4.45:1 (< AA), and dialogs/pickers
+      // put muted body text on surfaceContainerHigh, so use `surface` there.
+      surfaceContainerHigh: colors.surface,
+      surfaceContainerHighest: colors.surfaceElevated,
+      outline: colors.border,
+      outlineVariant: colors.border,
       error: colors.expense,
+      onError: colors.onPrimary,
     );
 
     return ThemeData(
@@ -73,8 +86,19 @@ abstract final class AppTheme {
       seedColor: colors.primary,
       brightness: Brightness.dark,
       primary: colors.primary,
+      onPrimary: colors.onPrimary,
       surface: colors.surface,
+      onSurface: colors.textPrimary,
+      onSurfaceVariant: colors.textMuted,
+      surfaceContainerLowest: colors.background,
+      surfaceContainerLow: colors.surface,
+      surfaceContainer: colors.surface,
+      surfaceContainerHigh: colors.surfaceElevated,
+      surfaceContainerHighest: colors.surfaceElevated,
+      outline: colors.border,
+      outlineVariant: colors.border,
       error: colors.expense,
+      onError: colors.onPrimary,
     );
 
     return ThemeData(
@@ -83,6 +107,7 @@ abstract final class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: colors.background,
       fontFamily: 'Manrope',
+      fontFamilyFallback: const ['Inter', 'Roboto', 'Segoe UI'],
       extensions: const [colors],
       appBarTheme: AppBarTheme(
         backgroundColor: colors.background,
@@ -99,7 +124,7 @@ abstract final class AppTheme {
           fontWeight: FontWeight.w700,
         ),
         bodyLarge: TextStyle(color: colors.textPrimary),
-        bodyMedium: TextStyle(color: colors.textMuted),
+        bodyMedium: TextStyle(color: colors.textPrimary),
       ),
       cardTheme: CardThemeData(
         elevation: 0,

@@ -19,6 +19,8 @@ class AppColors extends ThemeExtension<AppColors> {
 
   final Color background;
   final Color surface;
+
+  /// Light `surfaceElevated` + `textMuted` = 4.45:1 (below AA): use `surface` for muted text.
   final Color surfaceElevated;
   final Color border;
   final Color textPrimary;

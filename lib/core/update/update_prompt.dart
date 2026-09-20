@@ -100,6 +100,8 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                       end: Alignment.bottomRight,
                       colors: [
                         AppColors.dark.background,
+                        // Tempered so the white title/subtitle stay legible
+                        // (the full lima stop was ~1.2:1).
                         Color.lerp(
                           AppColors.dark.background,
                           AppColors.dark.primary,
