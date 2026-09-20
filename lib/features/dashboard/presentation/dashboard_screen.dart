@@ -64,12 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
         return LayoutBuilder(
           builder: (context, constraints) {
-            final dark = Theme.of(context).brightness == Brightness.dark;
             return constraints.maxWidth < 700
                 ? _MobileDashboard(
                     summary: snapshot.requireData,
                     onRefresh: _refresh,
-                    dark: dark,
                     updateAvailable: widget.updateAvailable,
                     onNotifications: widget.onNotifications,
                     onOpenTransactions: widget.onOpenTransactions,
@@ -79,7 +77,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     summary: snapshot.requireData,
                     onRefresh: _refresh,
                     onAddTransaction: widget.onAddTransaction,
-                    dark: dark,
                     onOpenTransactions: widget.onOpenTransactions,
                     onNotifications: widget.onNotifications,
                     updateAvailable: widget.updateAvailable,
@@ -96,7 +93,6 @@ class _DesktopDashboard extends StatelessWidget {
     required this.summary,
     required this.onRefresh,
     required this.onAddTransaction,
-    required this.dark,
     required this.onOpenTransactions,
     required this.onNotifications,
     required this.updateAvailable,
@@ -105,7 +101,6 @@ class _DesktopDashboard extends StatelessWidget {
   final DashboardSummary summary;
   final Future<void> Function() onRefresh;
   final VoidCallback onAddTransaction;
-  final bool dark;
   final ValueChanged<TransactionType?> onOpenTransactions;
   final VoidCallback onNotifications;
   final bool updateAvailable;
@@ -113,7 +108,7 @@ class _DesktopDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
+      color: context.colors.background,
       child: RefreshIndicator(
         onRefresh: onRefresh,
         child: CustomScrollView(
@@ -148,7 +143,7 @@ class _DesktopDashboard extends StatelessWidget {
                         label: summary.pendingAlerts > 0
                             ? Text('${summary.pendingAlerts}')
                             : null,
-                        backgroundColor: AppColors.expense,
+                        backgroundColor: context.colors.expense,
                         child: const Icon(Icons.notifications_none_rounded),
                       ),
                     ),
@@ -180,36 +175,32 @@ class _DesktopDashboard extends StatelessWidget {
                 ),
                 delegate: SliverChildListDelegate([
                   _MetricCard(
-                    dark: dark,
                     label: 'Despesas totais',
                     value: summary.monthExpense,
-                    color: AppColors.expense,
+                    color: context.colors.expense,
                     icon: Icons.receipt_long_outlined,
                     onTap: () => onOpenTransactions(TransactionType.expense),
                   ),
                   _MetricCard(
-                    dark: dark,
                     label: 'Receitas',
                     value: summary.monthIncome,
-                    color: AppColors.primary,
+                    color: context.colors.income,
                     icon: Icons.south_west_rounded,
                     onTap: () => onOpenTransactions(TransactionType.income),
                   ),
                   _MetricCard(
-                    dark: dark,
                     label: 'Saldo total',
                     value: summary.balance,
-                    color: AppColors.primaryDark,
+                    color: context.colors.primary,
                     icon: Icons.account_balance_wallet_outlined,
                     onTap: () => onOpenTransactions(null),
                   ),
                   _MetricCard(
-                    dark: dark,
                     label: 'Economia',
                     value: summary.savings,
                     color: summary.savings >= 0
-                        ? AppColors.primary
-                        : AppColors.warning,
+                        ? context.colors.primary
+                        : context.colors.warning,
                     icon: Icons.savings_outlined,
                   ),
                 ]),
@@ -225,7 +216,6 @@ class _DesktopDashboard extends StatelessWidget {
                       Expanded(
                         flex: 3,
                         child: _Panel(
-                          dark: dark,
                           title: 'Evolução mensal',
                           child: _FlowChart(items: summary.monthlyFlow),
                         ),
@@ -234,11 +224,9 @@ class _DesktopDashboard extends StatelessWidget {
                       Expanded(
                         flex: 2,
                         child: _Panel(
-                          dark: dark,
                           title: 'Despesas por categoria',
                           child: _CategoryChart(
                             items: summary.categorySpending,
-                            dark: dark,
                           ),
                         ),
                       ),
@@ -253,13 +241,11 @@ class _DesktopDashboard extends StatelessWidget {
                 child: SizedBox(
                   height: 350,
                   child: _Panel(
-                    dark: dark,
                     title: 'Últimas transações',
                     child: SingleChildScrollView(
                       child: _TransactionList(
                         items: summary.recentTransactions,
                         desktop: true,
-                        dark: dark,
                       ),
                     ),
                   ),
@@ -277,7 +263,6 @@ class _MobileDashboard extends StatelessWidget {
   const _MobileDashboard({
     required this.summary,
     required this.onRefresh,
-    required this.dark,
     required this.updateAvailable,
     required this.onNotifications,
     required this.onOpenTransactions,
@@ -286,7 +271,6 @@ class _MobileDashboard extends StatelessWidget {
 
   final DashboardSummary summary;
   final Future<void> Function() onRefresh;
-  final bool dark;
   final bool updateAvailable;
   final VoidCallback onNotifications;
   final ValueChanged<TransactionType?> onOpenTransactions;
@@ -295,7 +279,7 @@ class _MobileDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: dark ? const Color(0xFF0D1820) : const Color(0xFFF6F8FA),
+      color: context.colors.background,
       child: SafeArea(
         bottom: false,
         child: RefreshIndicator(
@@ -312,14 +296,14 @@ class _MobileDashboard extends StatelessWidget {
                         Text(
                           _greeting(userName),
                           style: TextStyle(
-                            color: dark ? Colors.white : AppColors.text,
+                            color: context.colors.textPrimary,
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                         Text(
                           _dayMessage(),
-                          style: TextStyle(color: Color(0xFF91A0AA)),
+                          style: TextStyle(color: context.colors.textMuted),
                         ),
                       ],
                     ),
@@ -333,12 +317,12 @@ class _MobileDashboard extends StatelessWidget {
                       label: summary.pendingAlerts > 0
                           ? Text('${summary.pendingAlerts}')
                           : null,
-                      backgroundColor: AppColors.expense,
+                      backgroundColor: context.colors.expense,
                       child: Icon(
                         updateAvailable
                             ? Icons.notifications_active_rounded
                             : Icons.notifications_none_rounded,
-                        color: dark ? Colors.white : AppColors.text,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -350,49 +334,43 @@ class _MobileDashboard extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF922D2A), AppColors.expense],
-                    ),
+                    color: context.colors.surface,
                     borderRadius: BorderRadius.circular(14),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x33E53935),
-                        blurRadius: 24,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
+                    border: Border.all(
+                      color: context.colors.expense.withValues(alpha: .35),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Row(
+                      Row(
                         children: [
                           Expanded(
                             child: Text(
                               'Despesas totais do mês',
-                              style: TextStyle(color: Color(0xFFFFE3E3)),
+                              style: TextStyle(color: context.colors.textMuted),
                             ),
                           ),
                           Icon(
                             Icons.chevron_right_rounded,
-                            color: Colors.white,
+                            color: context.colors.textMuted,
                           ),
                         ],
                       ),
                       const SizedBox(height: 7),
                       Text(
                         AppFormatters.currency(summary.monthExpense),
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.colors.expense,
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Toque para ver os vencimentos',
                         style: TextStyle(
-                          color: Color(0xFFFFD0D0),
+                          color: context.colors.textMuted,
                           fontSize: 11,
                         ),
                       ),
@@ -405,10 +383,9 @@ class _MobileDashboard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _MobileMetric(
-                      dark: dark,
                       label: 'Receitas',
                       value: summary.monthIncome,
-                      color: AppColors.primary,
+                      color: context.colors.income,
                       icon: Icons.arrow_upward_rounded,
                       onTap: () => onOpenTransactions(TransactionType.income),
                     ),
@@ -416,10 +393,9 @@ class _MobileDashboard extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _MobileMetric(
-                      dark: dark,
                       label: 'Saldo total',
                       value: summary.balance,
-                      color: AppColors.primaryDark,
+                      color: context.colors.primary,
                       icon: Icons.account_balance_wallet_outlined,
                       onTap: () => onOpenTransactions(null),
                     ),
@@ -429,29 +405,24 @@ class _MobileDashboard extends StatelessWidget {
               const SizedBox(height: 22),
               _MobileSectionTitle(
                 title: 'Despesas por categoria',
-                dark: dark,
               ),
               const SizedBox(height: 12),
               Container(
                 height: 205,
                 padding: const EdgeInsets.all(16),
-                decoration:
-                    dark ? _darkDecoration() : _lightDecoration(dark: false),
+                decoration: _cardDecoration(context),
                 child: _CategoryChart(
                   items: summary.categorySpending,
-                  dark: dark,
                 ),
               ),
               const SizedBox(height: 22),
               _MobileSectionTitle(
                 title: 'Transações recentes',
-                dark: dark,
               ),
               const SizedBox(height: 10),
               _TransactionList(
                 items: summary.recentTransactions,
                 desktop: false,
-                dark: dark,
               ),
             ],
           ),
@@ -487,7 +458,6 @@ class _MetricCard extends StatelessWidget {
     required this.value,
     required this.color,
     required this.icon,
-    required this.dark,
     this.onTap,
   });
 
@@ -495,7 +465,6 @@ class _MetricCard extends StatelessWidget {
   final double value;
   final Color color;
   final IconData icon;
-  final bool dark;
   final VoidCallback? onTap;
 
   @override
@@ -505,7 +474,7 @@ class _MetricCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(18),
-        decoration: _lightDecoration(dark: dark),
+        decoration: _cardDecoration(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -514,8 +483,8 @@ class _MetricCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.colors.textMuted,
                       fontWeight: FontWeight.w600,
                       fontSize: 12,
                     ),
@@ -537,7 +506,7 @@ class _MetricCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: dark ? Colors.white : AppColors.text,
+                color: context.colors.textPrimary,
                 fontSize: 21,
                 fontWeight: FontWeight.w800,
               ),
@@ -546,7 +515,9 @@ class _MetricCard extends StatelessWidget {
             Text(
               value >= 0 ? '● Atualizado agora' : '● Atenção ao orçamento',
               style: TextStyle(
-                color: value >= 0 ? AppColors.primary : AppColors.expense,
+                color: value >= 0
+                    ? context.colors.primary
+                    : context.colors.expense,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
               ),
@@ -564,7 +535,6 @@ class _MobileMetric extends StatelessWidget {
     required this.value,
     required this.color,
     required this.icon,
-    required this.dark,
     this.onTap,
   });
 
@@ -572,7 +542,6 @@ class _MobileMetric extends StatelessWidget {
   final double value;
   final Color color;
   final IconData icon;
-  final bool dark;
   final VoidCallback? onTap;
 
   @override
@@ -583,7 +552,7 @@ class _MobileMetric extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: dark ? const Color(0xFF111E27) : Colors.white,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: .35)),
         ),
@@ -596,7 +565,7 @@ class _MobileMetric extends StatelessWidget {
               child: Text(
                 AppFormatters.currency(value),
                 style: TextStyle(
-                  color: dark ? Colors.white : AppColors.text,
+                  color: context.colors.textPrimary,
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                 ),
@@ -615,25 +584,23 @@ class _Panel extends StatelessWidget {
   const _Panel({
     required this.title,
     required this.child,
-    required this.dark,
   });
 
   final String title;
   final Widget child;
-  final bool dark;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: _lightDecoration(dark: dark),
+      decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: TextStyle(
-              color: dark ? Colors.white : AppColors.text,
+              color: context.colors.textPrimary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -654,18 +621,18 @@ class _FlowChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            _LegendDot(color: AppColors.primary, text: 'Receitas'),
-            SizedBox(width: 14),
-            _LegendDot(color: AppColors.expense, text: 'Despesas'),
+            _LegendDot(color: context.colors.income, text: 'Receitas'),
+            const SizedBox(width: 14),
+            _LegendDot(color: context.colors.expense, text: 'Despesas'),
           ],
         ),
         const SizedBox(height: 8),
         Expanded(
           child: CustomPaint(
-            painter: _FlowPainter(items),
+            painter: _FlowPainter(items, colors: context.colors),
             child: const SizedBox.expand(),
           ),
         ),
@@ -675,8 +642,8 @@ class _FlowChart extends StatelessWidget {
               .map(
                 (item) => Text(
                   DateFormat('MMM', 'pt_BR').format(item.month),
-                  style: const TextStyle(
-                    color: AppColors.muted,
+                  style: TextStyle(
+                    color: context.colors.textMuted,
                     fontSize: 10,
                   ),
                 ),
@@ -689,14 +656,15 @@ class _FlowChart extends StatelessWidget {
 }
 
 class _FlowPainter extends CustomPainter {
-  _FlowPainter(this.items);
+  _FlowPainter(this.items, {required this.colors});
 
   final List<MonthlyFlow> items;
+  final AppColors colors;
 
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
-      ..color = const Color(0xFFE8EDF2)
+      ..color = colors.border
       ..strokeWidth = 1;
     for (var i = 0; i < 4; i++) {
       final y = size.height * i / 3;
@@ -706,9 +674,8 @@ class _FlowPainter extends CustomPainter {
       1,
       (max, item) => math.max(max, math.max(item.income, item.expense)),
     );
-    _drawLine(canvas, size, maxValue, (item) => item.income, AppColors.primary);
-    _drawLine(
-        canvas, size, maxValue, (item) => item.expense, AppColors.expense);
+    _drawLine(canvas, size, maxValue, (item) => item.income, colors.income);
+    _drawLine(canvas, size, maxValue, (item) => item.expense, colors.expense);
   }
 
   void _drawLine(
@@ -739,14 +706,13 @@ class _FlowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _FlowPainter oldDelegate) =>
-      oldDelegate.items != items;
+      oldDelegate.items != items || oldDelegate.colors != colors;
 }
 
 class _CategoryChart extends StatelessWidget {
-  const _CategoryChart({required this.items, this.dark = false});
+  const _CategoryChart({required this.items});
 
   final List<CategorySpending> items;
-  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -754,8 +720,7 @@ class _CategoryChart extends StatelessWidget {
       return Center(
         child: Text(
           'Sem despesas neste mês',
-          style: TextStyle(
-              color: dark ? const Color(0xFF91A0AA) : AppColors.muted),
+          style: TextStyle(color: context.colors.textMuted),
         ),
       );
     }
@@ -792,7 +757,7 @@ class _CategoryChart extends StatelessWidget {
                         item.name,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: dark ? Colors.white : AppColors.text,
+                          color: context.colors.textPrimary,
                           fontSize: 11,
                         ),
                       ),
@@ -800,7 +765,7 @@ class _CategoryChart extends StatelessWidget {
                     Text(
                       '${percent.toStringAsFixed(0)}%',
                       style: TextStyle(
-                        color: dark ? const Color(0xFF91A0AA) : AppColors.muted,
+                        color: context.colors.textMuted,
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                       ),
@@ -852,12 +817,10 @@ class _TransactionList extends StatelessWidget {
   const _TransactionList({
     required this.items,
     required this.desktop,
-    required this.dark,
   });
 
   final List<TransactionListItem> items;
   final bool desktop;
-  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -867,9 +830,7 @@ class _TransactionList extends StatelessWidget {
           padding: const EdgeInsets.all(22),
           child: Text(
             'Adicione sua primeira transação',
-            style: TextStyle(
-              color: dark ? const Color(0xFF91A0AA) : AppColors.muted,
-            ),
+            style: TextStyle(color: context.colors.textMuted),
           ),
         ),
       );
@@ -877,18 +838,14 @@ class _TransactionList extends StatelessWidget {
     return Column(
       children: items.map((item) {
         final income = item.type == TransactionType.income;
-        final color = income ? AppColors.primary : AppColors.expense;
+        final color = income ? context.colors.income : context.colors.expense;
         return Container(
           margin: const EdgeInsets.only(bottom: 7),
           padding: EdgeInsets.symmetric(
             horizontal: desktop ? 8 : 12,
             vertical: 10,
           ),
-          decoration: desktop
-              ? null
-              : dark
-                  ? _darkDecoration()
-                  : _lightDecoration(dark: false),
+          decoration: desktop ? null : _cardDecoration(context),
           child: Row(
             children: [
               CircleAvatar(
@@ -911,7 +868,7 @@ class _TransactionList extends StatelessWidget {
                           ? item.categoryName
                           : item.description,
                       style: TextStyle(
-                        color: dark ? Colors.white : AppColors.text,
+                        color: context.colors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -919,8 +876,8 @@ class _TransactionList extends StatelessWidget {
                       '${item.categoryName}'
                       '${item.installmentCount > 1 ? ' • ${item.installmentNumber}/${item.installmentCount}' : ''}'
                       '${item.isPaid ? ' • concluído' : ' • vence ${AppFormatters.date(item.date)}'}',
-                      style: const TextStyle(
-                        color: AppColors.muted,
+                      style: TextStyle(
+                        color: context.colors.textMuted,
                         fontSize: 11,
                       ),
                     ),
@@ -931,8 +888,8 @@ class _TransactionList extends StatelessWidget {
                 Expanded(
                   child: Text(
                     AppFormatters.date(item.date),
-                    style: const TextStyle(
-                      color: AppColors.muted,
+                    style: TextStyle(
+                      color: context.colors.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -961,9 +918,9 @@ class _MonthButton extends StatelessWidget {
       icon: const Icon(Icons.calendar_month_outlined, size: 17),
       label: Text(DateFormat('MMMM / yyyy', 'pt_BR').format(DateTime.now())),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppColors.text,
+        foregroundColor: context.colors.textPrimary,
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        side: const BorderSide(color: Color(0xFFE0E6EB)),
+        side: BorderSide(color: context.colors.border),
       ),
     );
   }
@@ -992,10 +949,9 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _MobileSectionTitle extends StatelessWidget {
-  const _MobileSectionTitle({required this.title, required this.dark});
+  const _MobileSectionTitle({required this.title});
 
   final String title;
-  final bool dark;
 
   @override
   Widget build(BuildContext context) {
@@ -1005,27 +961,25 @@ class _MobileSectionTitle extends StatelessWidget {
           child: Text(
             title,
             style: TextStyle(
-              color: dark ? Colors.white : AppColors.text,
+              color: context.colors.textPrimary,
               fontWeight: FontWeight.w800,
               fontSize: 16,
             ),
           ),
         ),
-        const Text(
+        Text(
           'Ver todas',
-          style: TextStyle(color: AppColors.primary, fontSize: 11),
+          style: TextStyle(color: context.colors.primary, fontSize: 11),
         ),
       ],
     );
   }
 }
 
-BoxDecoration _lightDecoration({required bool dark}) => BoxDecoration(
-      color: dark ? const Color(0xFF111E27) : Colors.white,
+BoxDecoration _cardDecoration(BuildContext context) => BoxDecoration(
+      color: context.colors.surface,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: dark ? const Color(0xFF26343D) : const Color(0xFFE8EDF2),
-      ),
+      border: Border.all(color: context.colors.border),
       boxShadow: const [
         BoxShadow(
           color: Color(0x08000000),
@@ -1033,10 +987,4 @@ BoxDecoration _lightDecoration({required bool dark}) => BoxDecoration(
           offset: Offset(0, 5),
         ),
       ],
-    );
-
-BoxDecoration _darkDecoration() => BoxDecoration(
-      color: const Color(0xFF111E27),
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFF22313B)),
     );
