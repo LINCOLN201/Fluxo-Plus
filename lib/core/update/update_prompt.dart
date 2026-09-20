@@ -100,7 +100,11 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                       end: Alignment.bottomRight,
                       colors: [
                         AppColors.dark.background,
-                        AppColors.dark.primary
+                        Color.lerp(
+                          AppColors.dark.background,
+                          AppColors.dark.primary,
+                          .35,
+                        )!,
                       ],
                     ),
                   ),
@@ -125,8 +129,8 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                       const SizedBox(height: 16),
                       Text(
                         'Fluxo+ ${update.version}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: AppColors.dark.textPrimary,
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
                         ),
@@ -134,7 +138,10 @@ class _UpdateDialogState extends State<_UpdateDialog> {
                       const SizedBox(height: 4),
                       Text(
                         'Nova versão disponível',
-                        style: TextStyle(color: AppColors.dark.textMuted),
+                        style: TextStyle(
+                          color:
+                              AppColors.dark.textPrimary.withValues(alpha: .85),
+                        ),
                       ),
                     ],
                   ),
