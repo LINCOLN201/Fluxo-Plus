@@ -171,7 +171,7 @@ class SettingsScreen extends StatelessWidget {
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'Fluxo+',
-                applicationVersion: '0.4.0',
+                applicationVersion: '0.5.0',
                 applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
                 children: const [
                   SizedBox(height: 12),
