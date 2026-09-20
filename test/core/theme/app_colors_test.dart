@@ -91,8 +91,7 @@ void main() {
 
     test('textPrimary meets WCAG AA (4.5:1) on background', () {
       expect(
-        _contrastRatio(
-            AppColors.light.textPrimary, AppColors.light.background),
+        _contrastRatio(AppColors.light.textPrimary, AppColors.light.background),
         greaterThanOrEqualTo(4.5),
       );
     });
