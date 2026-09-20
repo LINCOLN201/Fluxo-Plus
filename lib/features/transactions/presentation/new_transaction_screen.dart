@@ -337,8 +337,8 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                                   ? Icons.check_circle_rounded
                                   : Icons.schedule_rounded,
                               color: _isPaid
-                                  ? AppColors.primary
-                                  : AppColors.warning,
+                                  ? AppColors.dark.primary
+                                  : AppColors.dark.warning,
                             ),
                             title: Text(
                               _type == TransactionType.income
@@ -358,16 +358,16 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                             onPressed: _saving ? null : _save,
                             style: FilledButton.styleFrom(
                               backgroundColor: _type == TransactionType.income
-                                  ? AppColors.primary
-                                  : AppColors.expense,
+                                  ? AppColors.dark.income
+                                  : AppColors.dark.expense,
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             icon: _saving
-                                ? const SizedBox.square(
+                                ? SizedBox.square(
                                     dimension: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Colors.white,
+                                      color: AppColors.dark.onPrimary,
                                     ),
                                   )
                                 : const Icon(Icons.check_rounded),
@@ -403,12 +403,12 @@ class _InstallmentSummary extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: .10),
+        color: context.colors.primary.withValues(alpha: .10),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.calculate_outlined, color: AppColors.primary),
+          Icon(Icons.calculate_outlined, color: context.colors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
