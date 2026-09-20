@@ -31,6 +31,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     var type = category?.type ?? TransactionType.expense;
     var icon = category?.icon ?? 'category';
     final key = GlobalKey<FormState>();
+    // Read before the await: `context` must not be used across the async gap.
+    final colors = context.colors;
     final saved = await showDialog<bool>(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -116,8 +118,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         icon: icon,
         color: category?.color ??
             (type == TransactionType.income
-                ? AppColors.primary.toARGB32()
-                : AppColors.expense.toARGB32()),
+                ? colors.primary.toARGB32()
+                : colors.expense.toARGB32()),
         isDefault: category?.isDefault ?? false,
       ),
     );
