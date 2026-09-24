@@ -1,5 +1,7 @@
 # Fluxo+
 
+Site oficial: <https://lincoln201.github.io/Fluxo-Plus/>
+
 Aplicativo open source de finanças pessoais, moderno e offline-first, feito com
 Flutter. O Fluxo+ mantém os dados no dispositivo e foi desenhado para Android,
 iOS, Windows, macOS e Linux. Web/PWA permanece no roadmap; a sincronização
@@ -22,6 +24,10 @@ opcional com Supabase já está disponível sem retirar o funcionamento offline.
 - relatórios mensais responsivos com resultado, valores pagos, pendências,
   receita x despesa e gastos por categoria;
 - temas escuro (padrão) e claro, com preferência salva localmente;
+- valores gravados em centavos inteiros (sem erro de arredondamento);
+- backup local criptografado por senha, com opção de desfazer a restauração;
+- bloqueio por PIN e/ou biometria;
+- sincronização com a nuvem que pede confirmação quando há conflito;
 - SQLite real em Android/iOS (`sqflite`) e desktop
   (`sqflite_common_ffi`);
 - conta principal e categorias brasileiras criadas no primeiro uso;
@@ -29,7 +35,8 @@ opcional com Supabase já está disponível sem retirar o funcionamento offline.
 - moeda e datas no padrão brasileiro;
 - schema preparado para contas, categorias, transações, metas e configurações;
 - arquitetura por features, com persistência e regras fora das telas.
-- estrutura inicial do Fluxo+ Premium, sem cobranças ou bloqueios ativos.
+- estrutura do Fluxo+ Premium (nuvem e cores exclusivas), sem cobranças ou
+  bloqueios ativos.
 
 Todas as áreas do MVP estão conectadas ao banco local e funcionam sem internet.
 
@@ -126,19 +133,23 @@ lib/
 ├── main.dart
 ├── app.dart
 ├── core/
+│   ├── backup/        backup local criptografado
 │   ├── constants/
-│   ├── database/
+│   ├── database/      SQLite, migrações e snapshots
+│   ├── premium/
+│   ├── security/      PIN e biometria
+│   ├── sync/          sincronização com Supabase
 │   ├── theme/
+│   ├── update/
 │   └── utils/
 ├── features/
-│   ├── dashboard/
-│   ├── onboarding/
-│   ├── shell/
-│   ├── splash/
-│   └── transactions/
+│   ├── accounts/  categories/  dashboard/  goals/
+│   ├── notifications/  onboarding/  premium/  reports/
+│   ├── settings/  shell/  splash/  transactions/
 └── shared/
     ├── models/
     └── widgets/
+site/                  site oficial (GitHub Pages)
 ```
 
 Sem login, nenhuma informação financeira sai do dispositivo. Quando o usuário
@@ -146,14 +157,15 @@ opta pela sincronização, o Supabase armazena um snapshot protegido por RLS.
 
 ## Próximos passos
 
-1. PIN e backup local criptografado.
-2. Migrações avançadas, testes de repositório e testes de interface.
-3. Histórico de backups e sincronização granular com resolução de conflitos.
+1. Assinatura Premium por Pix Automático.
+2. Histórico de backups e sincronização granular.
+3. Recorrências, cartões, orçamentos e exportação PDF/Excel.
 4. Web/PWA com uma estratégia de armazenamento compatível.
 
 ## Segurança e privacidade
 
-O projeto não possui pagamentos ou analytics. Login e sincronização são
+O projeto não possui pagamentos ativos nem analytics. A política de
+privacidade está no [site oficial](https://lincoln201.github.io/Fluxo-Plus/privacidade.html). Login e sincronização são
 opcionais; o modo local continua disponível. Antes de produção comercial,
 serão necessárias política de privacidade, termos e revisão de criptografia.
 
