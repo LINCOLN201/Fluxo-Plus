@@ -119,4 +119,26 @@ void main() {
     expect(goal.targetAmount, 7500.75);
     expect(goal.currentAmount, 0.05);
   });
+
+  test('saldo da conta segue o Dashboard e mostra o previsto à parte',
+      () async {
+    final food = await categoryId('Alimentação');
+    await transactions.create(expense(40, DateTime(2026, 9, 1), food));
+    final pending = expense(60, DateTime(2026, 9, 20), food);
+    await transactions.create(
+      FinanceTransaction(
+        type: pending.type,
+        amount: pending.amount,
+        categoryId: pending.categoryId,
+        accountId: pending.accountId,
+        date: pending.date,
+        description: pending.description,
+        createdAt: pending.createdAt,
+        isPaid: false,
+      ),
+    );
+    final account = (await AccountRepository(opened.database).list()).single;
+    expect(account.balance, -40);
+    expect(account.projectedBalance, -100);
+  });
 }

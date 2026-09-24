@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/money.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../shared/models/account.dart';
 import '../../../shared/widgets/empty_state.dart';
@@ -137,6 +138,10 @@ class _AccountsScreenState extends State<AccountsScreen> {
           }
           final total =
               items.fold<double>(0, (sum, item) => sum + item.balance);
+          final projected = items.fold<double>(
+            0,
+            (sum, item) => sum + item.projectedBalance,
+          );
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
@@ -160,6 +165,14 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
+                      if (Money.toCents(projected) != Money.toCents(total)) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          'Previsto com pendências: '
+                          '${AppFormatters.currency(projected)}',
+                          style: TextStyle(color: context.colors.textMuted),
+                        ),
+                      ],
                     ],
                   ),
                 ),
