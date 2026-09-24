@@ -1,3 +1,4 @@
+import '../../core/utils/money.dart';
 import 'category.dart';
 
 class FinanceTransaction {
@@ -36,7 +37,7 @@ class FinanceTransaction {
       FinanceTransaction(
         id: map['id'] as int,
         type: TransactionType.values.byName(map['type'] as String),
-        amount: (map['amount'] as num).toDouble(),
+        amount: Money.fromCents(map['amount_cents']),
         categoryId: map['category_id'] as int,
         accountId: map['account_id'] as int,
         date: DateTime.parse(map['date'] as String),
@@ -51,7 +52,7 @@ class FinanceTransaction {
   Map<String, Object?> toMap() => {
         if (id != null) 'id': id,
         'type': type.name,
-        'amount': amount,
+        'amount_cents': Money.toCents(amount),
         'category_id': categoryId,
         'account_id': accountId,
         'date': date.toIso8601String(),

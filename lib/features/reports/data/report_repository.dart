@@ -1,4 +1,5 @@
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/money.dart';
 
 class ReportRepository {
   ReportRepository(this._database);
@@ -10,8 +11,8 @@ class ReportRepository {
     final end = DateTime(month.year, month.month + 1);
     final totals = await _database.db.rawQuery(
       '''
-      SELECT type, SUM(amount) AS total,
-             SUM(CASE WHEN is_paid = 1 THEN amount ELSE 0 END) AS completed,
+      SELECT type, SUM(amount_cents) AS total,
+             SUM(CASE WHEN is_paid = 1 THEN amount_cents ELSE 0 END) AS completed,
              COUNT(*) AS quantity
       FROM transactions
       WHERE date >= ? AND date < ?
@@ -21,7 +22,7 @@ class ReportRepository {
     );
     final categories = await _database.db.rawQuery(
       '''
-      SELECT c.name, c.color, c.icon, SUM(t.amount) AS total
+      SELECT c.name, c.color, c.icon, SUM(t.amount_cents) AS total
       FROM transactions t
       JOIN categories c ON c.id = t.category_id
       WHERE t.type = 'expense' AND t.date >= ? AND t.date < ?
@@ -38,11 +39,11 @@ class ReportRepository {
     for (final row in totals) {
       transactionCount += (row['quantity'] as num).toInt();
       if (row['type'] == 'income') {
-        income = (row['total'] as num).toDouble();
-        receivedIncome = (row['completed'] as num).toDouble();
+        income = Money.fromCents(row['total']);
+        receivedIncome = Money.fromCents(row['completed']);
       } else {
-        expense = (row['total'] as num).toDouble();
-        paidExpense = (row['completed'] as num).toDouble();
+        expense = Money.fromCents(row['total']);
+        paidExpense = Money.fromCents(row['completed']);
       }
     }
     return MonthlyReport(
@@ -53,7 +54,7 @@ class ReportRepository {
             (row) => ReportCategory(
               name: row['name'] as String,
               color: row['color'] as int,
-              amount: (row['total'] as num).toDouble(),
+              amount: Money.fromCents(row['total']),
               icon: row['icon'] as String,
             ),
           )

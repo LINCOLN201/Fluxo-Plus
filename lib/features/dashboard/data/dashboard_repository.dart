@@ -1,4 +1,5 @@
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/money.dart';
 import '../../../shared/models/category.dart';
 import '../domain/dashboard_summary.dart';
 
@@ -13,19 +14,19 @@ class DashboardRepository {
 
     final balanceRows = await _database.db.rawQuery('''
       SELECT
-        COALESCE((SELECT SUM(initial_balance) FROM accounts), 0) +
+        COALESCE((SELECT SUM(initial_balance_cents) FROM accounts), 0) +
         COALESCE(SUM(
           CASE
             WHEN is_paid = 0 THEN 0
-            WHEN type = 'income' THEN amount
-            ELSE -amount
+            WHEN type = 'income' THEN amount_cents
+            ELSE -amount_cents
           END
         ), 0) AS balance
       FROM transactions
     ''');
     final monthRows = await _database.db.rawQuery(
       '''
-      SELECT type, COALESCE(SUM(amount), 0) AS total
+      SELECT type, COALESCE(SUM(amount_cents), 0) AS total
       FROM transactions
       WHERE date >= ? AND date < ?
       GROUP BY type
@@ -33,7 +34,7 @@ class DashboardRepository {
       [start.toIso8601String(), end.toIso8601String()],
     );
     final recentRows = await _database.db.rawQuery('''
-      SELECT t.id, t.type, t.amount, t.description, t.date, t.is_paid,
+      SELECT t.id, t.type, t.amount_cents, t.description, t.date, t.is_paid,
              t.installment_number, t.installment_count,
              c.name AS category_name, c.icon AS category_icon
       FROM transactions t
@@ -63,7 +64,7 @@ class DashboardRepository {
     final historyStart = DateTime(month.year, month.month - 4);
     final historyRows = await _database.db.rawQuery(
       '''
-      SELECT strftime('%Y-%m', date) AS month, type, SUM(amount) AS total
+      SELECT strftime('%Y-%m', date) AS month, type, SUM(amount_cents) AS total
       FROM transactions
       WHERE date >= ? AND date < ?
       GROUP BY strftime('%Y-%m', date), type
@@ -72,7 +73,7 @@ class DashboardRepository {
     );
     final categoryRows = await _database.db.rawQuery(
       '''
-      SELECT c.name, c.color, SUM(t.amount) AS total
+      SELECT c.name, c.color, SUM(t.amount_cents) AS total
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
       WHERE t.type = 'expense' AND t.date >= ? AND t.date < ?
@@ -86,7 +87,7 @@ class DashboardRepository {
     var income = 0.0;
     var expense = 0.0;
     for (final row in monthRows) {
-      final total = (row['total'] as num).toDouble();
+      final total = Money.fromCents(row['total']);
       if (row['type'] == TransactionType.income.name) {
         income = total;
       } else {
@@ -101,9 +102,9 @@ class DashboardRepository {
       var itemExpense = 0.0;
       for (final row in historyRows.where((row) => row['month'] == key)) {
         if (row['type'] == TransactionType.income.name) {
-          itemIncome = (row['total'] as num).toDouble();
+          itemIncome = Money.fromCents(row['total']);
         } else {
-          itemExpense = (row['total'] as num).toDouble();
+          itemExpense = Money.fromCents(row['total']);
         }
       }
       return MonthlyFlow(
@@ -114,7 +115,7 @@ class DashboardRepository {
     });
 
     return DashboardSummary(
-      balance: (balanceRows.first['balance'] as num).toDouble(),
+      balance: Money.fromCents(balanceRows.first['balance']),
       monthIncome: income,
       monthExpense: expense,
       recentTransactions: recentRows
@@ -122,7 +123,7 @@ class DashboardRepository {
             (row) => TransactionListItem(
               id: row['id'] as int,
               type: TransactionType.values.byName(row['type'] as String),
-              amount: (row['amount'] as num).toDouble(),
+              amount: Money.fromCents(row['amount_cents']),
               description: row['description'] as String,
               categoryName: row['category_name'] as String,
               date: DateTime.parse(row['date'] as String),
@@ -138,7 +139,7 @@ class DashboardRepository {
           .map(
             (row) => CategorySpending(
               name: row['name'] as String,
-              amount: (row['total'] as num).toDouble(),
+              amount: Money.fromCents(row['total']),
               color: row['color'] as int,
             ),
           )

@@ -1,4 +1,5 @@
 import '../../../core/database/app_database.dart';
+import '../../../core/utils/money.dart';
 import '../../../shared/models/account.dart';
 
 class AccountRepository {
@@ -9,8 +10,8 @@ class AccountRepository {
   Future<List<AccountBalance>> list() async {
     final rows = await _database.db.rawQuery('''
       SELECT a.*,
-        a.initial_balance + COALESCE(SUM(
-          CASE WHEN t.type = 'income' THEN t.amount ELSE -t.amount END
+        a.initial_balance_cents + COALESCE(SUM(
+          CASE WHEN t.type = 'income' THEN t.amount_cents ELSE -t.amount_cents END
         ), 0) AS current_balance,
         COUNT(t.id) AS transaction_count
       FROM accounts a
@@ -22,7 +23,7 @@ class AccountRepository {
         .map(
           (row) => AccountBalance(
             account: Account.fromMap(row),
-            balance: (row['current_balance'] as num).toDouble(),
+            balance: Money.fromCents(row['current_balance']),
             transactionCount: row['transaction_count'] as int,
           ),
         )
