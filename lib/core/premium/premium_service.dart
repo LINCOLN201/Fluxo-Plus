@@ -50,7 +50,6 @@ class PremiumService {
   PremiumEntitlement _fromMap(Map<String, dynamic> map) {
     final plan = switch (map['plan']) {
       'premium' => PremiumPlan.premium,
-      'lifetime' => PremiumPlan.lifetime,
       _ => PremiumPlan.free,
     };
     return PremiumEntitlement(

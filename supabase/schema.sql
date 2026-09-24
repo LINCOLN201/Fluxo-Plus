@@ -30,7 +30,7 @@ with check ((select auth.uid()) = user_id);
 create table if not exists public.premium_subscriptions (
   user_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'free'
-    check (plan in ('free', 'premium', 'lifetime')),
+    check (plan in ('free', 'premium')),
   status text not null default 'inactive'
     check (status in ('inactive', 'trialing', 'active', 'past_due', 'canceled')),
   provider text,

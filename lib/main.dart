@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/backup/local_backup_service.dart';
 import 'core/database/app_database.dart';
 import 'core/database/database_factory.dart';
 import 'core/update/update_service.dart';
 import 'core/security/biometric_service.dart';
+import 'core/security/pin_service.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
@@ -43,6 +45,8 @@ Future<void> main() async {
       cloudSyncService: CloudSyncService(database, supabaseClient),
       premiumService: PremiumService(database, supabaseClient),
       biometricService: BiometricService(),
+      pinService: PinService(database),
+      localBackupService: LocalBackupService(database),
     ),
   );
 }
