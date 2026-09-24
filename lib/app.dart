@@ -10,7 +10,11 @@ import 'core/theme/app_theme.dart';
 import 'core/update/update_prompt.dart';
 import 'core/update/app_update.dart';
 import 'core/update/update_service.dart';
+import 'core/backup/local_backup_service.dart';
+import 'core/premium/premium_entitlement.dart';
 import 'core/security/biometric_service.dart';
+import 'core/security/pin_service.dart';
+import 'core/theme/app_colors.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
@@ -37,6 +41,8 @@ class FluxoApp extends StatefulWidget {
     required this.cloudSyncService,
     required this.biometricService,
     required this.premiumService,
+    required this.pinService,
+    required this.localBackupService,
   });
 
   final AppDatabase database;
@@ -50,6 +56,8 @@ class FluxoApp extends StatefulWidget {
   final CloudSyncService cloudSyncService;
   final BiometricService biometricService;
   final PremiumService premiumService;
+  final PinService pinService;
+  final LocalBackupService localBackupService;
 
   @override
   State<FluxoApp> createState() => _FluxoAppState();
@@ -63,7 +71,10 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   AppUpdate? _availableUpdate;
   ThemeMode _themeMode = ThemeMode.dark;
   bool _biometricEnabled = false;
+  bool _pinEnabled = false;
   bool _unlocked = true;
+
+  bool get _lockEnabled => _biometricEnabled || _pinEnabled;
 
   @override
   void initState() {
@@ -74,19 +85,14 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_biometricEnabled &&
+    if (_lockEnabled &&
         (state == AppLifecycleState.paused ||
             state == AppLifecycleState.hidden)) {
       setState(() => _unlocked = false);
     }
     if (state == AppLifecycleState.paused &&
         widget.cloudSyncService.currentUser != null) {
-      unawaited(
-        widget.cloudSyncService
-            .uploadBackup()
-            .then<void>((_) {})
-            .catchError((_) {}),
-      );
+      unawaited(_syncSilently());
     }
     if (state == AppLifecycleState.resumed &&
         (_lastUpdateCheck == null ||
@@ -120,6 +126,7 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     );
     final biometricEnabled =
         biometricRows.isNotEmpty && biometricRows.first['value'] == 'true';
+    final pinEnabled = await widget.pinService.isEnabled();
     if (mounted) {
       setState(
         () {
@@ -130,7 +137,8 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
                   ? ThemeMode.light
                   : ThemeMode.dark;
           _biometricEnabled = biometricEnabled;
-          _unlocked = !biometricEnabled;
+          _pinEnabled = pinEnabled;
+          _unlocked = !_lockEnabled;
         },
       );
       if (biometricEnabled) await _unlock();
@@ -149,8 +157,12 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     if (mounted) setState(() => _onboardingComplete = true);
   }
 
+  /// Sincronização automática: nunca resolve conflitos sozinha (o usuário
+  /// decide em Configurações) e só roda quando o backup na nuvem está liberado.
   Future<void> _syncSilently() async {
     try {
+      final entitlement = await widget.premiumService.load();
+      if (!entitlement.allows(PremiumFeature.cloudBackup)) return;
       await widget.cloudSyncService.synchronize();
     } catch (error) {
       debugPrint('Sincronização adiada: $error');
@@ -183,6 +195,17 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     final success = await widget.biometricService.authenticate();
     if (mounted && success) setState(() => _unlocked = true);
     return success;
+  }
+
+  Future<bool> _unlockWithPin(String pin) async {
+    final success = await widget.pinService.verify(pin);
+    if (mounted && success) setState(() => _unlocked = true);
+    return success;
+  }
+
+  Future<void> _reloadLockSettings() async {
+    final pinEnabled = await widget.pinService.isEnabled();
+    if (mounted) setState(() => _pinEnabled = pinEnabled);
   }
 
   Future<bool> _changeBiometric(bool enabled) async {
@@ -226,7 +249,13 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
       home: switch (_onboardingComplete) {
         null => const SplashScreen(),
         false => OnboardingScreen(onComplete: _completeOnboarding),
-        true when !_unlocked => _LockScreen(onUnlock: _unlock),
+        true when !_unlocked => _LockScreen(
+            biometricEnabled: _biometricEnabled,
+            pinEnabled: _pinEnabled,
+            onBiometric: _unlock,
+            onPin: _unlockWithPin,
+            pinService: widget.pinService,
+          ),
         true => MainShell(
             dashboardRepository: widget.dashboardRepository,
             transactionRepository: widget.transactionRepository,
@@ -243,6 +272,10 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             availableUpdate: _availableUpdate,
             onOpenUpdate: _openAvailableUpdate,
             premiumService: widget.premiumService,
+            pinService: widget.pinService,
+            onLockSettingsChanged: _reloadLockSettings,
+            localBackupService: widget.localBackupService,
+            database: widget.database,
           ),
       },
     );
@@ -260,33 +293,144 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   }
 }
 
-class _LockScreen extends StatelessWidget {
-  const _LockScreen({required this.onUnlock});
+class _LockScreen extends StatefulWidget {
+  const _LockScreen({
+    required this.biometricEnabled,
+    required this.pinEnabled,
+    required this.onBiometric,
+    required this.onPin,
+    required this.pinService,
+  });
 
-  final Future<bool> Function() onUnlock;
+  final bool biometricEnabled;
+  final bool pinEnabled;
+  final Future<bool> Function() onBiometric;
+  final Future<bool> Function(String) onPin;
+  final PinService pinService;
+
+  @override
+  State<_LockScreen> createState() => _LockScreenState();
+}
+
+class _LockScreenState extends State<_LockScreen> {
+  final _pin = TextEditingController();
+  String? _error;
+  bool _checking = false;
+
+  @override
+  void dispose() {
+    _pin.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitPin() async {
+    if (_checking || _pin.text.isEmpty) return;
+    setState(() {
+      _checking = true;
+      _error = null;
+    });
+    final success = await widget.onPin(_pin.text);
+    if (!mounted || success) return;
+    final blocked = widget.pinService.blockedFor;
+    setState(() {
+      _checking = false;
+      _pin.clear();
+      _error = blocked == null
+          ? 'PIN incorreto.'
+          : 'Muitas tentativas. Aguarde ${blocked.inSeconds + 1} segundos.';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_rounded, size: 72),
-            const SizedBox(height: 20),
-            Text(
-              'Fluxo+ bloqueado',
-              style: Theme.of(context).textTheme.headlineMedium,
+      backgroundColor: colors.background,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      color: colors.surface,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: colors.border),
+                    ),
+                    child: Icon(
+                      Icons.lock_rounded,
+                      size: 34,
+                      color: colors.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Fluxo+ bloqueado',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: colors.textPrimary,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.pinEnabled
+                        ? 'Digite seu PIN para continuar.'
+                        : 'Use sua biometria para continuar.',
+                    style: TextStyle(color: colors.textMuted),
+                  ),
+                  const SizedBox(height: 24),
+                  if (widget.pinEnabled) ...[
+                    TextField(
+                      controller: _pin,
+                      autofocus: true,
+                      obscureText: true,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      maxLength: PinService.maxLength,
+                      style: const TextStyle(fontSize: 24, letterSpacing: 8),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        hintText: 'PIN',
+                        errorText: _error,
+                      ),
+                      onSubmitted: (_) => _submitPin(),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: _checking ? null : _submitPin,
+                        child: const Text('Desbloquear'),
+                      ),
+                    ),
+                  ],
+                  if (widget.biometricEnabled) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: widget.pinEnabled
+                          ? OutlinedButton.icon(
+                              onPressed: widget.onBiometric,
+                              icon: const Icon(Icons.fingerprint_rounded),
+                              label: const Text('Usar biometria'),
+                            )
+                          : FilledButton.icon(
+                              onPressed: widget.onBiometric,
+                              icon: const Icon(Icons.fingerprint_rounded),
+                              label: const Text('Desbloquear'),
+                            ),
+                    ),
+                  ],
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            const Text('Use sua biometria para continuar.'),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onUnlock,
-              icon: const Icon(Icons.fingerprint_rounded),
-              label: const Text('Desbloquear'),
-            ),
-          ],
+          ),
         ),
       ),
     );

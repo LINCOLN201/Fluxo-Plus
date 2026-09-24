@@ -1,6 +1,9 @@
-enum PremiumPlan { free, premium, lifetime }
+import '../constants/app_constants.dart';
+
+enum PremiumPlan { free, premium }
 
 enum PremiumFeature {
+  cloudBackup,
   automaticBackup,
   multiDeviceSync,
   backupHistory,
@@ -12,6 +15,7 @@ enum PremiumFeature {
   pdfExport,
   excelExport,
   financialIntelligence,
+  customColors,
 }
 
 class PremiumEntitlement {
@@ -35,7 +39,6 @@ class PremiumEntitlement {
 
   bool get isActive {
     if (plan == PremiumPlan.free) return false;
-    if (plan == PremiumPlan.lifetime && status == 'active') return true;
     if (status != 'active' && status != 'trialing') return false;
     final limit = status == 'trialing' ? trialEndsAt : currentPeriodEnd;
     return limit == null || limit.isAfter(DateTime.now());
@@ -43,10 +46,17 @@ class PremiumEntitlement {
 
   bool canUse(PremiumFeature feature) => isActive;
 
+  /// Se o recurso pode ser usado agora. Com a cobrança desligada
+  /// ([AppConstants.premiumEnforced]), tudo fica liberado.
+  bool allows(
+    PremiumFeature feature, {
+    bool enforced = AppConstants.premiumEnforced,
+  }) =>
+      !enforced || canUse(feature);
+
   String get label => switch (plan) {
         PremiumPlan.free => 'Gratuito',
         PremiumPlan.premium =>
           status == 'trialing' ? 'Premium em teste' : 'Premium',
-        PremiumPlan.lifetime => 'Premium vitalício',
       };
 }

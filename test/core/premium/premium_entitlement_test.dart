@@ -12,9 +12,9 @@ void main() {
     );
   });
 
-  test('plano vitalício ativo não expira', () {
+  test('plano premium ativo sem data de fim libera recursos', () {
     const entitlement = PremiumEntitlement(
-      plan: PremiumPlan.lifetime,
+      plan: PremiumPlan.premium,
       status: 'active',
     );
 
@@ -30,5 +30,23 @@ void main() {
     );
 
     expect(entitlement.isActive, isFalse);
+  });
+
+  test('com a cobrança desligada, recursos premium ficam liberados', () {
+    const entitlement = PremiumEntitlement.free();
+
+    expect(
+      entitlement.allows(PremiumFeature.cloudBackup, enforced: false),
+      isTrue,
+    );
+    expect(
+      entitlement.allows(PremiumFeature.cloudBackup, enforced: true),
+      isFalse,
+    );
+    expect(
+      const PremiumEntitlement(plan: PremiumPlan.premium, status: 'active')
+          .allows(PremiumFeature.customColors, enforced: true),
+      isTrue,
+    );
   });
 }

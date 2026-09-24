@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/premium/premium_entitlement.dart';
+import '../../../core/premium/premium_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/category_palette.dart';
 import '../../../core/utils/category_icons.dart';
 import '../../../shared/models/category.dart';
 import '../../../shared/widgets/empty_state.dart';
 import '../data/category_repository.dart';
 
 class CategoriesScreen extends StatefulWidget {
-  const CategoriesScreen({super.key, required this.repository});
+  const CategoriesScreen({
+    super.key,
+    required this.repository,
+    required this.premiumService,
+  });
 
   final CategoryRepository repository;
+  final PremiumService premiumService;
 
   @override
   State<CategoriesScreen> createState() => _CategoriesScreenState();
@@ -17,11 +25,15 @@ class CategoriesScreen extends StatefulWidget {
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
   late Future<List<CategoryUsage>> _categories;
+  PremiumEntitlement _entitlement = const PremiumEntitlement.free();
 
   @override
   void initState() {
     super.initState();
     _reload();
+    widget.premiumService.load().then((value) {
+      if (mounted) setState(() => _entitlement = value);
+    });
   }
 
   void _reload() => _categories = widget.repository.list();
@@ -30,6 +42,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final name = TextEditingController(text: category?.name);
     var type = category?.type ?? TransactionType.expense;
     var icon = category?.icon ?? 'category';
+    int? color = category?.color;
+    final colorsUnlocked = _entitlement.allows(PremiumFeature.customColors);
     final key = GlobalKey<FormState>();
     final saved = await showDialog<bool>(
       context: context,
@@ -89,6 +103,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   onChanged: (value) =>
                       setDialogState(() => icon = value ?? 'category'),
                 ),
+                const SizedBox(height: 16),
+                _ColorPicker(
+                  selected: color,
+                  unlocked: colorsUnlocked,
+                  onSelected: (value) => setDialogState(() => color = value),
+                ),
               ],
             ),
           ),
@@ -114,7 +134,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         name: name.text.trim(),
         type: type,
         icon: icon,
-        color: category?.color ??
+        color: color ??
             (type == TransactionType.income
                 // Stored in the DB: must be theme-independent (fixed values).
                 ? AppColors.light.income.toARGB32()
@@ -209,6 +229,94 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _ColorPicker extends StatelessWidget {
+  const _ColorPicker({
+    required this.selected,
+    required this.unlocked,
+    required this.onSelected,
+  });
+
+  final int? selected;
+  final bool unlocked;
+  final ValueChanged<int> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Text('Cor', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: context.colors.border),
+              ),
+              child: Text(
+                'Premium',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: context.colors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final value in CategoryPalette.premium)
+              Semantics(
+                button: true,
+                selected: value == selected,
+                label: 'Cor da categoria',
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: unlocked
+                      ? () => onSelected(value)
+                      : () => ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'A paleta de cores faz parte do Fluxo+ Premium.',
+                              ),
+                            ),
+                          ),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Color(value).withValues(alpha: unlocked ? 1 : .35),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: value == selected
+                            ? context.colors.textPrimary
+                            : Colors.transparent,
+                        width: 2.5,
+                      ),
+                    ),
+                    child: unlocked
+                        ? null
+                        : const Icon(
+                            Icons.lock_rounded,
+                            size: 14,
+                            color: Colors.white,
+                          ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

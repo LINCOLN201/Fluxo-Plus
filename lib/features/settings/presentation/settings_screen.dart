@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../../../core/backup/local_backup_service.dart';
+import '../../../core/constants/app_constants.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/premium/premium_entitlement.dart';
+import '../../../core/premium/premium_service.dart';
+import '../../../core/security/pin_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/update/update_prompt.dart';
 import '../../../core/update/update_service.dart';
+import 'cloud_sync_panel.dart';
+import 'local_backup_panel.dart';
+import 'security_panel.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
@@ -16,6 +24,12 @@ class SettingsScreen extends StatelessWidget {
     required this.onBiometricChanged,
     required this.updateService,
     required this.onDataChanged,
+    required this.premiumService,
+    required this.pinService,
+    required this.onLockSettingsChanged,
+    required this.localBackupService,
+    required this.database,
+    required this.onOpenPremium,
   });
 
   final ThemeMode themeMode;
@@ -25,6 +39,12 @@ class SettingsScreen extends StatelessWidget {
   final Future<bool> Function(bool) onBiometricChanged;
   final UpdateService updateService;
   final VoidCallback onDataChanged;
+  final PremiumService premiumService;
+  final PinService pinService;
+  final VoidCallback onLockSettingsChanged;
+  final LocalBackupService localBackupService;
+  final AppDatabase database;
+  final VoidCallback onOpenPremium;
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +57,13 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          Text(
+            'Perfil',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          _NameTile(service: cloudSyncService, onChanged: onDataChanged),
+          const SizedBox(height: 24),
           Text(
             'Aparência',
             style: Theme.of(context).textTheme.titleLarge,
@@ -107,37 +134,33 @@ class SettingsScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          Card(
-            child: SwitchListTile(
-              value: biometricEnabled,
-              secondary: const Icon(Icons.fingerprint_rounded),
-              title: const Text('Bloqueio biométrico'),
-              subtitle: const Text(
-                'Solicitar biometria ao abrir o aplicativo.',
-              ),
-              onChanged: (value) async {
-                final changed = await onBiometricChanged(value);
-                if (!changed && context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Biometria indisponível ou autenticação cancelada.',
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
+          SecurityPanel(
+            pinService: pinService,
+            biometricEnabled: biometricEnabled,
+            onBiometricChanged: onBiometricChanged,
+            onChanged: onLockSettingsChanged,
           ),
           const SizedBox(height: 24),
           Text(
-            'Sincronização e backup',
+            'Backup',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 12),
-          _CloudSyncPanel(
-            service: cloudSyncService,
+          LocalBackupPanel(
+            service: localBackupService,
+            database: database,
             onDataChanged: onDataChanged,
+          ),
+          const SizedBox(height: 12),
+          FutureBuilder<PremiumEntitlement>(
+            future: premiumService.load(),
+            builder: (context, snapshot) => CloudSyncPanel(
+              service: cloudSyncService,
+              onDataChanged: onDataChanged,
+              allowed: (snapshot.data ?? const PremiumEntitlement.free())
+                  .allows(PremiumFeature.cloudBackup),
+              onOpenPremium: onOpenPremium,
+            ),
           ),
           const SizedBox(height: 24),
           Text(
@@ -171,7 +194,7 @@ class SettingsScreen extends StatelessWidget {
               onTap: () => showAboutDialog(
                 context: context,
                 applicationName: 'Fluxo+',
-                applicationVersion: '0.5.0',
+                applicationVersion: AppConstants.appVersion,
                 applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
                 children: const [
                   SizedBox(height: 12),
@@ -267,144 +290,30 @@ class _UpdatePanelState extends State<_UpdatePanel> {
   }
 }
 
-class _CloudSyncPanel extends StatefulWidget {
-  const _CloudSyncPanel({
-    required this.service,
-    required this.onDataChanged,
-  });
+class _NameTile extends StatefulWidget {
+  const _NameTile({required this.service, required this.onChanged});
 
   final CloudSyncService service;
-  final VoidCallback onDataChanged;
+  final VoidCallback onChanged;
 
   @override
-  State<_CloudSyncPanel> createState() => _CloudSyncPanelState();
+  State<_NameTile> createState() => _NameTileState();
 }
 
-class _CloudSyncPanelState extends State<_CloudSyncPanel> {
-  bool _busy = false;
-  late Future<DateTime?> _lastSync;
+class _NameTileState extends State<_NameTile> {
+  late Future<String?> _name = widget.service.preferredName();
 
-  @override
-  void initState() {
-    super.initState();
-    _lastSync = widget.service.lastSyncAt();
-  }
-
-  void _refreshLastSync() {
-    if (mounted) setState(() => _lastSync = widget.service.lastSyncAt());
-  }
-
-  Future<void> _authenticate() async {
-    final name = TextEditingController();
-    final email = TextEditingController();
-    final password = TextEditingController();
-    var createAccount = false;
-    final key = GlobalKey<FormState>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text(createAccount ? 'Criar conta' : 'Entrar no Fluxo+'),
-          content: Form(
-            key: key,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (createAccount) ...[
-                  TextFormField(
-                    controller: name,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Como podemos chamar você?',
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? 'Informe seu nome'
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                TextFormField(
-                  controller: email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'E-mail'),
-                  validator: (value) => value != null && value.contains('@')
-                      ? null
-                      : 'Informe um e-mail válido',
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: password,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Senha'),
-                  validator: (value) => (value?.length ?? 0) < 6
-                      ? 'Use pelo menos 6 caracteres'
-                      : null,
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () =>
-                      setDialogState(() => createAccount = !createAccount),
-                  child: Text(
-                    createAccount ? 'Já tenho uma conta' : 'Criar uma conta',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                if (key.currentState!.validate()) Navigator.pop(context, true);
-              },
-              child: Text(createAccount ? 'Criar' : 'Entrar'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (confirmed != true) return;
-    final accountEmail = email.text.trim();
-    final succeeded = await _run(() async {
-      if (createAccount) {
-        await widget.service.signUp(
-          accountEmail,
-          password.text,
-          name: name.text,
-        );
-      } else {
-        await widget.service.signIn(accountEmail, password.text);
-      }
-    },
-        createAccount
-            ? 'Código de confirmação enviado por e-mail.'
-            : 'Conectado.');
-    if (createAccount && succeeded && mounted) {
-      await _confirmEmailCode(accountEmail);
-    }
-  }
-
-  Future<void> _resendConfirmation() async {
-    final email = TextEditingController();
-    final key = GlobalKey<FormState>();
-    final confirmed = await showDialog<bool>(
+  Future<void> _edit(String? current) async {
+    final controller = TextEditingController(text: current);
+    final saved = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reenviar confirmação'),
-        content: Form(
-          key: key,
-          child: TextFormField(
-            controller: email,
-            autofocus: true,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(labelText: 'E-mail da conta'),
-            validator: (value) => value != null && value.contains('@')
-                ? null
-                : 'Informe um e-mail válido',
-          ),
+        title: const Text('Como quer ser chamado?'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(labelText: 'Seu nome'),
         ),
         actions: [
           TextButton(
@@ -412,209 +321,33 @@ class _CloudSyncPanelState extends State<_CloudSyncPanel> {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () {
-              if (key.currentState!.validate()) Navigator.pop(context, true);
-            },
-            child: const Text('Reenviar'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Salvar'),
           ),
         ],
       ),
     );
-    if (confirmed != true) return;
-    final accountEmail = email.text.trim();
-    final succeeded = await _run(
-      () => widget.service.resendConfirmation(accountEmail),
-      'Novo código enviado por e-mail.',
-    );
-    if (succeeded && mounted) await _confirmEmailCode(accountEmail);
-  }
-
-  Future<void> _confirmEmailCode(String email) async {
-    final code = TextEditingController();
-    final key = GlobalKey<FormState>();
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Confirmar e-mail'),
-        content: Form(
-          key: key,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Digite o código de 8 dígitos enviado para $email.'),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: code,
-                autofocus: true,
-                keyboardType: TextInputType.number,
-                maxLength: 8,
-                decoration: const InputDecoration(
-                  labelText: 'Código de confirmação',
-                ),
-                validator: (value) => (value?.trim().length ?? 0) == 8
-                    ? null
-                    : 'Informe os 8 dígitos',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Confirmar depois'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (key.currentState!.validate()) Navigator.pop(context, true);
-            },
-            child: const Text('Confirmar'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-    await _run(
-      () => widget.service.verifyEmailCode(email, code.text),
-      'E-mail confirmado. Sincronização conectada.',
-    );
-  }
-
-  Future<bool> _run(
-    Future<void> Function() action,
-    String success,
-  ) async {
-    setState(() => _busy = true);
-    try {
-      await action();
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(success)));
-        setState(() {});
-        _refreshLastSync();
-      }
-      return true;
-    } catch (error) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Não foi possível concluir: $error')),
-        );
-      }
-      return false;
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    if (saved != true) return;
+    await widget.service.savePreferredName(controller.text);
+    if (!mounted) return;
+    setState(() => _name = widget.service.preferredName());
+    widget.onChanged();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.service.isConfigured) {
-      return const Card(
-        child: ListTile(
-          leading: Icon(Icons.cloud_off_outlined),
-          title: Text('Supabase não configurado'),
-          subtitle: Text(
-            'Compile com SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY.',
-          ),
-        ),
-      );
-    }
-    final user = widget.service.currentUser;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                user == null ? Icons.cloud_off_outlined : Icons.cloud_done,
-                color: user == null ? null : context.colors.primary,
-              ),
-              title: Text(user?.email ?? 'Conecte sua conta'),
-              subtitle: Text(
-                user == null
-                    ? 'Entre para sincronizar seus dispositivos.'
-                    : 'Android e computador usam o mesmo backup.',
-              ),
-              trailing: user == null
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FilledButton(
-                          onPressed: _busy ? null : _authenticate,
-                          child: const Text('Entrar'),
-                        ),
-                      ],
-                    )
-                  : TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _run(
-                              widget.service.signOut, 'Conta desconectada.'),
-                      child: const Text('Sair'),
-                    ),
-            ),
-            if (user == null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: _busy ? null : _resendConfirmation,
-                  icon: const Icon(Icons.mark_email_unread_outlined),
-                  label: const Text('Reenviar confirmação'),
-                ),
-              ),
-            if (user != null) ...[
-              const Divider(),
-              FutureBuilder<DateTime?>(
-                future: _lastSync,
-                builder: (context, snapshot) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.schedule_rounded),
-                  title: const Text('Última sincronização'),
-                  subtitle: Text(
-                    snapshot.data == null
-                        ? 'Ainda não sincronizado'
-                        : DateFormat(
-                            'dd/MM/yyyy HH:mm',
-                            'pt_BR',
-                          ).format(snapshot.data!.toLocal()),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _busy
-                          ? null
-                          : () => _run(() async {
-                                await widget.service.synchronize();
-                                widget.onDataChanged();
-                              }, 'Dispositivos sincronizados.'),
-                      icon: const Icon(Icons.sync_rounded),
-                      label: const Text('Sincronizar'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _busy
-                          ? null
-                          : () => _run(() async {
-                                await widget.service.restoreBackup();
-                                widget.onDataChanged();
-                              }, 'Backup restaurado neste dispositivo.'),
-                      icon: const Icon(Icons.cloud_download_outlined),
-                      label: const Text('Restaurar'),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (_busy) const LinearProgressIndicator(),
-          ],
+      child: FutureBuilder<String?>(
+        future: _name,
+        builder: (context, snapshot) => ListTile(
+          leading: Icon(
+            Icons.person_outline_rounded,
+            color: context.colors.primary,
+          ),
+          title: const Text('Nome na saudação'),
+          subtitle: Text(snapshot.data ?? 'Toque para informar seu nome'),
+          trailing: const Icon(Icons.edit_outlined),
+          onTap: () => _edit(snapshot.data),
         ),
       ),
     );

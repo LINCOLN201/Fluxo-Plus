@@ -1,3 +1,5 @@
+import '../../core/utils/money.dart';
+
 class Goal {
   const Goal({
     this.id,
@@ -21,8 +23,8 @@ class Goal {
   factory Goal.fromMap(Map<String, Object?> map) => Goal(
         id: map['id'] as int,
         name: map['name'] as String,
-        targetAmount: (map['target_amount'] as num).toDouble(),
-        currentAmount: (map['current_amount'] as num).toDouble(),
+        targetAmount: Money.fromCents(map['target_amount_cents']),
+        currentAmount: Money.fromCents(map['current_amount_cents']),
         deadline: map['deadline'] == null
             ? null
             : DateTime.parse(map['deadline'] as String),
@@ -32,8 +34,8 @@ class Goal {
   Map<String, Object?> toMap() => {
         if (id != null) 'id': id,
         'name': name,
-        'target_amount': targetAmount,
-        'current_amount': currentAmount,
+        'target_amount_cents': Money.toCents(targetAmount),
+        'current_amount_cents': Money.toCents(currentAmount),
         'deadline': deadline?.toIso8601String(),
         'created_at': createdAt.toIso8601String(),
       };

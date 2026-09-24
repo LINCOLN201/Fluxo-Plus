@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -9,30 +11,61 @@ class CloudSyncService {
   final AppDatabase _database;
   final SupabaseClient? _client;
   static const confirmationRedirect =
-      'https://github.com/fluxoecossistema/fluxo-plus';
+      'https://lincoln201.github.io/Fluxo-Plus/confirmado.html';
 
   bool get isConfigured => _client != null;
   User? get currentUser => _client?.auth.currentUser;
+
+  /// Primeiro nome para a saudação: o da conta ou, sem nome cadastrado,
+  /// a primeira parte do e-mail sem números ("lincolnqueiroz201" → "Lincolnqueiroz").
   String? get displayName {
     final user = currentUser;
     if (user == null) return null;
     final metadata = user.userMetadata;
     final value = metadata?['full_name'] ?? metadata?['name'];
-    if (value is String && value.trim().isNotEmpty) return value.trim();
-    final emailName = user.email?.split('@').first.replaceAll(
-          RegExp(r'[._-]+'),
-          ' ',
-        );
-    if (emailName == null || emailName.trim().isEmpty) return null;
-    return emailName
+    if (value is String) {
+      final name = firstName(value);
+      if (name != null) return name;
+    }
+    return firstName(user.email?.split('@').first ?? '');
+  }
+
+  static const _nameKey = 'display_name';
+
+  /// Nome escolhido pelo usuário em Configurações; na falta dele, o da conta.
+  Future<String?> preferredName() async =>
+      firstName(await _readSetting(_nameKey) ?? '') ?? displayName;
+
+  Future<void> savePreferredName(String name) async {
+    final value = name.trim();
+    if (value.isEmpty) {
+      await _database.db.delete(
+        'settings',
+        where: 'key = ?',
+        whereArgs: [_nameKey],
+      );
+      return;
+    }
+    await _writeSetting(_nameKey, value);
+    if (currentUser == null) return;
+    try {
+      await _client!.auth.updateUser(
+        UserAttributes(data: {'full_name': value}),
+      );
+    } catch (_) {
+      // Sem internet o nome continua salvo neste aparelho.
+    }
+  }
+
+  /// Primeira palavra, sem números nem separadores, com inicial maiúscula.
+  static String? firstName(String value) {
+    final word = value
+        .replaceAll(RegExp(r'[0-9._\-+]+'), ' ')
         .trim()
-        .split(' ')
-        .where((part) => part.isNotEmpty)
-        .map(
-          (part) =>
-              '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}',
-        )
-        .join(' ');
+        .split(RegExp(r'\s+'))
+        .first;
+    if (word.isEmpty) return null;
+    return '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}';
   }
 
   Stream<AuthState>? get authChanges => _client?.auth.onAuthStateChange;
@@ -41,7 +74,6 @@ class CloudSyncService {
     _requireClient();
     try {
       await _client!.auth.signInWithPassword(email: email, password: password);
-      await synchronize();
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (_) {
@@ -100,7 +132,6 @@ class CloudSyncService {
         token: code.trim(),
         type: OtpType.signup,
       );
-      await synchronize();
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (_) {
@@ -120,76 +151,109 @@ class CloudSyncService {
       'payload': await _database.exportSnapshot(),
       'updated_at': now.toIso8601String(),
     });
-    await _saveLastSync(now);
+    await _saveLastSync(user.id, now);
     return now;
   }
 
+  /// Traz o backup da nuvem para este aparelho, substituindo os dados locais
+  /// (uma cópia deles é guardada antes, permitindo desfazer).
   Future<DateTime> restoreBackup() async {
     final user = _requireUser();
-    final row = await _client!
-        .from('user_backups')
-        .select('payload, updated_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
+    final row = await _fetchBackup(user.id);
     if (row == null) {
       throw StateError('Nenhum backup encontrado nesta conta.');
     }
-    await _database.restoreSnapshot(
-      Map<String, dynamic>.from(row['payload'] as Map),
-    );
-    final updatedAt = DateTime.parse(row['updated_at'] as String).toLocal();
-    await _saveLastSync(DateTime.now());
-    return updatedAt;
+    return _download(user.id, row);
   }
 
   Future<DateTime?> lastSyncAt() async {
+    final value = await _readSetting(_lastSyncKey);
+    return value == null ? null : DateTime.tryParse(value);
+  }
+
+  /// O aparelho nunca sobrescreve a nuvem, nem a nuvem o aparelho, sem
+  /// saber que isso é seguro. Quando os dois lados mudaram desde a última
+  /// sincronização deste aparelho, devolve [SyncDirection.conflict] e a
+  /// escolha fica com o usuário ([resolution]).
+  Future<SyncResult> synchronize({SyncResolution? resolution}) async {
+    final user = _requireUser();
+    final row = await _fetchBackup(user.id);
+    final action = SyncPlanner.decide(
+      cloudUpdatedAt: row == null ? null : _parseCloudDate(row),
+      hasLocalData: await _database.hasLocalData(),
+      knownCloudVersion: await _knownCloudVersion(user.id),
+      resolution: resolution,
+    );
+    return switch (action) {
+      SyncAction.upload =>
+        SyncResult(SyncDirection.uploaded, await uploadBackup()),
+      SyncAction.download =>
+        SyncResult(SyncDirection.downloaded, await _download(user.id, row!)),
+      SyncAction.conflict =>
+        SyncResult(SyncDirection.conflict, _parseCloudDate(row!).toLocal()),
+    };
+  }
+
+  Future<Map<String, dynamic>?> _fetchBackup(String userId) => _client!
+      .from('user_backups')
+      .select('payload, updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+  Future<DateTime> _download(String userId, Map<String, dynamic> row) async {
+    await _database.restoreSnapshot(
+      Map<String, dynamic>.from(row['payload'] as Map),
+    );
+    final cloudUpdatedAt = _parseCloudDate(row);
+    await _saveLastSync(userId, cloudUpdatedAt);
+    return cloudUpdatedAt.toLocal();
+  }
+
+  static DateTime _parseCloudDate(Map<String, dynamic> row) =>
+      DateTime.parse(row['updated_at'] as String).toUtc();
+
+  static const _lastSyncKey = 'last_sync_at';
+  static const _knownVersionKey = 'cloud_known_version';
+
+  /// Versão da nuvem que este aparelho conhece (enviou ou baixou por último),
+  /// vinculada ao usuário: trocar de conta não herda o estado anterior.
+  Future<DateTime?> _knownCloudVersion(String userId) async {
+    final value = await _readSetting(_knownVersionKey);
+    if (value == null) return null;
+    try {
+      final data = jsonDecode(value) as Map;
+      if (data['user_id'] != userId) return null;
+      return DateTime.tryParse(data['updated_at'] as String);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveLastSync(String userId, DateTime cloudVersion) async {
+    await _writeSetting(_lastSyncKey, DateTime.now().toIso8601String());
+    await _writeSetting(
+      _knownVersionKey,
+      jsonEncode({
+        'user_id': userId,
+        'updated_at': cloudVersion.toUtc().toIso8601String(),
+      }),
+    );
+  }
+
+  Future<String?> _readSetting(String key) async {
     final rows = await _database.db.query(
       'settings',
       columns: ['value'],
       where: 'key = ?',
-      whereArgs: ['last_sync_at'],
+      whereArgs: [key],
       limit: 1,
     );
-    if (rows.isEmpty) return null;
-    return DateTime.tryParse(rows.first['value'] as String);
+    return rows.isEmpty ? null : rows.first['value'] as String;
   }
 
-  // Dispositivo é sempre a fonte da verdade — nunca sobrescreve dados locais
-  // automaticamente. A restauração só acontece quando o banco local está vazio
-  // (primeiro uso em um dispositivo novo) ou quando o usuário aciona
-  // explicitamente via restoreBackup().
-  Future<SyncResult> synchronize() async {
-    final user = _requireUser();
-    final row = await _client!
-        .from('user_backups')
-        .select('payload, updated_at')
-        .eq('user_id', user.id)
-        .maybeSingle();
-    if (row == null) {
-      return SyncResult(SyncDirection.uploaded, await uploadBackup());
-    }
-
-    // Dispositivo novo sem dados locais: restaura o backup automaticamente.
-    final hasData = await _database.hasLocalData();
-    if (!hasData) {
-      await _database.restoreSnapshot(
-        Map<String, dynamic>.from(row['payload'] as Map),
-      );
-      final cloudUpdated =
-          DateTime.parse(row['updated_at'] as String).toLocal();
-      await _saveLastSync(DateTime.now());
-      return SyncResult(SyncDirection.downloaded, cloudUpdated);
-    }
-
-    return SyncResult(SyncDirection.uploaded, await uploadBackup());
-  }
-
-  Future<void> _saveLastSync(DateTime value) => _database.db.insert(
+  Future<void> _writeSetting(String key, String value) => _database.db.insert(
         'settings',
-        {
-          'key': 'last_sync_at',
-          'value': value.toLocal().toIso8601String(),
-        },
+        {'key': key, 'value': value},
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
@@ -233,7 +297,34 @@ class CloudSyncService {
   }
 }
 
-enum SyncDirection { uploaded, downloaded }
+enum SyncDirection { uploaded, downloaded, conflict }
+
+/// Escolha do usuário quando aparelho e nuvem mudaram ao mesmo tempo.
+enum SyncResolution { keepLocal, useCloud }
+
+enum SyncAction { upload, download, conflict }
+
+/// Regra de decisão da sincronização, separada para ser testável.
+abstract final class SyncPlanner {
+  static SyncAction decide({
+    required DateTime? cloudUpdatedAt,
+    required bool hasLocalData,
+    required DateTime? knownCloudVersion,
+    SyncResolution? resolution,
+  }) {
+    if (cloudUpdatedAt == null) return SyncAction.upload;
+    if (resolution == SyncResolution.useCloud) return SyncAction.download;
+    if (resolution == SyncResolution.keepLocal) return SyncAction.upload;
+    // Aparelho novo ou vazio: só recebe.
+    if (!hasLocalData) return SyncAction.download;
+    // A nuvem ainda é a versão que este aparelho conhece: enviar é seguro.
+    if (knownCloudVersion != null &&
+        cloudUpdatedAt.isAtSameMomentAs(knownCloudVersion)) {
+      return SyncAction.upload;
+    }
+    return SyncAction.conflict;
+  }
+}
 
 class SyncResult {
   const SyncResult(this.direction, this.at);

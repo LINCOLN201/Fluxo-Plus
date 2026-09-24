@@ -1,14 +1,22 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../constants/app_constants.dart';
+import '../theme/category_palette.dart';
+import 'snapshot_migrator.dart';
 
 class AppDatabase {
   AppDatabase(this._factory);
 
+  static const _safetyCopyName = 'antes-da-restauracao.json';
+
   final DatabaseFactory _factory;
   Database? _database;
+  String? _directory;
 
   Database get db {
     final value = _database;
@@ -18,10 +26,12 @@ class AppDatabase {
     return value;
   }
 
-  Future<void> initialize() async {
+  /// [path] e [directory] existem para os testes; o app usa o diretório de
+  /// suporte privado da plataforma.
+  Future<void> initialize({String? path, String? directory}) async {
     if (_database != null) return;
-    final directory = await getApplicationSupportDirectory();
-    final path = p.join(directory.path, AppConstants.databaseName);
+    _directory = directory ?? (await getApplicationSupportDirectory()).path;
+    path ??= p.join(_directory!, AppConstants.databaseName);
     _database = await _factory.openDatabase(
       path,
       options: OpenDatabaseOptions(
@@ -39,7 +49,7 @@ class AppDatabase {
         CREATE TABLE accounts (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL,
-          initial_balance REAL NOT NULL DEFAULT 0,
+          initial_balance_cents INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL
         )
       ''');
@@ -53,74 +63,42 @@ class AppDatabase {
           is_default INTEGER NOT NULL DEFAULT 0
         )
       ''');
-      await txn.execute('''
-        CREATE TABLE transactions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
-          amount REAL NOT NULL CHECK(amount > 0),
-          category_id INTEGER NOT NULL,
-          account_id INTEGER NOT NULL,
-          date TEXT NOT NULL,
-          description TEXT NOT NULL DEFAULT '',
-          is_paid INTEGER NOT NULL DEFAULT 1,
-          installment_group TEXT,
-          installment_number INTEGER NOT NULL DEFAULT 1,
-          installment_count INTEGER NOT NULL DEFAULT 1,
-          created_at TEXT NOT NULL,
-          FOREIGN KEY(category_id) REFERENCES categories(id),
-          FOREIGN KEY(account_id) REFERENCES accounts(id)
-        )
-      ''');
-      await txn.execute('''
-        CREATE TABLE goals (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL,
-          target_amount REAL NOT NULL,
-          current_amount REAL NOT NULL DEFAULT 0,
-          deadline TEXT,
-          created_at TEXT NOT NULL
-        )
-      ''');
+      await _createTransactionsTable(txn, 'transactions');
+      await _createGoalsTable(txn, 'goals');
       await txn.execute('''
         CREATE TABLE settings (
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL
         )
       ''');
-      await txn.execute(
-        'CREATE INDEX idx_transactions_date ON transactions(date)',
-      );
-      await txn.execute(
-        'CREATE INDEX idx_transactions_due_status '
-        'ON transactions(is_paid, date)',
-      );
+      await _createTransactionIndexes(txn);
 
       final now = DateTime.now().toIso8601String();
       await txn.insert('accounts', {
         'name': 'Conta principal',
-        'initial_balance': 0.0,
+        'initial_balance_cents': 0,
         'created_at': now,
       });
 
       const categories = [
-        ('Salário', 'income', 'payments', 0xFF0F9D58),
-        ('Freelance', 'income', 'work', 0xFF0B6B3A),
-        ('Outras receitas', 'income', 'add_circle', 0xFF64748B),
-        ('Alimentação', 'expense', 'restaurant', 0xFFE53935),
-        ('Moradia', 'expense', 'home', 0xFF7C3AED),
-        ('Transporte', 'expense', 'directions_car', 0xFF0284C7),
-        ('Saúde', 'expense', 'medical_services', 0xFFDB2777),
-        ('Lazer', 'expense', 'celebration', 0xFFF59E0B),
-        ('Cartão de crédito', 'expense', 'credit_card', 0xFF7C3AED),
-        ('Internet', 'expense', 'wifi', 0xFF0284C7),
-        ('Outras despesas', 'expense', 'more_horiz', 0xFF64748B),
+        ('Salário', 'income', 'payments'),
+        ('Freelance', 'income', 'work'),
+        ('Outras receitas', 'income', 'add_circle'),
+        ('Alimentação', 'expense', 'restaurant'),
+        ('Moradia', 'expense', 'home'),
+        ('Transporte', 'expense', 'directions_car'),
+        ('Saúde', 'expense', 'medical_services'),
+        ('Lazer', 'expense', 'celebration'),
+        ('Cartão de crédito', 'expense', 'credit_card'),
+        ('Internet', 'expense', 'wifi'),
+        ('Outras despesas', 'expense', 'more_horiz'),
       ];
       for (final category in categories) {
         await txn.insert('categories', {
           'name': category.$1,
           'type': category.$2,
           'icon': category.$3,
-          'color': category.$4,
+          'color': CategoryPalette.defaults[category.$1],
           'is_default': 1,
         });
       }
@@ -187,7 +165,112 @@ class AppDatabase {
         }
       });
     }
+    if (oldVersion < 3) {
+      await database.transaction(_upgradeToCents);
+    }
   }
+
+  /// v3: valores em centavos inteiros e cores Grafite nas categorias padrão.
+  ///
+  /// `transactions` e `goals` não são referenciadas por outras tabelas e são
+  /// recriadas. `accounts` é referenciada por `transactions`, então recebe uma
+  /// coluna nova; a antiga `initial_balance` fica sem uso (tem DEFAULT 0), o
+  /// que evita recriar uma tabela pai com as chaves estrangeiras ativas.
+  Future<void> _upgradeToCents(Transaction txn) async {
+    await txn.execute(
+      'ALTER TABLE accounts '
+      'ADD COLUMN initial_balance_cents INTEGER NOT NULL DEFAULT 0',
+    );
+    await txn.execute(
+      'UPDATE accounts '
+      'SET initial_balance_cents = CAST(ROUND(initial_balance * 100) AS INTEGER)',
+    );
+
+    await _createTransactionsTable(txn, 'transactions_v3');
+    await txn.execute('''
+      INSERT INTO transactions_v3 (
+        id, type, amount_cents, category_id, account_id, date, description,
+        is_paid, installment_group, installment_number, installment_count,
+        created_at
+      )
+      SELECT
+        id, type, CAST(ROUND(amount * 100) AS INTEGER), category_id,
+        account_id, date, description, is_paid, installment_group,
+        installment_number, installment_count, created_at
+      FROM transactions
+    ''');
+    await txn.execute('DROP TABLE transactions');
+    await txn.execute('ALTER TABLE transactions_v3 RENAME TO transactions');
+    await _createTransactionIndexes(txn);
+
+    await _createGoalsTable(txn, 'goals_v3');
+    await txn.execute('''
+      INSERT INTO goals_v3 (
+        id, name, target_amount_cents, current_amount_cents, deadline,
+        created_at
+      )
+      SELECT
+        id, name, CAST(ROUND(target_amount * 100) AS INTEGER),
+        CAST(ROUND(current_amount * 100) AS INTEGER), deadline, created_at
+      FROM goals
+    ''');
+    await txn.execute('DROP TABLE goals');
+    await txn.execute('ALTER TABLE goals_v3 RENAME TO goals');
+
+    for (final entry in CategoryPalette.legacyDefaults.entries) {
+      await txn.update(
+        'categories',
+        {'color': CategoryPalette.defaults[entry.key]},
+        where: 'name = ? AND color = ? AND is_default = 1',
+        whereArgs: [entry.key, entry.value],
+      );
+    }
+  }
+
+  Future<void> _createTransactionsTable(
+    DatabaseExecutor database,
+    String name,
+  ) =>
+      database.execute('''
+        CREATE TABLE $name (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
+          amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
+          category_id INTEGER NOT NULL,
+          account_id INTEGER NOT NULL,
+          date TEXT NOT NULL,
+          description TEXT NOT NULL DEFAULT '',
+          is_paid INTEGER NOT NULL DEFAULT 1,
+          installment_group TEXT,
+          installment_number INTEGER NOT NULL DEFAULT 1,
+          installment_count INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL,
+          FOREIGN KEY(category_id) REFERENCES categories(id),
+          FOREIGN KEY(account_id) REFERENCES accounts(id)
+        )
+      ''');
+
+  Future<void> _createTransactionIndexes(DatabaseExecutor database) async {
+    await database.execute(
+      'CREATE INDEX idx_transactions_date ON transactions(date)',
+    );
+    await database.execute(
+      'CREATE INDEX idx_transactions_due_status '
+      'ON transactions(is_paid, date)',
+    );
+  }
+
+  Future<void> _createGoalsTable(DatabaseExecutor database, String name) =>
+      database.execute('''
+        CREATE TABLE $name (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          target_amount_cents INTEGER NOT NULL,
+          current_amount_cents INTEGER NOT NULL DEFAULT 0,
+          deadline TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
 
   Future<void> _ensureCategory(
     DatabaseExecutor database, {
@@ -223,43 +306,64 @@ class AppDatabase {
   }
 
   Future<Map<String, dynamic>> exportSnapshot() async {
-    const tables = [
-      'accounts',
-      'categories',
-      'transactions',
-      'goals',
-    ];
     final snapshot = <String, dynamic>{};
-    for (final table in tables) {
-      snapshot[table] = await db.query(table);
+    for (final entry in SnapshotMigrator.columns.entries) {
+      snapshot[entry.key] = await db.query(entry.key, columns: entry.value);
     }
-    // Preferências de tema, biometria e onboarding pertencem ao dispositivo.
+    // Preferências de tema, bloqueio e onboarding pertencem ao dispositivo.
     snapshot['settings'] = <Map<String, Object?>>[];
     snapshot['exported_at'] = DateTime.now().toUtc().toIso8601String();
     snapshot['schema_version'] = AppConstants.databaseVersion;
     return snapshot;
   }
 
+  /// Substitui os dados financeiros pelo conteúdo do snapshot. Antes disso,
+  /// guarda uma cópia dos dados atuais para permitir desfazer a restauração.
   Future<void> restoreSnapshot(Map<String, dynamic> snapshot) async {
-    const tables = [
-      'accounts',
-      'categories',
-      'transactions',
-      'goals',
-    ];
-    for (final table in [...tables, 'settings']) {
-      if (snapshot[table] is! List) {
-        throw const FormatException('Backup inválido ou incompleto.');
-      }
+    final tables = SnapshotMigrator.upgrade(snapshot);
+    if (await hasLocalData()) await _writeSafetyCopy();
+    await _replaceData(tables);
+  }
+
+  /// Data da cópia feita antes da última restauração, se existir.
+  Future<DateTime?> safetyCopyDate() async {
+    final file = _safetyCopyFile;
+    if (file == null || !await file.exists()) return null;
+    return file.lastModified();
+  }
+
+  /// Desfaz a última restauração, voltando aos dados que existiam antes dela.
+  Future<void> restoreSafetyCopy() async {
+    final file = _safetyCopyFile;
+    if (file == null || !await file.exists()) {
+      throw const SnapshotException('Não há restauração para desfazer.');
     }
+    final data = jsonDecode(await file.readAsString());
+    await _replaceData(
+      SnapshotMigrator.upgrade(Map<String, dynamic>.from(data as Map)),
+    );
+    await file.delete();
+  }
+
+  File? get _safetyCopyFile =>
+      _directory == null ? null : File(p.join(_directory!, _safetyCopyName));
+
+  Future<void> _writeSafetyCopy() async {
+    final file = _safetyCopyFile;
+    if (file == null) return;
+    await file.writeAsString(jsonEncode(await exportSnapshot()), flush: true);
+  }
+
+  Future<void> _replaceData(
+    Map<String, List<Map<String, Object?>>> tables,
+  ) async {
     await db.transaction((txn) async {
-      await txn.delete('transactions');
-      await txn.delete('goals');
-      await txn.delete('categories');
-      await txn.delete('accounts');
-      for (final table in tables) {
-        for (final raw in snapshot[table] as List<dynamic>) {
-          await txn.insert(table, Map<String, Object?>.from(raw as Map));
+      for (final table in SnapshotMigrator.columns.keys.toList().reversed) {
+        await txn.delete(table);
+      }
+      for (final entry in tables.entries) {
+        for (final row in entry.value) {
+          await txn.insert(entry.key, row);
         }
       }
     });

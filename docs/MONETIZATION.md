@@ -11,11 +11,13 @@ básicos ou metas.
 - dashboard, relatórios básicos e metas;
 - temas claro e escuro;
 - SQLite local e funcionamento offline;
-- segurança local básica.
+- backup local criptografado (arquivo protegido por senha);
+- bloqueio por PIN e biometria.
 
 ## Premium planejado
 
-- backup automático, sincronização e histórico de versões;
+- backup na nuvem, sincronização entre aparelhos e histórico de versões;
+- paleta de cores exclusiva para as categorias;
 - recorrências, cartões, parcelas e orçamentos;
 - relatórios avançados e exportação PDF/Excel;
 - inteligência financeira no roadmap.
@@ -23,17 +25,23 @@ básicos ou metas.
 ## Preços de referência
 
 - mensal: R$ 9,90;
-- anual: R$ 79,90;
-- vitalício de lançamento: R$ 149,90.
+- anual: R$ 79,90.
 
-O plano vitalício não deve prometer infraestrutura ilimitada. Serviços de
-nuvem poderão ter franquia ou política própria para cobrir custos recorrentes.
+Não há plano vitalício: os serviços de nuvem têm custo recorrente.
+
+## Forma de pagamento
+
+Pix Automático (recorrência autorizada uma vez pelo usuário no app do banco).
+A integração depende da escolha do PSP; ver
+`docs/superpowers/specs/2026-09-24-versao-0.6.0-orientacoes.md`.
 
 ## Estado da implementação
 
 A estrutura de planos, permissões, cache offline e consulta segura ao Supabase
-está preparada. Pagamentos, período de teste e bloqueios de funcionalidades
-permanecem desativados até a escolha e integração de um provedor oficial.
+está preparada. Os recursos Premium já checam o plano do usuário
+(`PremiumEntitlement.allows`), mas a cobrança fica desligada
+(`AppConstants.premiumEnforced = false`) e tudo continua liberado até a
+integração do Pix Automático entrar em produção.
 
 Somente um backend confiável poderá criar ou alterar assinaturas. O aplicativo
 cliente possui acesso de leitura apenas à assinatura do usuário autenticado.

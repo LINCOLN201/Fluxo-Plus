@@ -1,3 +1,5 @@
+import '../../core/utils/money.dart';
+
 class Account {
   const Account({
     this.id,
@@ -14,14 +16,14 @@ class Account {
   factory Account.fromMap(Map<String, Object?> map) => Account(
         id: map['id'] as int,
         name: map['name'] as String,
-        initialBalance: (map['initial_balance'] as num).toDouble(),
+        initialBalance: Money.fromCents(map['initial_balance_cents']),
         createdAt: DateTime.parse(map['created_at'] as String),
       );
 
   Map<String, Object?> toMap() => {
         if (id != null) 'id': id,
         'name': name,
-        'initial_balance': initialBalance,
+        'initial_balance_cents': Money.toCents(initialBalance),
         'created_at': createdAt.toIso8601String(),
       };
 }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:intl/intl.dart';
+
+import '../../../core/constants/app_constants.dart';
 import '../../../core/premium/premium_entitlement.dart';
 import '../../../core/premium/premium_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -71,11 +74,6 @@ class _PremiumScreenState extends State<PremiumScreen> {
                       detail: 'economize 32%',
                       featured: true,
                     ),
-                    const _PlanCard(
-                      title: 'Vitalício',
-                      price: 'R\$ 149,90',
-                      detail: 'oferta de lançamento',
-                    ),
                   ];
                   if (constraints.maxWidth < 760) {
                     return Column(
@@ -134,51 +132,152 @@ class _Hero extends StatelessWidget {
 
   final PremiumEntitlement entitlement;
 
+  String get _detail {
+    if (entitlement.isActive) {
+      final end = entitlement.status == 'trialing'
+          ? entitlement.trialEndsAt
+          : entitlement.currentPeriodEnd;
+      return end == null
+          ? 'Todos os recursos Premium estão ativos.'
+          : 'Ativo até ${DateFormat('dd/MM/yyyy', 'pt_BR').format(end)}.';
+    }
+    return 'Transações, contas, relatórios, metas e backup local '
+        'ilimitados, sem custo.';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final active = entitlement.isActive;
+    final accent = active ? colors.primary : colors.textMuted;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: context.colors.surface,
+        color: colors.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: context.colors.border),
+        border: Border.all(
+          color: active ? colors.primary : colors.border,
+          width: active ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'SEU PLANO ATUAL',
+                style: TextStyle(
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const Spacer(),
+              _StatusPill(active: active),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(
+                  active
+                      ? Icons.workspace_premium_rounded
+                      : Icons.verified_user_outlined,
+                  color: accent,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entitlement.label,
+                      style: TextStyle(
+                        color: colors.textPrimary,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(_detail, style: TextStyle(color: colors.textMuted)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!active && !AppConstants.premiumEnforced) ...[
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: colors.background,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.celebration_outlined,
+                      size: 18, color: colors.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Durante o lançamento, os recursos Premium estão '
+                      'liberados para todos.',
+                      style: TextStyle(color: colors.textPrimary, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: active ? colors.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: active ? colors.primary : colors.border),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: context.colors.warning.withValues(alpha: .14),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Icon(
-              Icons.workspace_premium_rounded,
-              color: context.colors.warning,
-              size: 36,
-            ),
+          Icon(
+            active ? Icons.check_rounded : Icons.circle,
+            size: active ? 14 : 8,
+            color: active ? colors.onPrimary : colors.textMuted,
           ),
-          const SizedBox(width: 18),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entitlement.label,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  entitlement.isActive
-                      ? 'Seus recursos Premium estão ativos.'
-                      : 'Mais automação, nuvem e inteligência financeira.',
-                  style: TextStyle(color: context.colors.textMuted),
-                ),
-              ],
+          const SizedBox(width: 6),
+          Text(
+            active ? 'Ativo' : 'Em uso',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              color: active ? colors.onPrimary : colors.textPrimary,
             ),
           ),
         ],
@@ -254,7 +353,12 @@ class _Benefits extends StatelessWidget {
       (
         Icons.cloud_done_outlined,
         'Nuvem',
-        'Backup automático, múltiplos dispositivos e histórico.'
+        'Backup na nuvem, sincronização entre aparelhos e histórico.'
+      ),
+      (
+        Icons.palette_outlined,
+        'Personalização',
+        'Paleta de cores exclusiva para as suas categorias.'
       ),
       (
         Icons.event_repeat_rounded,

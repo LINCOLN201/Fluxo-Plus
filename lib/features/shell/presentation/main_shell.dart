@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/backup/local_backup_service.dart';
+import '../../../core/database/app_database.dart';
+import '../../../core/security/pin_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../dashboard/data/dashboard_repository.dart';
 import '../../accounts/data/account_repository.dart';
@@ -42,6 +45,10 @@ class MainShell extends StatefulWidget {
     required this.availableUpdate,
     required this.onOpenUpdate,
     required this.premiumService,
+    required this.pinService,
+    required this.onLockSettingsChanged,
+    required this.localBackupService,
+    required this.database,
   });
 
   final DashboardRepository dashboardRepository;
@@ -59,6 +66,10 @@ class MainShell extends StatefulWidget {
   final AppUpdate? availableUpdate;
   final VoidCallback onOpenUpdate;
   final PremiumService premiumService;
+  final PinService pinService;
+  final VoidCallback onLockSettingsChanged;
+  final LocalBackupService localBackupService;
+  final AppDatabase database;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -70,6 +81,23 @@ class _MainShellState extends State<MainShell> {
   bool _showMobileMore = false;
   TransactionType? _transactionType;
   int _transactionRevision = 0;
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final name = await widget.cloudSyncService.preferredName();
+    if (mounted) setState(() => _userName = name);
+  }
+
+  void _dataChanged() {
+    setState(() => _dashboardRevision++);
+    _loadUserName();
+  }
 
   static const _items = [
     (Icons.grid_view_rounded, 'Dashboard'),
@@ -160,7 +188,7 @@ class _MainShellState extends State<MainShell> {
           updateAvailable: widget.availableUpdate != null,
           onNotifications: _openNotifications,
           onOpenTransactions: _openTransactions,
-          userName: widget.cloudSyncService.displayName,
+          userName: _userName,
         ),
       1 => TransactionsScreen(
           key: ValueKey(_transactionRevision),
@@ -171,7 +199,10 @@ class _MainShellState extends State<MainShell> {
       2 => AccountsScreen(repository: widget.accountRepository),
       3 => GoalsScreen(repository: widget.goalRepository),
       4 => ReportsScreen(repository: widget.reportRepository),
-      5 => CategoriesScreen(repository: widget.categoryRepository),
+      5 => CategoriesScreen(
+          repository: widget.categoryRepository,
+          premiumService: widget.premiumService,
+        ),
       6 => SettingsScreen(
           themeMode: widget.themeMode,
           onThemeChanged: widget.onThemeChanged,
@@ -179,7 +210,13 @@ class _MainShellState extends State<MainShell> {
           biometricEnabled: widget.biometricEnabled,
           onBiometricChanged: widget.onBiometricChanged,
           updateService: widget.updateService,
-          onDataChanged: () => setState(() => _dashboardRevision++),
+          onDataChanged: _dataChanged,
+          premiumService: widget.premiumService,
+          pinService: widget.pinService,
+          onLockSettingsChanged: widget.onLockSettingsChanged,
+          localBackupService: widget.localBackupService,
+          database: widget.database,
+          onOpenPremium: () => setState(() => _selectedIndex = 7),
         ),
       _ => PremiumScreen(service: widget.premiumService),
     };
@@ -200,7 +237,7 @@ class _MainShellState extends State<MainShell> {
               backgroundColor: context.colors.background,
               body: _showMobileMore
                   ? _MobileMore(
-                      userName: widget.cloudSyncService.displayName,
+                      userName: _userName,
                       email: widget.cloudSyncService.currentUser?.email,
                       onSelected: (index) => setState(() {
                         _selectedIndex = index;
