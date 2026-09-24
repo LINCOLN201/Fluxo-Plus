@@ -123,6 +123,8 @@ O desenvolvimento acontece na branch `dev`. Cada alteração passa por análise,
 testes e builds Android/Windows antes de entrar na `main`. A publicação só é
 iniciada depois da integração validada, por meio de uma tag de versão.
 
+O que falta, por fase, está em [docs/ROADMAP.md](docs/ROADMAP.md).
+
 Consulte [docs/RELEASES.md](docs/RELEASES.md) para o fluxo completo:
 `dev` → CI → Pull Request → `main` → release.
 
