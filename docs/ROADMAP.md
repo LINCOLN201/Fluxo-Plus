@@ -24,7 +24,8 @@ Legenda: **(você)** depende do dono do produto · **(código)** é implementaç
   - [ ] ativar PIN, fechar e abrir o app; testar biometria junto;
   - [ ] entrar na conta em um segundo aparelho com dados e ver a pergunta
         de conflito.
-- [ ] **(código)** Notas da versão 0.6.0 e publicação pela tag `v0.6.0`.
+- [x] **(código)** Notas da versão escritas em `docs/releases/v0.6.0.md`.
+- [ ] **(você)** Publicar pela tag `v0.6.0` depois do merge.
 
 ## Fase 1 — 0.7.0: assinatura Premium por Pix Automático
 

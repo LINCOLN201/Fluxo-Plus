@@ -82,6 +82,11 @@ O workflow `.github/workflows/release.yml` executa análise e testes, gera:
 - `fluxo-plus-windows.zip`;
 - uma GitHub Release com notas automáticas.
 
+Antes de criar a tag, escreva `docs/releases/vX.Y.Z.md` com as novidades em
+linguagem simples. Esse texto abre a Release e aparece no aviso de
+atualização dentro do app (as primeiras 7 linhas), por isso use frases curtas.
+Inclua `[mandatory]` somente se a atualização for obrigatória.
+
 O `--build-name` usa a própria tag. Isso garante que o app instalado reconheça
 corretamente a próxima versão.
 
