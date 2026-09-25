@@ -19,6 +19,7 @@ import 'core/security/screen_privacy_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
+import 'core/update/push_notification_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
 import 'features/accounts/data/account_repository.dart';
 import 'features/categories/data/category_repository.dart';
@@ -46,6 +47,7 @@ class FluxoApp extends StatefulWidget {
     required this.pinService,
     required this.localBackupService,
     required this.screenPrivacyService,
+    required this.pushNotificationService,
   });
 
   final AppDatabase database;
@@ -62,6 +64,7 @@ class FluxoApp extends StatefulWidget {
   final PinService pinService;
   final LocalBackupService localBackupService;
   final ScreenPrivacyService screenPrivacyService;
+  final PushNotificationService pushNotificationService;
 
   @override
   State<FluxoApp> createState() => _FluxoAppState();
@@ -86,11 +89,16 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
     biometricEnabled: () => _biometricEnabled,
   );
 
+  StreamSubscription<void>? _pushTapSubscription;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(widget.screenPrivacyService.apply());
+    unawaited(widget.pushNotificationService.initialize());
+    _pushTapSubscription = widget.pushNotificationService.onUpdateTapped
+        .listen((_) => _handleUpdateNotificationTapped());
     _loadStartupState();
   }
 
@@ -235,6 +243,8 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_pushTapSubscription?.cancel());
+    unawaited(widget.pushNotificationService.dispose());
     widget.database.close();
     widget.updateService.close();
     super.dispose();
@@ -294,6 +304,14 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
           ),
       },
     );
+  }
+
+  /// Tocou numa notificação de "chegou atualização": consulta de novo
+  /// (ignorando o intervalo normal de 15 minutos) e já abre a tela.
+  Future<void> _handleUpdateNotificationTapped() async {
+    _updateChecked = false;
+    await _checkForUpdates();
+    await _openAvailableUpdate();
   }
 
   Future<void> _openAvailableUpdate() async {

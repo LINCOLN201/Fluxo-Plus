@@ -2,6 +2,9 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- Notificação de atualização disponível (Android 13+ pede confirmação
+         da pessoa antes de mostrar qualquer notificação). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="Fluxo+"
         android:name="${applicationName}"
@@ -37,6 +40,19 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Ícone, cor e canal padrão das notificações do Firebase Cloud
+             Messaging (avisos de atualização). Sem efeito quando o app é
+             compilado sem google-services.json: o FCM simplesmente não
+             inicializa e essas chaves ficam sem uso. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_fluxo" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification_color" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="atualizacoes" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

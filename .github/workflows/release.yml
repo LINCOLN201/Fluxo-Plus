@@ -149,3 +149,26 @@ jobs:
             fluxo-plus-android.apk.sha256
             fluxo-plus-windows.zip
             fluxo-plus-windows.zip.sha256
+
+  notify:
+    name: Avisar quem já instalou (push)
+    needs: release
+    runs-on: ubuntu-latest
+    # Recurso opcional: sem os dois Secrets do Firebase, este job não faz
+    # nada — a publicação da versão continua normal sem ele.
+    if: ${{ secrets.FIREBASE_PROJECT_ID != '' && secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/notify_update.py
+      - name: Instalar dependências
+        run: pip install --quiet google-auth requests
+      - name: Enviar notificação push
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_SERVICE_ACCOUNT_JSON: service-account.json
+          VERSION: ${{ github.ref_name }}
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > service-account.json
+          python3 scripts/notify_update.py
+          rm -f service-account.json

@@ -106,3 +106,51 @@ Windows ou GitHub Release.
 
 Uma etapa futura pode trocar o ZIP do Windows por MSIX/App Installer assinado,
 permitindo instalação e atualização gerenciadas pelo próprio Windows.
+
+## 5. Notificação push de atualização (opcional, só Android)
+
+Além de o app verificar sozinho quando é aberto, dá para avisar quem já
+instalou mesmo com o app fechado há dias, com uma notificação de verdade na
+barra do celular. Sem isso configurado, o app funciona exatamente igual — só
+não manda essa notificação.
+
+### 5.1. Criar o projeto no Firebase
+
+1. Acesse [console.firebase.google.com](https://console.firebase.google.com) e
+   crie um projeto novo (gratuito, sem cartão).
+2. Dentro do projeto, adicione um app **Android** com o pacote
+   `br.com.fluxoplus.app` (o mesmo `applicationId` do
+   `android/app/build.gradle.kts`).
+3. Baixe o arquivo **`google-services.json`** gerado nessa etapa.
+4. Para rodar localmente (`flutter run`), coloque esse arquivo em
+   `android/app/google-services.json` — ele já está no `.gitignore`, nunca é
+   commitado. Para builds locais sem esse arquivo, o app compila normal, só
+   sem notificações.
+5. Anote o **Project ID** (aparece em Configurações do projeto → Geral).
+
+### 5.2. Criar a chave de serviço (para o GitHub Actions enviar o aviso)
+
+1. Configurações do projeto → **Contas de serviço** → **Gerar nova chave
+   privada**. Baixa um arquivo `.json`.
+2. Converta para Base64:
+
+   ```powershell
+   [Convert]::ToBase64String(
+     [IO.File]::ReadAllBytes("nome-do-arquivo.json")
+   ) | Set-Clipboard
+   ```
+
+### 5.3. Cadastrar os Secrets
+
+Em Settings → Secrets and variables → Actions do repositório, adicione:
+
+- `FIREBASE_PROJECT_ID` — o Project ID da etapa 5.1.
+- `FIREBASE_SERVICE_ACCOUNT_BASE64` — o conteúdo em Base64 da etapa 5.2.
+
+Na próxima tag publicada, o job **"Avisar quem já instalou (push)"** do
+`release.yml` roda automaticamente e manda a notificação. Sem esses dois
+Secrets, esse job é pulado — nada quebra.
+
+O app se inscreve sozinho no aviso assim que abre pela primeira vez, sem
+conta nem cadastro: é um único tópico do Firebase Cloud Messaging
+(`atualizacoes`), sem identificar quem instalou.

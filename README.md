@@ -105,7 +105,9 @@ O executável e suas DLLs ficam em
 O projeto inclui GitHub Actions para validar o código e publicar APK e Windows
 automaticamente a cada tag de versão. Builds públicos consultam a última GitHub
 Release ao iniciar e oferecem a atualização adequada, sem afetar o modo
-offline.
+offline. No Android, dá para avisar por notificação push mesmo com o app
+fechado (opcional, via Firebase Cloud Messaging — ver seção 5 de
+[docs/RELEASES.md](docs/RELEASES.md)).
 
 Consulte [docs/RELEASES.md](docs/RELEASES.md) para configurar a assinatura
 Android, os Secrets e publicar a primeira versão.
