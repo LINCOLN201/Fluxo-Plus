@@ -69,6 +69,19 @@ Achados por gravidade, já com o que foi corrigido.
 
 ### Corrigido nesta rodada
 
+- **Condição de corrida no bloqueio do PIN** — disparando várias tentativas
+  de PIN ao mesmo tempo (um script de ataque, não uma pessoa digitando),
+  o contador de erros perdia gravações por causa da disputa entre as
+  tentativas simultâneas, e o bloqueio nunca chegava a ativar. Comprovado:
+  10 tentativas erradas em paralelo, e o PIN certo ainda era aceito logo
+  em seguida, sem nenhuma espera. **Corrigido:** a checagem e a gravação
+  do contador agora acontecem dentro de uma transação do banco, que
+  serializa tentativas concorrentes.
+- **Builds de produção sem ofuscação** — o APK e o instalador do Windows
+  saíam com todos os nomes de classes, métodos e mensagens do código
+  legíveis, facilitando engenharia reversa. **Corrigido:** os workflows de
+  publicação agora usam `--obfuscate`; os símbolos para decifrar relatórios
+  de falha ficam guardados só como artefato interno do CI, nunca públicos.
 - **Cópia de segurança em texto puro** — o arquivo gravado automaticamente
   antes de qualquer restauração (nuvem, local ou "desfazer") guardava todos
   os lançamentos em JSON simples, sem nenhuma proteção, mesmo que o usuário
@@ -114,6 +127,23 @@ Achados por gravidade, já com o que foi corrigido.
   Content-Security-Policy restritiva.
 - A tela de bloqueio (PIN pela interface) respeita o limite de tentativas
   mesmo com a senha certa, enquanto o tempo de espera não passa.
+
+### Risco aceito: o PIN fica na memória do app enquanto ele roda
+
+Com o app aberto de verdade, tirei um retrato da memória do processo
+(`gcore`) logo depois de digitar o PIN e fechar aquela tela — e o PIN
+apareceu em texto puro, duas vezes, dentro da memória do próprio app.
+É uma limitação do Dart/Flutter: strings não são apagadas da memória
+quando deixam de ser usadas, ficam para trás até o coletor de lixo
+reaproveitar aquele espaço, sem hora certa para isso.
+
+Isso **não é o mesmo problema do banco de dados**: aqui, o invasor
+precisa ter o mesmo nível de acesso de quem já invadiu o aparelho inteiro
+(root ou depuração ligada, com o app aberto e destravado). Não é algo que
+alguém consiga fazer só copiando um arquivo, como no caso do banco. Por
+isso não é uma prioridade agora — mas fica registrado, porque nenhum
+app feito em Flutter escapa dessa limitação sem escrever a comparação de
+senhas em código nativo (fora do Dart), o que é um projeto à parte.
 
 ### Observação de baixo risco
 

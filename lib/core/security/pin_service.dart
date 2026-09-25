@@ -77,6 +77,10 @@ class PinService {
     );
   }
 
+  /// Verifica o PIN. Duas ou mais chamadas concorrentes (um script de ataque
+  /// disparando tentativas em paralelo, por exemplo) não conseguem furar o
+  /// limite: a leitura e a gravação do contador de erros acontecem dentro de
+  /// uma única transação do SQLite, que serializa chamadas simultâneas.
   Future<bool> verify(String pin) async {
     await loadLockout();
     if (blockedFor != null) return false;
@@ -88,19 +92,34 @@ class PinService {
       (stored['iterations'] as num).toInt(),
     );
     final expected = base64Decode(stored['hash'] as String);
-    if (_constantTimeEquals(hash, expected)) {
-      await _resetFailures();
-      return true;
-    }
-    final failures =
-        (int.tryParse(await _readSetting(_failuresKey) ?? '') ?? 0) + 1;
-    await _writeSetting(_failuresKey, '$failures');
-    final wait = lockoutFor(failures);
-    if (wait != null) {
-      _blockedUntil = DateTime.now().add(wait);
-      await _writeSetting(_blockedKey, _blockedUntil!.toIso8601String());
-    }
-    return false;
+    final matches = _constantTimeEquals(hash, expected);
+
+    return _database.db.transaction((txn) async {
+      // Reconfere o bloqueio dentro da transação: outra tentativa concorrente
+      // pode ter acabado de bloquear enquanto o hash acima era calculado.
+      final blockedValue = await _readSetting(_blockedKey, txn);
+      final blockedUntil =
+          blockedValue == null ? null : DateTime.tryParse(blockedValue);
+      if (blockedUntil != null && blockedUntil.isAfter(DateTime.now())) {
+        _blockedUntil = blockedUntil;
+        return false;
+      }
+
+      if (matches) {
+        await _resetFailures(txn);
+        return true;
+      }
+
+      final failures =
+          (int.tryParse(await _readSetting(_failuresKey, txn) ?? '') ?? 0) + 1;
+      await _writeSetting(_failuresKey, '$failures', txn);
+      final wait = lockoutFor(failures);
+      if (wait != null) {
+        _blockedUntil = DateTime.now().add(wait);
+        await _writeSetting(_blockedKey, _blockedUntil!.toIso8601String(), txn);
+      }
+      return false;
+    });
   }
 
   Future<void> clear() async {
@@ -112,17 +131,17 @@ class PinService {
     await _resetFailures();
   }
 
-  Future<void> _resetFailures() async {
+  Future<void> _resetFailures([DatabaseExecutor? executor]) async {
     _blockedUntil = null;
-    await _database.db.delete(
+    await (executor ?? _database.db).delete(
       'settings',
       where: 'key IN (?, ?)',
       whereArgs: [_failuresKey, _blockedKey],
     );
   }
 
-  Future<String?> _readSetting(String key) async {
-    final rows = await _database.db.query(
+  Future<String?> _readSetting(String key, [DatabaseExecutor? executor]) async {
+    final rows = await (executor ?? _database.db).query(
       'settings',
       columns: ['value'],
       where: 'key = ?',
@@ -132,7 +151,12 @@ class PinService {
     return rows.isEmpty ? null : rows.first['value'] as String;
   }
 
-  Future<void> _writeSetting(String key, String value) => _database.db.insert(
+  Future<void> _writeSetting(
+    String key,
+    String value, [
+    DatabaseExecutor? executor,
+  ]) =>
+      (executor ?? _database.db).insert(
         'settings',
         {'key': key, 'value': value},
         conflictAlgorithm: ConflictAlgorithm.replace,

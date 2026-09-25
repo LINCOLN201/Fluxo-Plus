@@ -54,7 +54,8 @@ Implementação **(código)** — detalhes em
 
 Teste de invasão feito em 25/09/2026 (`docs/SECURITY.md`, seção "Teste de
 invasão"). Corrigidos: cópia de segurança em texto puro, nome de arquivo da
-atualização vulnerável a path traversal, senha mínima fraca do backup local.
+atualização vulnerável a path traversal, senha mínima fraca do backup local,
+condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
 
 - [ ] **(prioridade alta, achado do pentest)** Criptografar o banco local com
       SQLCipher (chave no Keystore/cofre). Sem isso, qualquer programa com
