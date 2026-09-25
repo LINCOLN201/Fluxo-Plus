@@ -57,7 +57,7 @@ class PushNotificationService {
     const channel = AndroidNotificationChannel(
       _channelId,
       'Atualizações do Fluxo+',
-      'Avisa quando uma nova versão do app está disponível.',
+      description: 'Avisa quando uma nova versão do app está disponível.',
       importance: Importance.defaultImportance,
     );
     await _localNotifications
@@ -69,8 +69,8 @@ class PushNotificationService {
       const InitializationSettings(
         android: AndroidInitializationSettings('ic_stat_fluxo'),
       ),
-      onSelectNotification: (payload) async {
-        if (payload == _updateActionKey) _tapController.add(null);
+      onDidReceiveNotificationResponse: (response) {
+        if (response.payload == _updateActionKey) _tapController.add(null);
       },
     );
   }
@@ -90,7 +90,8 @@ class PushNotificationService {
         android: AndroidNotificationDetails(
           _channelId,
           'Atualizações do Fluxo+',
-          'Avisa quando uma nova versão do app está disponível.',
+          channelDescription:
+              'Avisa quando uma nova versão do app está disponível.',
           icon: 'ic_stat_fluxo',
           color: Color(0xFFC6FF5E),
           priority: Priority.high,
