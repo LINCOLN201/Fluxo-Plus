@@ -55,3 +55,30 @@ using ((select auth.uid()) = user_id);
 
 revoke insert, update, delete on public.premium_subscriptions
 from anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Reforço de segurança (0.6.0). Idempotente: pode ser executado de novo.
+-- ---------------------------------------------------------------------------
+
+-- Visitantes sem login não enxergam nem alteram nenhuma das tabelas.
+revoke all on public.user_backups from anon;
+revoke all on public.premium_subscriptions from anon;
+
+-- O app nunca apaga backups diretamente; exclusão de conta será feita por uma
+-- função confiável no servidor.
+revoke delete on public.user_backups from authenticated;
+
+-- Backup precisa ser um objeto JSON e ter tamanho razoável (evita abuso de
+-- armazenamento com payloads gigantes).
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'user_backups_payload_valid'
+  ) then
+    alter table public.user_backups
+      add constraint user_backups_payload_valid check (
+        jsonb_typeof(payload) = 'object'
+        and pg_column_size(payload) <= 20 * 1024 * 1024
+      );
+  end if;
+end $$;

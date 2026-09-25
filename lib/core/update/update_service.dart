@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -58,6 +59,17 @@ class UpdateService {
       asset?['browser_download_url'] as String? ?? '',
     );
     if (releaseUrl == null || downloadUrl == null) return null;
+    if (!isTrustedDownload(downloadUrl) || !isTrustedDownload(releaseUrl)) {
+      return null;
+    }
+    final checksumName = '${asset?['name']}.sha256';
+    final checksumAsset = assets.cast<Map<String, dynamic>?>().firstWhere(
+          (item) => item?['name'] == checksumName,
+          orElse: () => null,
+        );
+    final checksumUrl = Uri.tryParse(
+      checksumAsset?['browser_download_url'] as String? ?? '',
+    );
 
     return AppUpdate(
       version: tag,
@@ -65,7 +77,46 @@ class UpdateService {
       downloadUrl: downloadUrl,
       notes: data['body'] as String? ?? '',
       mandatory: (data['body'] as String? ?? '').contains('[mandatory]'),
+      checksumUrl: checksumUrl != null && isTrustedDownload(checksumUrl)
+          ? checksumUrl
+          : null,
     );
+  }
+
+  /// Só aceita instaladores servidos pelo próprio GitHub, via HTTPS.
+  static bool isTrustedDownload(Uri url) =>
+      url.scheme == 'https' &&
+      (url.host == 'github.com' || url.host.endsWith('.github.com'));
+
+  /// Lê o hash de um arquivo no formato do `sha256sum` (`hash  nome`).
+  static String? parseChecksum(String content) {
+    final match = RegExp(r'\b([0-9a-fA-F]{64})\b').firstMatch(content);
+    return match?.group(1)?.toLowerCase();
+  }
+
+  static Future<String> sha256Hex(Stream<List<int>> data) async {
+    final sink = Sha256().newHashSink();
+    await for (final chunk in data) {
+      sink.add(chunk);
+    }
+    sink.close();
+    final hash = await sink.hash();
+    return hash.bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  Future<String?> _expectedChecksum(AppUpdate update) async {
+    final url = update.checksumUrl;
+    if (url == null) return null;
+    final response =
+        await _client.get(url).timeout(const Duration(seconds: 10));
+    if (response.statusCode != 200) {
+      throw StateError('Não foi possível validar a atualização.');
+    }
+    final value = parseChecksum(response.body);
+    if (value == null) {
+      throw StateError('Não foi possível validar a atualização.');
+    }
+    return value;
   }
 
   Future<bool> openDownload(AppUpdate update) => launchUrl(
@@ -92,7 +143,12 @@ class UpdateService {
       );
     }
 
-    final directory = await getTemporaryDirectory();
+    final expected = await _expectedChecksum(update);
+    // Pasta própria, a única compartilhada com o instalador do Android.
+    final directory = Directory(
+      '${(await getTemporaryDirectory()).path}${Platform.pathSeparator}updates',
+    );
+    await directory.create(recursive: true);
     final file = File(
       '${directory.path}${Platform.pathSeparator}'
       'fluxo-plus-${update.version}.apk',
@@ -110,6 +166,13 @@ class UpdateService {
       await sink.close();
     }
     onProgress?.call(1);
+
+    if (expected != null && await sha256Hex(file.openRead()) != expected) {
+      await file.delete();
+      throw StateError(
+        'O arquivo baixado não confere com a versão oficial e foi descartado.',
+      );
+    }
 
     final result = await _installer.invokeMethod<String>(
       'installApk',

@@ -130,4 +130,24 @@ void main() {
     expect((await repository.list()).single.transaction.description, 'Salário');
     expect(await opened.database.safetyCopyDate(), isNull);
   });
+
+  test('cópia antes da restauração expira após 7 dias', () async {
+    await TransactionRepository(opened.database).create(
+      FinanceTransaction(
+        type: TransactionType.income,
+        amount: 10,
+        categoryId: 1,
+        accountId: 1,
+        date: DateTime(2026, 9, 1),
+        description: 'Teste',
+        createdAt: DateTime(2026, 9, 1),
+      ),
+    );
+    await opened.database.restoreSnapshot(_backupFrom050());
+    expect(await opened.database.safetyCopyDate(), isNotNull);
+
+    final later = DateTime.now().add(const Duration(days: 8));
+    expect(await opened.database.safetyCopyDate(now: later), isNull);
+    expect(await opened.database.safetyCopyDate(), isNull);
+  });
 }

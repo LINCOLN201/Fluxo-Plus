@@ -26,6 +26,9 @@ Legenda: **(você)** depende do dono do produto · **(código)** é implementaç
         de conflito.
 - [x] **(código)** Notas da versão escritas em `docs/releases/v0.6.0.md`.
 - [ ] **(você)** Publicar pela tag `v0.6.0` depois do merge.
+- [x] **(código)** Reforço de segurança dos dados (ver `docs/SECURITY.md`).
+- [ ] **(você)** Com o Supabase ativo, rodar o trecho "Reforço de segurança"
+      do `supabase/schema.sql` no SQL Editor (ou pedir para eu aplicar).
 
 ## Fase 1 — 0.7.0: assinatura Premium por Pix Automático
 
@@ -46,6 +49,11 @@ Implementação **(código)** — detalhes em
 - [ ] Termos de uso publicados no site.
 - [ ] Ligar `AppConstants.premiumEnforced = true`, com aviso prévio a quem já
       usa a nuvem.
+
+## Fase 1.5 — Segurança avançada
+
+- [ ] Criptografar o banco local com SQLCipher (chave no Keystore/cofre).
+- [ ] Criptografia de ponta a ponta no backup da nuvem.
 
 ## Fase 2 — 0.8.0: recursos Premium
 

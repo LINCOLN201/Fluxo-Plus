@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 
 import '../../../core/backup/local_backup_service.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/security/identity_check.dart';
 import '../../../core/security/pin_service.dart';
+import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../dashboard/data/dashboard_repository.dart';
 import '../../accounts/data/account_repository.dart';
@@ -49,6 +51,8 @@ class MainShell extends StatefulWidget {
     required this.onLockSettingsChanged,
     required this.localBackupService,
     required this.database,
+    required this.identityCheck,
+    required this.screenPrivacyService,
   });
 
   final DashboardRepository dashboardRepository;
@@ -70,6 +74,8 @@ class MainShell extends StatefulWidget {
   final VoidCallback onLockSettingsChanged;
   final LocalBackupService localBackupService;
   final AppDatabase database;
+  final IdentityCheck identityCheck;
+  final ScreenPrivacyService screenPrivacyService;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -217,6 +223,8 @@ class _MainShellState extends State<MainShell> {
           localBackupService: widget.localBackupService,
           database: widget.database,
           onOpenPremium: () => setState(() => _selectedIndex = 7),
+          identityCheck: widget.identityCheck,
+          screenPrivacyService: widget.screenPrivacyService,
         ),
       _ => PremiumScreen(service: widget.premiumService),
     };

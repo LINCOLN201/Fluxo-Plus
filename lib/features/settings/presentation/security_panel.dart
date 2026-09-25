@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/security/identity_check.dart';
 import '../../../core/security/pin_service.dart';
+import '../../../core/security/screen_privacy_service.dart';
 
 class SecurityPanel extends StatefulWidget {
   const SecurityPanel({
@@ -9,9 +11,13 @@ class SecurityPanel extends StatefulWidget {
     required this.biometricEnabled,
     required this.onBiometricChanged,
     required this.onChanged,
+    required this.screenPrivacyService,
+    required this.identityCheck,
   });
 
   final PinService pinService;
+  final ScreenPrivacyService screenPrivacyService;
+  final IdentityCheck identityCheck;
   final bool biometricEnabled;
   final Future<bool> Function(bool) onBiometricChanged;
   final VoidCallback onChanged;
@@ -22,6 +28,7 @@ class SecurityPanel extends StatefulWidget {
 
 class _SecurityPanelState extends State<SecurityPanel> {
   bool? _pinEnabled;
+  bool? _secureScreen;
 
   @override
   void initState() {
@@ -31,7 +38,25 @@ class _SecurityPanelState extends State<SecurityPanel> {
 
   Future<void> _load() async {
     final enabled = await widget.pinService.isEnabled();
-    if (mounted) setState(() => _pinEnabled = enabled);
+    final secureScreen = await widget.screenPrivacyService.isEnabled();
+    if (mounted) {
+      setState(() {
+        _pinEnabled = enabled;
+        _secureScreen = secureScreen;
+      });
+    }
+  }
+
+  Future<void> _toggleSecureScreen(bool enable) async {
+    if (!enable &&
+        !await widget.identityCheck.confirm(
+          context,
+          reason: 'Confirme para permitir capturas de tela.',
+        )) {
+      return;
+    }
+    await widget.screenPrivacyService.setEnabled(enable);
+    if (mounted) setState(() => _secureScreen = enable);
   }
 
   void _message(String text) =>
@@ -188,6 +213,19 @@ class _SecurityPanelState extends State<SecurityPanel> {
               }
             },
           ),
+          if (widget.screenPrivacyService.isSupported) ...[
+            const Divider(height: 1),
+            SwitchListTile(
+              value: _secureScreen ?? true,
+              secondary: const Icon(Icons.visibility_off_outlined),
+              title: const Text('Ocultar em capturas de tela'),
+              subtitle: const Text(
+                'Esconde seus valores em prints, gravações e na lista de '
+                'apps recentes.',
+              ),
+              onChanged: _secureScreen == null ? null : _toggleSecureScreen,
+            ),
+          ],
         ],
       ),
     );
