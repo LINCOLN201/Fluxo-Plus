@@ -166,6 +166,8 @@ opta pela sincronização, o Supabase armazena um snapshot protegido por RLS.
 
 ## Segurança e privacidade
 
+Detalhes técnicos das proteções em [docs/SECURITY.md](docs/SECURITY.md).
+
 O projeto não possui pagamentos ativos nem analytics. A política de
 privacidade está no [site oficial](https://lincoln201.github.io/Fluxo-Plus/privacidade.html). Login e sincronização são
 opcionais; o modo local continua disponível. Antes de produção comercial,

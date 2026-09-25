@@ -8,6 +8,8 @@ import 'core/database/database_factory.dart';
 import 'core/update/update_service.dart';
 import 'core/security/biometric_service.dart';
 import 'core/security/pin_service.dart';
+import 'core/security/screen_privacy_service.dart';
+import 'core/security/secure_session_storage.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
@@ -28,6 +30,11 @@ Future<void> main() async {
     await Supabase.initialize(
       url: supabaseUrl,
       publishableKey: supabaseKey,
+      authOptions: FlutterAuthClientOptions(
+        localStorage: SecureSessionStorage(
+          key: SecureSessionStorage.defaultKey(supabaseUrl),
+        ),
+      ),
     );
     supabaseClient = Supabase.instance.client;
   }
@@ -47,6 +54,7 @@ Future<void> main() async {
       biometricService: BiometricService(),
       pinService: PinService(database),
       localBackupService: LocalBackupService(database),
+      screenPrivacyService: ScreenPrivacyService(database),
     ),
   );
 }

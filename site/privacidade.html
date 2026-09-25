@@ -3,6 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; img-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
     <title>Privacidade — Fluxo+</title>
     <meta name="description" content="Como o Fluxo+ trata os seus dados." />
     <meta name="theme-color" content="#0a0a0b" />
@@ -26,7 +31,7 @@
 
     <main class="container texto">
       <h1>Política de privacidade</h1>
-      <p>Última atualização: 24 de setembro de 2026.</p>
+      <p>Última atualização: 25 de setembro de 2026.</p>
 
       <p>
         O Fluxo+ foi feito para que as suas finanças fiquem com você. Esta
@@ -41,7 +46,28 @@
         transações, metas e preferências. Nada disso é enviado para servidores.
       </p>
 
-      <h2>2. Backup local</h2>
+      <h2>2. Proteções no aparelho</h2>
+      <ul>
+        <li>
+          No Android, os dados do Fluxo+ <strong>não entram no backup
+          automático do Google</strong> nem na transferência entre aparelhos;
+          a cópia dos seus dados só existe quando você mesmo gera um backup.
+        </li>
+        <li>
+          Por padrão, a tela do app fica oculta em capturas de tela, gravações
+          e na lista de apps recentes.
+        </li>
+        <li>
+          Ações sensíveis, como exportar ou substituir dados, pedem PIN ou
+          biometria quando o bloqueio está ativo.
+        </li>
+        <li>
+          A sessão da conta fica no armazenamento seguro do sistema (Keystore
+          no Android, cofre de credenciais no Windows).
+        </li>
+      </ul>
+
+      <h2>3. Backup local</h2>
       <p>
         Quando você gera um backup local, o Fluxo+ cria um arquivo criptografado
         com uma senha escolhida por você. O arquivo fica onde você decidir
@@ -49,7 +75,7 @@
         isso, guarde-a com cuidado.
       </p>
 
-      <h2>3. Conta, backup na nuvem e sincronização</h2>
+      <h2>4. Conta, backup na nuvem e sincronização</h2>
       <p>Esses recursos são opcionais. Ao criar uma conta, armazenamos:</p>
       <ul>
         <li>seu e-mail e, se informado, seu nome;</li>
@@ -62,7 +88,7 @@
         como tema e bloqueio, não são enviadas.
       </p>
 
-      <h2>4. Verificação de atualizações</h2>
+      <h2>5. Verificação de atualizações</h2>
       <p>
         Ao abrir com internet, o aplicativo consulta a página pública de versões
         do projeto no GitHub para saber se existe uma atualização. Essa consulta
@@ -70,21 +96,21 @@
         GitHub recebe o endereço IP da conexão.
       </p>
 
-      <h2>5. O que o Fluxo+ não faz</h2>
+      <h2>6. O que o Fluxo+ não faz</h2>
       <ul>
         <li>não exibe anúncios;</li>
         <li>não usa ferramentas de análise ou rastreamento;</li>
         <li>não vende nem compartilha dados com terceiros para publicidade.</li>
       </ul>
 
-      <h2>6. Bloqueio por biometria e PIN</h2>
+      <h2>7. Bloqueio por biometria e PIN</h2>
       <p>
         A biometria é verificada pelo próprio sistema do aparelho; o Fluxo+
         recebe apenas a resposta "autorizado" ou "não autorizado". O PIN é
         guardado de forma cifrada (hash) e nunca sai do aparelho.
       </p>
 
-      <h2>7. Seus direitos</h2>
+      <h2>8. Seus direitos</h2>
       <p>
         Você pode, a qualquer momento, apagar os dados locais desinstalando o
         aplicativo, sair da conta e pedir a exclusão da conta e do backup na
@@ -93,7 +119,7 @@
         sem incluir informações pessoais na mensagem; entraremos em contato.
       </p>
 
-      <h2>8. Mudanças nesta política</h2>
+      <h2>9. Mudanças nesta política</h2>
       <p>
         Alterações serão publicadas nesta página, com a data de atualização
         acima. Mudanças relevantes também serão avisadas nas notas de versão.

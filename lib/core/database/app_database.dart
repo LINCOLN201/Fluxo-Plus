@@ -14,6 +14,10 @@ class AppDatabase {
 
   static const _safetyCopyName = 'antes-da-restauracao.json';
 
+  /// A cópia feita antes de restaurar guarda todos os dados em claro; ela só
+  /// existe para desfazer um engano recente e é apagada depois desse prazo.
+  static const safetyCopyLifetime = Duration(days: 7);
+
   final DatabaseFactory _factory;
   Database? _database;
   String? _directory;
@@ -41,6 +45,7 @@ class AppDatabase {
         onUpgrade: _upgrade,
       ),
     );
+    await safetyCopyDate(); // apaga a cópia de restauração vencida
   }
 
   Future<void> _create(Database database, int version) async {
@@ -326,10 +331,15 @@ class AppDatabase {
   }
 
   /// Data da cópia feita antes da última restauração, se existir.
-  Future<DateTime?> safetyCopyDate() async {
+  Future<DateTime?> safetyCopyDate({DateTime? now}) async {
     final file = _safetyCopyFile;
     if (file == null || !await file.exists()) return null;
-    return file.lastModified();
+    final date = await file.lastModified();
+    if ((now ?? DateTime.now()).difference(date) > safetyCopyLifetime) {
+      await file.delete();
+      return null;
+    }
+    return date;
   }
 
   /// Desfaz a última restauração, voltando aos dados que existiam antes dela.

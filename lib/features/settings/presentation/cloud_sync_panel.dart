@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/security/identity_check.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -11,9 +12,11 @@ class CloudSyncPanel extends StatefulWidget {
     required this.onDataChanged,
     required this.allowed,
     required this.onOpenPremium,
+    required this.identityCheck,
   });
 
   final CloudSyncService service;
+  final IdentityCheck identityCheck;
   final VoidCallback onDataChanged;
 
   /// Backup na nuvem liberado pelo plano (Premium).
@@ -269,6 +272,13 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
       ),
     );
     if (choice == null || !mounted) return;
+    if (choice == SyncResolution.useCloud &&
+        !await widget.identityCheck.confirm(
+          context,
+          reason: 'Confirme para substituir os dados deste aparelho.',
+        )) {
+      return;
+    }
     final ok = await _run(
       () => widget.service.synchronize(resolution: choice),
       choice == SyncResolution.useCloud
@@ -300,6 +310,12 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
       ),
     );
     if (confirmed != true || !mounted) return;
+    if (!await widget.identityCheck.confirm(
+      context,
+      reason: 'Confirme para substituir os dados deste aparelho.',
+    )) {
+      return;
+    }
     final ok = await _run(
       widget.service.restoreBackup,
       'Backup restaurado neste dispositivo.',

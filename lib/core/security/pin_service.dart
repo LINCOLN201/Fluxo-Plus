@@ -12,15 +12,19 @@ class PinService {
   PinService(this._database, {this.iterations = 60000});
 
   static const _key = 'pin_hash';
+  static const _failuresKey = 'pin_failures';
+  static const _blockedKey = 'pin_blocked_until';
   static const minLength = 4;
   static const maxLength = 8;
+
+  /// Tentativas livres antes do primeiro bloqueio.
   static const maxAttempts = 5;
   static const lockout = Duration(seconds: 30);
+  static const maxLockout = Duration(hours: 1);
 
   final AppDatabase _database;
   final int iterations;
 
-  int _failures = 0;
   DateTime? _blockedUntil;
 
   Future<bool> isEnabled() async => await _read() != null;
@@ -29,6 +33,21 @@ class PinService {
       pin.length >= minLength &&
       pin.length <= maxLength &&
       RegExp(r'^\d+$').hasMatch(pin);
+
+  /// Espera após erros seguidos: 30 s no 5º erro, dobrando a cada novo erro
+  /// até 1 hora. Fica gravada no banco, então fechar e abrir o app não zera.
+  static Duration? lockoutFor(int failures) {
+    if (failures < maxAttempts) return null;
+    final doublings = failures - maxAttempts;
+    final seconds = lockout.inSeconds * (1 << doublings.clamp(0, 12));
+    return Duration(seconds: seconds.clamp(0, maxLockout.inSeconds));
+  }
+
+  /// Carrega o bloqueio gravado (chamar antes de mostrar a tela de PIN).
+  Future<void> loadLockout() async {
+    final value = await _readSetting(_blockedKey);
+    _blockedUntil = value == null ? null : DateTime.tryParse(value);
+  }
 
   /// Tempo restante de espera após muitas tentativas erradas.
   Duration? get blockedFor {
@@ -59,6 +78,7 @@ class PinService {
   }
 
   Future<bool> verify(String pin) async {
+    await loadLockout();
     if (blockedFor != null) return false;
     final stored = await _read();
     if (stored == null) return false;
@@ -69,22 +89,53 @@ class PinService {
     );
     final expected = base64Decode(stored['hash'] as String);
     if (_constantTimeEquals(hash, expected)) {
-      _failures = 0;
-      _blockedUntil = null;
+      await _resetFailures();
       return true;
     }
-    _failures++;
-    if (_failures >= maxAttempts) {
-      _failures = 0;
-      _blockedUntil = DateTime.now().add(lockout);
+    final failures =
+        (int.tryParse(await _readSetting(_failuresKey) ?? '') ?? 0) + 1;
+    await _writeSetting(_failuresKey, '$failures');
+    final wait = lockoutFor(failures);
+    if (wait != null) {
+      _blockedUntil = DateTime.now().add(wait);
+      await _writeSetting(_blockedKey, _blockedUntil!.toIso8601String());
     }
     return false;
   }
 
-  Future<void> clear() => _database.db.delete(
+  Future<void> clear() async {
+    await _database.db.delete(
+      'settings',
+      where: 'key = ?',
+      whereArgs: [_key],
+    );
+    await _resetFailures();
+  }
+
+  Future<void> _resetFailures() async {
+    _blockedUntil = null;
+    await _database.db.delete(
+      'settings',
+      where: 'key IN (?, ?)',
+      whereArgs: [_failuresKey, _blockedKey],
+    );
+  }
+
+  Future<String?> _readSetting(String key) async {
+    final rows = await _database.db.query(
+      'settings',
+      columns: ['value'],
+      where: 'key = ?',
+      whereArgs: [key],
+      limit: 1,
+    );
+    return rows.isEmpty ? null : rows.first['value'] as String;
+  }
+
+  Future<void> _writeSetting(String key, String value) => _database.db.insert(
         'settings',
-        where: 'key = ?',
-        whereArgs: [_key],
+        {'key': key, 'value': value},
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
   Future<Map<String, dynamic>?> _read() async {

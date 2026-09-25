@@ -6,7 +6,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxo_plus/core/backup/local_backup_service.dart';
 import 'package:fluxo_plus/core/premium/premium_service.dart';
+import 'package:fluxo_plus/core/security/biometric_service.dart';
+import 'package:fluxo_plus/core/security/identity_check.dart';
 import 'package:fluxo_plus/core/security/pin_service.dart';
+import 'package:fluxo_plus/core/security/screen_privacy_service.dart';
 import 'package:fluxo_plus/core/sync/cloud_sync_service.dart';
 import 'package:fluxo_plus/core/theme/app_theme.dart';
 import 'package:fluxo_plus/core/update/update_service.dart';
@@ -94,6 +97,12 @@ void main() {
               localBackupService: LocalBackupService(opened.database),
               database: opened.database,
               onOpenPremium: () {},
+              identityCheck: IdentityCheck(
+                pinService: PinService(opened.database, iterations: 1000),
+                biometricService: BiometricService(),
+                biometricEnabled: () => false,
+              ),
+              screenPrivacyService: ScreenPrivacyService(opened.database),
             ),
           ),
         );

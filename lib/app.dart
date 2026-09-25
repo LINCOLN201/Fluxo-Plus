@@ -13,7 +13,9 @@ import 'core/update/update_service.dart';
 import 'core/backup/local_backup_service.dart';
 import 'core/premium/premium_entitlement.dart';
 import 'core/security/biometric_service.dart';
+import 'core/security/identity_check.dart';
 import 'core/security/pin_service.dart';
+import 'core/security/screen_privacy_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
@@ -43,6 +45,7 @@ class FluxoApp extends StatefulWidget {
     required this.premiumService,
     required this.pinService,
     required this.localBackupService,
+    required this.screenPrivacyService,
   });
 
   final AppDatabase database;
@@ -58,6 +61,7 @@ class FluxoApp extends StatefulWidget {
   final PremiumService premiumService;
   final PinService pinService;
   final LocalBackupService localBackupService;
+  final ScreenPrivacyService screenPrivacyService;
 
   @override
   State<FluxoApp> createState() => _FluxoAppState();
@@ -76,10 +80,17 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
 
   bool get _lockEnabled => _biometricEnabled || _pinEnabled;
 
+  late final IdentityCheck _identityCheck = IdentityCheck(
+    pinService: widget.pinService,
+    biometricService: widget.biometricService,
+    biometricEnabled: () => _biometricEnabled,
+  );
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    unawaited(widget.screenPrivacyService.apply());
     _loadStartupState();
   }
 
@@ -209,7 +220,9 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   }
 
   Future<bool> _changeBiometric(bool enabled) async {
-    if (enabled && !await widget.biometricService.authenticate()) return false;
+    // Ligar ou desligar exige a biometria: ninguém desativa o bloqueio
+    // com o aparelho de outra pessoa na mão.
+    if (!await widget.biometricService.authenticate()) return false;
     await widget.database.db.insert(
       'settings',
       {'key': 'biometric_enabled', 'value': enabled ? 'true' : 'false'},
@@ -276,6 +289,8 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             onLockSettingsChanged: _reloadLockSettings,
             localBackupService: widget.localBackupService,
             database: widget.database,
+            identityCheck: _identityCheck,
+            screenPrivacyService: widget.screenPrivacyService,
           ),
       },
     );
@@ -318,6 +333,21 @@ class _LockScreenState extends State<_LockScreen> {
   bool _checking = false;
 
   @override
+  void initState() {
+    super.initState();
+    widget.pinService.loadLockout().then((_) {
+      final blocked = widget.pinService.blockedFor;
+      if (mounted && blocked != null) {
+        setState(() => _error = _waitMessage(blocked));
+      }
+    });
+  }
+
+  static String _waitMessage(Duration wait) => wait.inMinutes >= 1
+      ? 'Muitas tentativas. Aguarde ${wait.inMinutes + 1} min.'
+      : 'Muitas tentativas. Aguarde ${wait.inSeconds + 1} segundos.';
+
+  @override
   void dispose() {
     _pin.dispose();
     super.dispose();
@@ -335,9 +365,7 @@ class _LockScreenState extends State<_LockScreen> {
     setState(() {
       _checking = false;
       _pin.clear();
-      _error = blocked == null
-          ? 'PIN incorreto.'
-          : 'Muitas tentativas. Aguarde ${blocked.inSeconds + 1} segundos.';
+      _error = blocked == null ? 'PIN incorreto.' : _waitMessage(blocked);
     });
   }
 

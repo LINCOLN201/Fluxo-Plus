@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/backup/local_backup_service.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/security/identity_check.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// Backup local criptografado — recurso gratuito.
@@ -13,9 +14,11 @@ class LocalBackupPanel extends StatefulWidget {
     required this.service,
     required this.database,
     required this.onDataChanged,
+    required this.identityCheck,
   });
 
   final LocalBackupService service;
+  final IdentityCheck identityCheck;
   final AppDatabase database;
   final VoidCallback onDataChanged;
 
@@ -135,7 +138,12 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
       ) ==
       true;
 
+  Future<bool> _confirmIdentity(String reason) =>
+      widget.identityCheck.confirm(context, reason: reason);
+
   Future<void> _export() async {
+    if (!await _confirmIdentity('Confirme para exportar seus dados.')) return;
+    if (!mounted) return;
     final password = await _askPassword(confirm: true);
     if (password == null || !mounted) return;
     await _busyWhile(() async {
@@ -150,6 +158,9 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
   }
 
   Future<void> _import() async {
+    if (!await _confirmIdentity('Confirme para substituir seus dados.')) {
+      return;
+    }
     final file = await FilePicker.pickFile(dialogTitle: 'Escolha o backup');
     if (file == null || !mounted) return;
     final proceed = await _confirm(
@@ -177,6 +188,9 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
       'Desfazer',
     );
     if (!proceed || !mounted) return;
+    if (!await _confirmIdentity('Confirme para desfazer a restauração.')) {
+      return;
+    }
     await _busyWhile(() async {
       await widget.database.restoreSafetyCopy();
       widget.onDataChanged();
