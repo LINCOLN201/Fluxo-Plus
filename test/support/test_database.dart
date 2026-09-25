@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:fluxo_plus/core/database/app_database.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -15,6 +16,9 @@ class TestDatabase {
 
   static Future<TestDatabase> open({Directory? directory}) async {
     sqfliteFfiInit();
+    // A cópia de segurança antes de restaurar usa o armazenamento seguro do
+    // sistema; nos testes não há Keystore/cofre real, então usamos o mock.
+    FlutterSecureStorage.setMockInitialValues({});
     final dir =
         directory ?? await Directory.systemTemp.createTemp('fluxo_plus_test_');
     final database = AppDatabase(databaseFactoryFfi);

@@ -71,8 +71,10 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
             children: [
               Text(
                 confirm
-                    ? 'O arquivo será protegido com esta senha. Guarde-a bem: '
-                        'sem ela não é possível recuperar o backup.'
+                    ? 'O arquivo será protegido com esta senha. Prefira uma '
+                        'frase do que uma palavra só (ex.: "sol quente de '
+                        'domingo"). Guarde-a bem: sem ela não é possível '
+                        'recuperar o backup.'
                     : 'Digite a senha usada ao gerar o backup.',
               ),
               const SizedBox(height: 16),

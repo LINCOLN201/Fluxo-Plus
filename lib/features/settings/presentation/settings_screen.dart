@@ -324,6 +324,7 @@ class _NameTileState extends State<_NameTile> {
           autofocus: true,
           textCapitalization: TextCapitalization.words,
           decoration: const InputDecoration(labelText: 'Seu nome'),
+          onSubmitted: (_) => Navigator.pop(context, true),
         ),
         actions: [
           TextButton(

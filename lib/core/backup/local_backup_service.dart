@@ -13,7 +13,7 @@ class LocalBackupService {
 
   static const format = 'fluxo-plus-backup';
   static const fileExtension = 'fluxobackup';
-  static const minPasswordLength = 6;
+  static const minPasswordLength = 10;
 
   final AppDatabase _database;
 
