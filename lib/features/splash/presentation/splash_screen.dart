@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/fluxo_mark.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -63,11 +64,7 @@ class _SplashMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(
-        Icons.show_chart_rounded,
-        size: 45,
-        color: AppColors.dark.primary,
-      ),
+      child: FluxoMark(size: 50, color: AppColors.dark.textPrimary),
     );
   }
 }
