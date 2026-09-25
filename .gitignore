@@ -20,12 +20,16 @@ macos/Pods/
 
 # Secrets and local databases
 .env
+# Config do Firebase (notificações push): não é secreto, mas é específico
+# de cada projeto — baixado do console e injetado no CI via Secret.
+android/app/google-services.json
 *.db
 *.sqlite
 *.sqlite3
 
 # Local toolchain
 .tools/
+__pycache__/
 
 # Brainstorming companion mockups (ephemeral)
 .superpowers/

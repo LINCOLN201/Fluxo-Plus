@@ -30,6 +30,25 @@ Legenda: **(você)** depende do dono do produto · **(código)** é implementaç
 - [ ] **(você)** Com o Supabase ativo, rodar o trecho "Reforço de segurança"
       do `supabase/schema.sql` no SQL Editor (ou pedir para eu aplicar).
 
+## Notificação push de atualização (pronta, falta você configurar)
+
+Avisa quem já instalou o Fluxo+ quando sai uma versão nova, com notificação
+de verdade na barra do celular — mesmo com o app fechado. Passo a passo
+completo em `docs/RELEASES.md`, seção 5.
+
+- [x] **(código)** App se inscreve sozinho no aviso (Firebase Cloud
+      Messaging), sem conta nem identificação de quem instalou.
+- [x] **(código)** Notificação com a logo do Fluxo+, funcionando com o app
+      aberto, em segundo plano ou fechado.
+- [x] **(código)** Workflow de publicação manda o aviso automaticamente a
+      cada versão nova (job "Avisar quem já instalou").
+- [ ] **(você)** Criar o projeto no [Firebase](https://console.firebase.google.com)
+      e cadastrar `FIREBASE_PROJECT_ID` e `FIREBASE_SERVICE_ACCOUNT_BASE64`
+      nos Secrets do GitHub (`docs/RELEASES.md`, seção 5).
+- [ ] **(você)** Testar no aparelho: publicar uma versão de teste e conferir
+      se a notificação chega com o app fechado.
+- Só Android por enquanto; o Windows continua avisando só quando o app abre.
+
 ## Fase 1 — 0.7.0: assinatura Premium por Pix Automático
 
 Pré-requisitos **(você)**:

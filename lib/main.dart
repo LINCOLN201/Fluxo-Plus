@@ -12,6 +12,7 @@ import 'core/security/screen_privacy_service.dart';
 import 'core/security/secure_session_storage.dart';
 import 'core/sync/cloud_sync_service.dart';
 import 'core/premium/premium_service.dart';
+import 'core/update/push_notification_service.dart';
 import 'features/dashboard/data/dashboard_repository.dart';
 import 'features/accounts/data/account_repository.dart';
 import 'features/categories/data/category_repository.dart';
@@ -55,6 +56,7 @@ Future<void> main() async {
       pinService: PinService(database),
       localBackupService: LocalBackupService(database),
       screenPrivacyService: ScreenPrivacyService(database),
+      pushNotificationService: PushNotificationService(),
     ),
   );
 }
