@@ -52,7 +52,16 @@ Implementação **(código)** — detalhes em
 
 ## Fase 1.5 — Segurança avançada
 
-- [ ] Criptografar o banco local com SQLCipher (chave no Keystore/cofre).
+Teste de invasão feito em 25/09/2026 (`docs/SECURITY.md`, seção "Teste de
+invasão"). Corrigidos: cópia de segurança em texto puro, nome de arquivo da
+atualização vulnerável a path traversal, senha mínima fraca do backup local,
+condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
+
+- [ ] **(prioridade alta, achado do pentest)** Criptografar o banco local com
+      SQLCipher (chave no Keystore/cofre). Sem isso, qualquer programa com
+      acesso ao arquivo `fluxo_plus.db` lê todas as transações e o hash do
+      PIN sem passar pelo app, e pode quebrar o PIN por força bruta offline
+      sem nenhum limite de tentativas (comprovado no pentest).
 - [ ] Criptografia de ponta a ponta no backup da nuvem.
 
 ## Fase 2 — 0.8.0: recursos Premium

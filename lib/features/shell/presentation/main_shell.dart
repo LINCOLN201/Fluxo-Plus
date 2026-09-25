@@ -7,6 +7,7 @@ import '../../../core/security/identity_check.dart';
 import '../../../core/security/pin_service.dart';
 import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/fluxo_mark.dart';
 import '../../dashboard/data/dashboard_repository.dart';
 import '../../accounts/data/account_repository.dart';
 import '../../categories/data/category_repository.dart';
@@ -499,7 +500,7 @@ class _DesktopSidebar extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
               child: Row(
                 children: [
-                  const _FluxoMark(size: 34),
+                  FluxoMark(size: 34, color: context.colors.textPrimary),
                   const SizedBox(width: 12),
                   const Text(
                     'Fluxo',
@@ -707,51 +708,6 @@ class _MobileNavigation extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _FluxoMark extends StatelessWidget {
-  const _FluxoMark({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: size,
-      child: Stack(
-        children: [
-          Align(
-            alignment: const Alignment(-0.5, -0.65),
-            child: Container(
-              width: size * .78,
-              height: size * .28,
-              decoration: BoxDecoration(
-                color: context.colors.primary,
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-              ),
-            ),
-          ),
-          Align(
-            alignment: const Alignment(-0.65, 0.4),
-            child: Transform.rotate(
-              angle: -.35,
-              child: Container(
-                width: size * .32,
-                height: size * .7,
-                decoration: BoxDecoration(
-                  color: context.colors.primary,
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

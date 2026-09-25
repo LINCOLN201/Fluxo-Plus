@@ -7,18 +7,21 @@ import 'package:sqflite/sqflite.dart';
 
 import '../constants/app_constants.dart';
 import '../theme/category_palette.dart';
+import 'safety_copy_cipher.dart';
 import 'snapshot_migrator.dart';
 
 class AppDatabase {
   AppDatabase(this._factory);
 
-  static const _safetyCopyName = 'antes-da-restauracao.json';
+  // Extensão neutra: o conteúdo é binário cifrado, não é mais JSON.
+  static const _safetyCopyName = 'antes-da-restauracao.enc';
 
   /// A cópia feita antes de restaurar guarda todos os dados em claro; ela só
   /// existe para desfazer um engano recente e é apagada depois desse prazo.
   static const safetyCopyLifetime = Duration(days: 7);
 
   final DatabaseFactory _factory;
+  final SafetyCopyCipher _safetyCopyCipher = SafetyCopyCipher();
   Database? _database;
   String? _directory;
 
@@ -348,7 +351,8 @@ class AppDatabase {
     if (file == null || !await file.exists()) {
       throw const SnapshotException('Não há restauração para desfazer.');
     }
-    final data = jsonDecode(await file.readAsString());
+    final json = await _safetyCopyCipher.decrypt(await file.readAsBytes());
+    final data = jsonDecode(json);
     await _replaceData(
       SnapshotMigrator.upgrade(Map<String, dynamic>.from(data as Map)),
     );
@@ -358,10 +362,17 @@ class AppDatabase {
   File? get _safetyCopyFile =>
       _directory == null ? null : File(p.join(_directory!, _safetyCopyName));
 
+  /// Cifrada com uma chave gerada no aparelho (Keystore/cofre), não com uma
+  /// senha do usuário: precisa poder ser lida de volta sem perguntar nada,
+  /// para "Desfazer última restauração" continuar sendo um toque só.
   Future<void> _writeSafetyCopy() async {
     final file = _safetyCopyFile;
     if (file == null) return;
-    await file.writeAsString(jsonEncode(await exportSnapshot()), flush: true);
+    final json = jsonEncode(await exportSnapshot());
+    await file.writeAsBytes(
+      await _safetyCopyCipher.encrypt(json),
+      flush: true,
+    );
   }
 
   Future<void> _replaceData(

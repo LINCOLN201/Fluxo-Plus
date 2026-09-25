@@ -58,6 +58,7 @@ jobs:
           flutter build apk --release \
             --build-name="$VERSION" \
             --build-number="${{ github.run_number }}" \
+            --obfuscate --split-debug-info=build/symbols \
             --dart-define=UPDATE_REPOSITORY=${{ github.repository }} \
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -67,6 +68,14 @@ jobs:
         with:
           name: fluxo-plus-android
           path: fluxo-plus-android.apk
+      # Símbolos para decifrar um relatório de falha desta versão. Ficam só
+      # como artefato do workflow (não vão para a Release pública), porque
+      # publicá-los anularia a ofuscação do APK.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-android-symbols
+          path: build/symbols
+          retention-days: 180
 
   windows:
     name: Windows
@@ -86,6 +95,7 @@ jobs:
           flutter build windows --release `
             --build-name="$version" `
             --build-number="${{ github.run_number }}" `
+            --obfuscate --split-debug-info=build/symbols `
             --dart-define=UPDATE_REPOSITORY=${{ github.repository }} `
             --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} `
             --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -99,6 +109,11 @@ jobs:
         with:
           name: fluxo-plus-windows
           path: fluxo-plus-windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-windows-symbols
+          path: build/symbols
+          retention-days: 180
 
   release:
     name: GitHub Release

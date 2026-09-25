@@ -149,9 +149,10 @@ class UpdateService {
       '${(await getTemporaryDirectory()).path}${Platform.pathSeparator}updates',
     );
     await directory.create(recursive: true);
+    // Nome fixo: o número da versão vem da Release do GitHub e nunca deve
+    // virar parte de um caminho de arquivo sem validação.
     final file = File(
-      '${directory.path}${Platform.pathSeparator}'
-      'fluxo-plus-${update.version}.apk',
+      '${directory.path}${Platform.pathSeparator}fluxo-plus-update.apk',
     );
     final sink = file.openWrite();
     var received = 0;
