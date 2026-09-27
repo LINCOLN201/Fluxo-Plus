@@ -50,10 +50,9 @@ envolva dados.
 
 ## Próximos passos recomendados
 
-1. **Criptografar o banco local (SQLCipher)**, com a chave no Keystore/cofre.
-   Protege contra aparelho com root ou cópia física do armazenamento. Exige
-   trocar o `sqflite` e migrar bancos existentes; deve ser feito numa versão
-   própria e testado em aparelho real antes de publicar.
+1. ~~Criptografar o banco local (SQLCipher)~~ — feito em 27/09/2026, só
+   Android (ver seção abaixo). Falta o mesmo no Windows: não existe um
+   `sqlite3` com SQLCipher testado para essa plataforma ainda.
 2. **Criptografia de ponta a ponta no backup da nuvem**, com uma senha de
    sincronização que só o usuário conhece: nem o Supabase conseguiria ler os
    dados. Exige cuidado com recuperação (senha perdida = backup perdido).
@@ -100,21 +99,34 @@ Achados por gravidade, já com o que foi corrigido.
   PBKDF2. **Corrigido:** mínimo de 10 caracteres, com sugestão de usar uma
   frase em vez de uma palavra só.
 
-### Risco conhecido, sem correção nesta versão (ver item 1 acima)
+### Corrigido em 27/09/2026 — banco local criptografado (Android)
 
-- **[Crítico] O banco de dados local não é criptografado.** Copiando o
+- **[Crítico] O banco de dados local não era criptografado.** Copiando o
   arquivo `fluxo_plus.db` do aparelho (USB debugging, root, backup, malware
-  com acesso ao armazenamento), qualquer programa comum lê todas as
+  com acesso ao armazenamento), qualquer programa comum lia todas as
   transações, saldos e o hash do PIN, sem passar pelo app. Comprovado: dump
   direto do arquivo com um script Python, sem nenhuma senha.
-- **[Crítico], mesma causa** — **o bloqueio de tentativas do PIN só existe
-  na tela do app.** Quem tem o arquivo do banco pode: (a) rodar força
+- **[Crítico], mesma causa** — **o bloqueio de tentativas do PIN só existia
+  na tela do app.** Quem tinha o arquivo do banco podia: (a) rodar força
   bruta offline sem nenhum limite — comprovado: um PIN de 4 dígitos foi
   quebrado em ~103 segundos com um script Python simples de uma só
   thread, sem otimização (um ataque de verdade, com GPU, faz isso em
   segundos); ou (b) apagar as linhas do PIN direto no banco e abrir o app
   sem nenhuma tela de bloqueio — comprovado ao vivo no app compilado.
-  A solução dos dois é a mesma: criptografar o banco (item 1 acima).
+  **Corrigido:** o banco agora abre com SQLCipher e uma chave de 256 bits
+  gerada no aparelho, guardada no Keystore — nunca uma senha do usuário,
+  para não pedir nada a mais na abertura do app. Sem essa chave (que só
+  existe no Keystore daquele aparelho específico), o arquivo `fluxo_plus.db`
+  é só ruído para qualquer ferramenta de fora do app.
+
+  **Limitação conhecida:** só Android por enquanto — não existe hoje um
+  `sqlite3` com SQLCipher testado para Windows neste projeto (ver
+  `docs/ROADMAP.md`, Fase 1.5). **E não há migração automática**: quem já
+  tinha um banco sem criptografia de uma versão anterior precisa exportar
+  um backup local antes de atualizar e restaurá-lo depois — o app não
+  converte um banco antigo em cifrado sozinho ainda, e não havia como
+  testar esse caminho de conversão nesta rodada sem um aparelho Android
+  real.
 
 ### Testado e resistiu
 

@@ -4,14 +4,18 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart'
+    show SqlCipherOpenDatabaseOptions;
 
 import '../constants/app_constants.dart';
 import '../theme/category_palette.dart';
+import 'database_key_service.dart';
 import 'safety_copy_cipher.dart';
 import 'snapshot_migrator.dart';
 
 class AppDatabase {
-  AppDatabase(this._factory);
+  AppDatabase(this._factory, {DatabaseKeyService? keyService})
+      : _keyService = keyService ?? DatabaseKeyService();
 
   // Extensão neutra: o conteúdo é binário cifrado, não é mais JSON.
   static const _safetyCopyName = 'antes-da-restauracao.enc';
@@ -21,6 +25,7 @@ class AppDatabase {
   static const safetyCopyLifetime = Duration(days: 7);
 
   final DatabaseFactory _factory;
+  final DatabaseKeyService _keyService;
   final SafetyCopyCipher _safetyCopyCipher = SafetyCopyCipher();
   Database? _database;
   String? _directory;
@@ -39,14 +44,27 @@ class AppDatabase {
     if (_database != null) return;
     _directory = directory ?? (await getApplicationSupportDirectory()).path;
     path ??= p.join(_directory!, AppConstants.databaseName);
+    // Só Android tem um sqlite3 com SQLCipher disponível hoje; ver
+    // docs/ROADMAP.md para as demais plataformas.
+    final password = Platform.isAndroid ? await _keyService.rawKey() : null;
     _database = await _factory.openDatabase(
       path,
-      options: OpenDatabaseOptions(
-        version: AppConstants.databaseVersion,
-        onConfigure: (database) => database.execute('PRAGMA foreign_keys = ON'),
-        onCreate: _create,
-        onUpgrade: _upgrade,
-      ),
+      options: password == null
+          ? OpenDatabaseOptions(
+              version: AppConstants.databaseVersion,
+              onConfigure: (database) =>
+                  database.execute('PRAGMA foreign_keys = ON'),
+              onCreate: _create,
+              onUpgrade: _upgrade,
+            )
+          : SqlCipherOpenDatabaseOptions(
+              version: AppConstants.databaseVersion,
+              password: password,
+              onConfigure: (database) =>
+                  database.execute('PRAGMA foreign_keys = ON'),
+              onCreate: _create,
+              onUpgrade: _upgrade,
+            ),
     );
     await safetyCopyDate(); // apaga a cópia de restauração vencida
   }
