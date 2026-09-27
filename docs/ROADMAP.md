@@ -76,11 +76,17 @@ invasão"). Corrigidos: cópia de segurança em texto puro, nome de arquivo da
 atualização vulnerável a path traversal, senha mínima fraca do backup local,
 condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
 
-- [ ] **(prioridade alta, achado do pentest)** Criptografar o banco local com
-      SQLCipher (chave no Keystore/cofre). Sem isso, qualquer programa com
-      acesso ao arquivo `fluxo_plus.db` lê todas as transações e o hash do
-      PIN sem passar pelo app, e pode quebrar o PIN por força bruta offline
-      sem nenhum limite de tentativas (comprovado no pentest).
+- [x] **(prioridade alta, achado do pentest)** Criptografar o banco local com
+      SQLCipher (chave no Keystore), só Android — feito em 27/09/2026, ver
+      `docs/SECURITY.md`.
+  - [ ] Mesma coisa no Windows: precisa de um `sqlite3` compilado com
+        SQLCipher, sem pacote Flutter pronto para isso hoje; exige compilar
+        e testar a DLL num PC Windows de verdade.
+  - [ ] Migração automática de bancos antigos (sem criptografia) para o
+        formato cifrado — hoje quem já tinha o app precisa exportar um
+        backup local antes de atualizar e restaurar depois. Não foi testado
+        porque a função do SQLCipher que faz essa conversão só existe na
+        build Android, sem como validar fora de um aparelho real.
 - [ ] Criptografia de ponta a ponta no backup da nuvem.
 
 ## Fase 2 — 0.8.0: recursos Premium
