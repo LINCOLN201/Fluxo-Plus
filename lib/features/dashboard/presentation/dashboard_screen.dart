@@ -167,43 +167,33 @@ class _DesktopDashboard extends StatelessWidget {
             ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(28, 0, 28, 16),
-              sliver: SliverGrid(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  mainAxisExtent: 132,
-                  crossAxisSpacing: 12,
+              sliver: SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 168,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _SalaryForecastCard(
+                          income: summary.monthIncome,
+                          expense: summary.monthExpense,
+                          onTap: () => onOpenTransactions(null),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _MetricCard(
+                          label: 'Saldo total',
+                          value: summary.balance,
+                          color: context.colors.primary,
+                          icon: Icons.account_balance_wallet_outlined,
+                          onTap: () => onOpenTransactions(null),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                delegate: SliverChildListDelegate([
-                  _MetricCard(
-                    label: 'Despesas totais',
-                    value: summary.monthExpense,
-                    color: context.colors.expense,
-                    icon: Icons.receipt_long_outlined,
-                    onTap: () => onOpenTransactions(TransactionType.expense),
-                  ),
-                  _MetricCard(
-                    label: 'Receitas',
-                    value: summary.monthIncome,
-                    color: context.colors.income,
-                    icon: Icons.south_west_rounded,
-                    onTap: () => onOpenTransactions(TransactionType.income),
-                  ),
-                  _MetricCard(
-                    label: 'Saldo total',
-                    value: summary.balance,
-                    color: context.colors.primary,
-                    icon: Icons.account_balance_wallet_outlined,
-                    onTap: () => onOpenTransactions(null),
-                  ),
-                  _MetricCard(
-                    label: 'Economia',
-                    value: summary.savings,
-                    color: summary.savings >= 0
-                        ? context.colors.primary
-                        : context.colors.warning,
-                    icon: Icons.savings_outlined,
-                  ),
-                ]),
               ),
             ),
             SliverPadding(
@@ -329,78 +319,21 @@ class _MobileDashboard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 22),
-              GestureDetector(
-                onTap: () => onOpenTransactions(TransactionType.expense),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: context.colors.surface,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: context.colors.expense.withValues(alpha: .35),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              'Despesas totais do mês',
-                              style: TextStyle(color: context.colors.textMuted),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: context.colors.textMuted,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
-                      Text(
-                        AppFormatters.currency(summary.monthExpense),
-                        style: TextStyle(
-                          color: context.colors.expense,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Toque para ver os vencimentos',
-                        style: TextStyle(
-                          color: context.colors.textMuted,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              _SalaryForecastCard(
+                income: summary.monthIncome,
+                expense: summary.monthExpense,
+                onTap: () => onOpenTransactions(null),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _MobileMetric(
-                      label: 'Receitas',
-                      value: summary.monthIncome,
-                      color: context.colors.income,
-                      icon: Icons.arrow_upward_rounded,
-                      onTap: () => onOpenTransactions(TransactionType.income),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _MobileMetric(
-                      label: 'Saldo total',
-                      value: summary.balance,
-                      color: context.colors.primary,
-                      icon: Icons.account_balance_wallet_outlined,
-                      onTap: () => onOpenTransactions(null),
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: _MobileMetric(
+                  label: 'Saldo total',
+                  value: summary.balance,
+                  color: context.colors.primary,
+                  icon: Icons.account_balance_wallet_outlined,
+                  onTap: () => onOpenTransactions(null),
+                ),
               ),
               const SizedBox(height: 22),
               _MobileSectionTitle(
@@ -450,6 +383,125 @@ String _dayMessage() {
   if (hour < 12) return 'Vamos organizar o seu dia financeiro?';
   if (hour < 18) return 'Veja o que ainda precisa da sua atenção.';
   return 'Feche o dia sabendo que está tudo em ordem.';
+}
+
+/// A receita não é "mais uma métrica ao lado da despesa": ela é a base do
+/// mês, e as despesas vão descontando dela — igual a pessoa organiza no
+/// papel, salário menos o que precisa pagar.
+class _SalaryForecastCard extends StatelessWidget {
+  const _SalaryForecastCard({
+    required this.income,
+    required this.expense,
+    this.onTap,
+  });
+
+  final double income;
+  final double expense;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = income - expense;
+    final remainingColor =
+        remaining >= 0 ? context.colors.primary : context.colors.expense;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
+        decoration: _cardDecoration(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Previsão salarial do mês',
+                    style: TextStyle(
+                      color: context.colors.textMuted,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                Text(
+                  AppFormatters.currency(income),
+                  style: TextStyle(
+                    color: context.colors.income,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            _ForecastLine(
+              label: 'Despesas do mês',
+              prefix: '−',
+              value: expense,
+              color: context.colors.expense,
+            ),
+            const SizedBox(height: 10),
+            const Divider(height: 1),
+            const SizedBox(height: 10),
+            _ForecastLine(
+              label: 'Resta do salário',
+              prefix: '=',
+              value: remaining,
+              color: remainingColor,
+              emphasize: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ForecastLine extends StatelessWidget {
+  const _ForecastLine({
+    required this.label,
+    required this.prefix,
+    required this.value,
+    required this.color,
+    this.emphasize = false,
+  });
+
+  final String label;
+  final String prefix;
+  final double value;
+  final Color color;
+  final bool emphasize;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: emphasize
+                  ? context.colors.textPrimary
+                  : context.colors.textMuted,
+              fontWeight: emphasize ? FontWeight.w800 : FontWeight.w600,
+              fontSize: emphasize ? 13 : 12,
+            ),
+          ),
+        ),
+        Text(
+          '$prefix ${AppFormatters.currency(value.abs())}',
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w800,
+            fontSize: emphasize ? 19 : 13,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _MetricCard extends StatelessWidget {
