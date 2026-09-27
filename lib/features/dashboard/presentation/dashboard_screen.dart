@@ -249,6 +249,42 @@ class _DesktopDashboard extends StatelessWidget {
   }
 }
 
+/// Iniciais em vez de emoji: um cabeçalho de app financeiro passa mais
+/// confiança sendo sóbrio do que descontraído.
+class _GreetingAvatar extends StatelessWidget {
+  const _GreetingAvatar({required this.name});
+
+  final String? name;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial =
+        name?.trim().isNotEmpty == true ? name!.trim()[0].toUpperCase() : null;
+    return Container(
+      width: 44,
+      height: 44,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: context.colors.primary.withValues(alpha: .16),
+        shape: BoxShape.circle,
+      ),
+      child: initial == null
+          ? Icon(
+              Icons.person_outline_rounded,
+              color: context.colors.primary,
+            )
+          : Text(
+              initial,
+              style: TextStyle(
+                color: context.colors.primary,
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+              ),
+            ),
+    );
+  }
+}
+
 class _MobileDashboard extends StatelessWidget {
   const _MobileDashboard({
     required this.summary,
@@ -278,22 +314,32 @@ class _MobileDashboard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(18, 20, 18, 28),
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  _GreetingAvatar(name: userName),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          _greeting(userName),
+                          _greetingPeriod(),
                           style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
+                            color: context.colors.textMuted,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          _dayMessage(),
-                          style: TextStyle(color: context.colors.textMuted),
+                          _greetingName(userName),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w800,
+                            height: 1.2,
+                          ),
                         ),
                       ],
                     ),
@@ -317,6 +363,14 @@ class _MobileDashboard extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 14),
+              Text(
+                _dayMessage(),
+                style: TextStyle(
+                  color: context.colors.textMuted,
+                  fontSize: 13,
+                ),
               ),
               const SizedBox(height: 22),
               _SalaryForecastCard(
@@ -365,17 +419,20 @@ class _MobileDashboard extends StatelessWidget {
   }
 }
 
-String _greeting(String? userName) {
+String _greetingPeriod() {
   final hour = DateTime.now().hour;
-  final period = hour < 12
+  return hour < 12
       ? 'Bom dia'
       : hour < 18
           ? 'Boa tarde'
           : 'Boa noite';
+}
+
+String _greetingName(String? userName) {
   final firstName = userName?.trim().split(RegExp(r'\s+')).first;
   return firstName == null || firstName.isEmpty
-      ? '$period! 👋'
-      : '$period, $firstName! 👋';
+      ? 'Bem-vindo de volta'
+      : firstName;
 }
 
 String _dayMessage() {
