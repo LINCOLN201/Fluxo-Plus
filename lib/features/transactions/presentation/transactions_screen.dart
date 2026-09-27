@@ -26,7 +26,7 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
-  DateTime _month = DateTime.now();
+  DateTime? _month = DateTime.now();
   TransactionType? _type;
   int? _categoryId;
   PaymentFilter _payment = PaymentFilter.all;
@@ -112,18 +112,20 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> _selectMonth() async {
     final value = await showDatePicker(
       context: context,
-      initialDate: _month,
+      initialDate: _month ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       initialDatePickerMode: DatePickerMode.year,
       locale: const Locale('pt', 'BR'),
     );
     if (value == null) return;
-    setState(() {
-      _month = value;
-      _load();
-    });
+    _setMonth(value);
   }
+
+  void _setMonth(DateTime? value) => setState(() {
+        _month = value;
+        _load();
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +153,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             payment: _payment,
             categories: _categories,
             onMonth: _selectMonth,
+            onMonthPreset: _setMonth,
             onType: (value) => setState(() {
               _type = value;
               _categoryId = null;
@@ -208,20 +211,30 @@ class _Filters extends StatelessWidget {
     required this.payment,
     required this.categories,
     required this.onMonth,
+    required this.onMonthPreset,
     required this.onType,
     required this.onCategory,
     required this.onPayment,
   });
 
-  final DateTime month;
+  final DateTime? month;
   final TransactionType? type;
   final int? categoryId;
   final PaymentFilter payment;
   final List<Category> categories;
   final VoidCallback onMonth;
+  final ValueChanged<DateTime?> onMonthPreset;
   final ValueChanged<TransactionType?> onType;
   final ValueChanged<int?> onCategory;
   final ValueChanged<PaymentFilter> onPayment;
+
+  String get _monthLabel {
+    final value = month;
+    if (value == null) return 'Todos os períodos';
+    final now = DateTime.now();
+    if (value.year == now.year && value.month == now.month) return 'Este mês';
+    return DateFormat('MMM / yyyy', 'pt_BR').format(value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,10 +243,24 @@ class _Filters extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 12),
       child: Row(
         children: [
-          OutlinedButton.icon(
-            onPressed: onMonth,
-            icon: const Icon(Icons.calendar_month_outlined),
-            label: Text(DateFormat('MMM / yyyy', 'pt_BR').format(month)),
+          PopupMenuButton<String>(
+            onSelected: (value) => switch (value) {
+              'current' => onMonthPreset(DateTime.now()),
+              'all' => onMonthPreset(null),
+              _ => onMonth(),
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'current', child: Text('Este mês')),
+              PopupMenuItem(
+                value: 'all',
+                child: Text('Todos os períodos'),
+              ),
+              PopupMenuItem(value: 'pick', child: Text('Escolher mês…')),
+            ],
+            child: Chip(
+              label: Text(_monthLabel),
+              avatar: const Icon(Icons.calendar_month_outlined, size: 17),
+            ),
           ),
           const SizedBox(width: 8),
           _FilterMenu<String>(
