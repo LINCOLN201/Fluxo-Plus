@@ -1,46 +1,40 @@
 # Fluxo+
 
-Site oficial: <https://lincoln201.github.io/Fluxo-Plus/>
+Aplicativo de finanças pessoais, gratuito e open source, que funciona **sem
+internet** — seus dados ficam no seu aparelho, não em algum servidor.
 
-Aplicativo open source de finanças pessoais, moderno e offline-first, feito com
-Flutter. O Fluxo+ mantém os dados no dispositivo e foi desenhado para Android,
-iOS, Windows, macOS e Linux. Web/PWA permanece no roadmap; a sincronização
-opcional com Supabase já está disponível sem retirar o funcionamento offline.
+**[Conhecer e baixar no site oficial](https://lincoln201.github.io/Fluxo-Plus/)**
+· disponível para Android e Windows.
 
-## O que já funciona
+## O que o Fluxo+ faz
 
-- splash e onboarding persistente;
-- dashboard responsivo com despesas, receitas, saldo e próximos vencimentos
-  calculados diretamente no SQLite;
-- receitas e despesas com nome, vencimento, status pago/pendente e parcelas;
-- cálculo do valor total e geração automática dos vencimentos mensais;
-- listagem por prioridade de vencimento e filtros por mês, tipo, categoria e
-  status;
-- central de avisos para contas vencidas ou próximas do vencimento, com baixa
-  rápida;
-- contas com saldo inicial, saldo calculado e proteção de histórico;
-- categorias padrão e personalizadas com ícones;
-- metas financeiras com prazo e acompanhamento de progresso;
-- relatórios mensais responsivos com resultado, valores pagos, pendências,
-  receita x despesa e gastos por categoria;
-- temas escuro (padrão) e claro, com preferência salva localmente;
-- valores gravados em centavos inteiros (sem erro de arredondamento);
-- backup local criptografado por senha, com opção de desfazer a restauração;
-- bloqueio por PIN e/ou biometria;
-- sincronização com a nuvem que pede confirmação quando há conflito;
-- SQLite real em Android/iOS (`sqflite`) e desktop
-  (`sqflite_common_ffi`);
-- conta principal e categorias brasileiras criadas no primeiro uso;
-- navegação adaptativa: barra inferior no celular e rail no desktop;
-- moeda e datas no padrão brasileiro;
-- schema preparado para contas, categorias, transações, metas e configurações;
-- arquitetura por features, com persistência e regras fora das telas.
-- estrutura do Fluxo+ Premium (nuvem e cores exclusivas), sem cobranças ou
-  bloqueios ativos.
+- Receitas, despesas, vencimentos, parcelas e lançamentos recorrentes
+  (aluguel, assinaturas, salário fixo);
+- Dashboard com saldo, previsão do mês e despesas por categoria;
+- Contas, categorias personalizadas e metas financeiras com prazo;
+- Relatórios mensais;
+- Backup local protegido por senha — sem depender de nuvem de terceiro;
+- Bloqueio por PIN e biometria;
+- Sincronização opcional entre aparelhos (Premium), com backup criptografado
+  na nuvem;
+- Temas claro e escuro.
 
-Todas as áreas do MVP estão conectadas ao banco local e funcionam sem internet.
+Sem login, nenhuma informação financeira sai do aparelho. A política de
+privacidade completa está no
+[site oficial](https://lincoln201.github.io/Fluxo-Plus/privacidade.html).
 
-## Requisitos
+## Licença
+
+Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).
+
+---
+
+## Para desenvolvedores
+
+O restante deste documento é sobre compilar e contribuir com o código —
+não é necessário para só usar o app (baixe pelo link acima).
+
+### Requisitos
 
 - Flutter estável atual (Dart 3.4 ou superior);
 - Android Studio/SDK para Android;
@@ -54,7 +48,7 @@ Confira a instalação com:
 flutter doctor
 ```
 
-## Preparar e rodar
+### Preparar e rodar
 
 Este repositório contém todo o código do app. Como os runners nativos são
 gerados pelo próprio Flutter, rode uma vez, na raiz:
@@ -77,7 +71,7 @@ Escolha um dispositivo específico com `flutter devices` e
 `flutter run -d <id>`. O banco fica no diretório de suporte privado da aplicação
 e é criado automaticamente na primeira execução.
 
-## Gerar APK
+### Gerar APK
 
 ```powershell
 flutter build apk --release
@@ -87,7 +81,7 @@ O arquivo será criado em `build/app/outputs/flutter-apk/app-release.apk`.
 Para publicação na Play Store, prefira `flutter build appbundle --release` e
 configure uma chave de assinatura própria.
 
-## Gerar EXE para Windows
+### Gerar EXE para Windows
 
 Em um Windows com o workload C++ do Visual Studio:
 
@@ -100,7 +94,7 @@ O executável e suas DLLs ficam em
 `build/windows/x64/runner/Release/`. Distribua a pasta inteira, não apenas o
 `.exe`.
 
-## Atualizações pela internet
+### Publicação e atualizações automáticas
 
 O projeto inclui GitHub Actions para validar o código e publicar APK e Windows
 automaticamente a cada tag de versão. Builds públicos consultam a última GitHub
@@ -119,7 +113,7 @@ projeto.
 O modelo comercial e a separação entre recursos gratuitos e serviços Premium
 estão documentados em [docs/MONETIZATION.md](docs/MONETIZATION.md).
 
-## Fluxo de contribuição
+### Fluxo de contribuição
 
 O desenvolvimento acontece na branch `dev`. Cada alteração passa por análise,
 testes e builds Android/Windows antes de entrar na `main`. A publicação só é
@@ -130,7 +124,7 @@ O que falta, por fase, está em [docs/ROADMAP.md](docs/ROADMAP.md).
 Consulte [docs/RELEASES.md](docs/RELEASES.md) para o fluxo completo:
 `dev` → CI → Pull Request → `main` → release.
 
-## Estrutura
+### Estrutura
 
 ```text
 lib/
@@ -156,25 +150,6 @@ lib/
 site/                  site oficial (GitHub Pages)
 ```
 
-Sem login, nenhuma informação financeira sai do dispositivo. Quando o usuário
-opta pela sincronização, o Supabase armazena um snapshot protegido por RLS.
-
-## Próximos passos
-
-1. Assinatura Premium por Pix Automático.
-2. Histórico de backups e sincronização granular.
-3. Recorrências, cartões, orçamentos e exportação PDF/Excel.
-4. Web/PWA com uma estratégia de armazenamento compatível.
-
-## Segurança e privacidade
+### Segurança
 
 Detalhes técnicos das proteções em [docs/SECURITY.md](docs/SECURITY.md).
-
-O projeto não possui pagamentos ativos nem analytics. A política de
-privacidade está no [site oficial](https://lincoln201.github.io/Fluxo-Plus/privacidade.html). Login e sincronização são
-opcionais; o modo local continua disponível. Antes de produção comercial,
-serão necessárias política de privacidade, termos e revisão de criptografia.
-
-## Licença
-
-Distribuído sob a licença MIT. Consulte [LICENSE](LICENSE).
