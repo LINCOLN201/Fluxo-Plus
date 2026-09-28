@@ -47,7 +47,7 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
     final password = TextEditingController();
     var createAccount = false;
     final key = GlobalKey<FormState>();
-    final confirmed = await showDialog<bool>(
+    final result = await showDialog<String>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -95,17 +95,24 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
                     createAccount ? 'Já tenho uma conta' : 'Criar uma conta',
                   ),
                 ),
+                if (!createAccount)
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, 'forgot'),
+                    child: const Text('Esqueci minha senha'),
+                  ),
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
+              onPressed: () => Navigator.pop(context),
               child: const Text('Cancelar'),
             ),
             FilledButton(
               onPressed: () {
-                if (key.currentState!.validate()) Navigator.pop(context, true);
+                if (key.currentState!.validate()) {
+                  Navigator.pop(context, 'submit');
+                }
               },
               child: Text(createAccount ? 'Criar' : 'Entrar'),
             ),
@@ -113,11 +120,19 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
         ),
       ),
     );
-    if (confirmed != true) return;
+    if (result == 'forgot') {
+      await _forgotPassword(initialEmail: email.text.trim());
+      return;
+    }
+    if (result != 'submit') return;
     final accountEmail = email.text.trim();
+    // Alguns projetos Supabase confirmam e logam a conta na hora do
+    // cadastro, sem exigir código — preenchido dentro do _run abaixo. Sem
+    // isso, a pessoa ficava esperando um e-mail que nunca chega.
+    var alreadyConfirmed = false;
     final succeeded = await _run(() async {
       if (createAccount) {
-        await widget.service.signUp(
+        alreadyConfirmed = await widget.service.signUp(
           accountEmail,
           password.text,
           name: name.text,
@@ -125,15 +140,121 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
       } else {
         await widget.service.signIn(accountEmail, password.text);
       }
-    },
-        createAccount
-            ? 'Código de confirmação enviado por e-mail.'
-            : 'Conectado.');
-    if (createAccount && succeeded && mounted) {
+    }, createAccount ? 'Conta criada.' : 'Conectado.');
+    if (!succeeded || !mounted) return;
+    if (createAccount && !alreadyConfirmed) {
       await _confirmEmailCode(accountEmail);
-    } else if (succeeded && mounted) {
+    } else {
       await _synchronize();
     }
+  }
+
+  Future<void> _forgotPassword({String initialEmail = ''}) async {
+    final email = TextEditingController(text: initialEmail);
+    final key = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Esqueci minha senha'),
+        content: Form(
+          key: key,
+          child: TextFormField(
+            controller: email,
+            autofocus: initialEmail.isEmpty,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'E-mail da conta'),
+            validator: (value) => value != null && value.contains('@')
+                ? null
+                : 'Informe um e-mail válido',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (key.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Enviar código'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final accountEmail = email.text.trim();
+    final succeeded = await _run(
+      () => widget.service.requestPasswordReset(accountEmail),
+      'Código enviado por e-mail.',
+    );
+    if (succeeded && mounted) await _resetPasswordCode(accountEmail);
+  }
+
+  Future<void> _resetPasswordCode(String email) async {
+    final code = TextEditingController();
+    final password = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Nova senha'),
+        content: Form(
+          key: key,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Digite o código de 8 dígitos enviado para $email.'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: code,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                maxLength: 8,
+                decoration: const InputDecoration(
+                  labelText: 'Código de confirmação',
+                ),
+                validator: (value) => (value?.trim().length ?? 0) == 8
+                    ? null
+                    : 'Informe os 8 dígitos',
+              ),
+              TextFormField(
+                controller: password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Nova senha'),
+                validator: (value) => (value?.length ?? 0) < 6
+                    ? 'Use pelo menos 6 caracteres'
+                    : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (key.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Redefinir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final succeeded = await _run(
+      () => widget.service.confirmPasswordReset(
+        email,
+        code.text,
+        password.text,
+      ),
+      'Senha redefinida. Conta conectada.',
+    );
+    if (succeeded && mounted) await _synchronize();
   }
 
   Future<void> _resendConfirmation() async {

@@ -213,6 +213,18 @@ está à frente do que foi pesquisado:
 
 ## Concluído
 
+### Pós-0.6.2
+- [x] "Esqueci minha senha" — não existia no app; agora usa o mesmo padrão
+      de código por e-mail já usado na confirmação de cadastro (sem precisar
+      de deep link). Depende do modelo de e-mail "Reset Password" no painel
+      do Supabase mostrar `{{ .Token }}`, igual ao de confirmação — conferir
+      ao testar.
+- [x] Cadastro travava pedindo um código de confirmação que, em projetos
+      Supabase com confirmação por e-mail desligada, nunca chega — a pessoa
+      ficava esperando indefinidamente. `CloudSyncService.signUp` agora
+      devolve se a conta já veio confirmada/logada; nesse caso o app pula
+      direto para a sincronização, sem pedir código nenhum.
+
 ### 0.6.2 (hotfix, PR #19)
 - [x] Corrige o Secret `SUPABASE_URL` de produção, que apontava para um
       projeto inexistente desde a 0.6.0 — sincronização com a nuvem nunca
