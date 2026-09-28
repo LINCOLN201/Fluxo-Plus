@@ -209,6 +209,31 @@ class CloudSyncService {
 
   Future<void> signOut() async => _client?.auth.signOut();
 
+  /// Apaga a conta e todo o backup na nuvem, para sempre — direito já
+  /// prometido na política de privacidade (LGPD). `delete_own_account` só
+  /// apaga a PRÓPRIA conta de quem chama (nunca recebe um id) e as tabelas
+  /// referenciadas já têm `ON DELETE CASCADE`, então isso também leva o
+  /// backup e a assinatura Premium. Os dados deste aparelho não são
+  /// afetados.
+  Future<void> deleteAccount() async {
+    final client = _requireClient();
+    try {
+      await client.rpc('delete_own_account');
+    } on PostgrestException catch (error) {
+      throw CloudSyncException(
+        'Não foi possível excluir a conta: ${error.message}',
+      );
+    } catch (e, st) {
+      ErrorReporter.record(e, st, reason: 'CloudSyncService.deleteAccount');
+      throw const CloudSyncException(
+        'Não foi possível excluir a conta. Verifique sua internet.',
+      );
+    }
+    // Só chega aqui se a conta foi apagada de verdade; a sessão local não
+    // serve mais para nada de qualquer forma (o usuário não existe mais).
+    await client.auth.signOut();
+  }
+
   Future<DateTime> uploadBackup() async {
     final user = _requireUser();
     final now = DateTime.now().toUtc();

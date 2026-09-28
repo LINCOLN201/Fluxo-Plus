@@ -82,3 +82,23 @@ begin
       );
   end if;
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Excluir conta pelo app (0.9.0). A pessoa só apaga a PRÓPRIA conta (nunca
+-- recebe um id) — SECURITY DEFINER só pra ter permissão de mexer em
+-- auth.users, que authenticated normalmente não tem. user_backups e
+-- premium_subscriptions já têm ON DELETE CASCADE em auth.users(id), então
+-- apagar o usuário já leva o resto junto.
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  delete from auth.users where id = (select auth.uid());
+end;
+$$;
+
+revoke all on function public.delete_own_account() from public, anon;
+grant execute on function public.delete_own_account() to authenticated;
