@@ -245,8 +245,11 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
     );
     if (confirmed != true) return;
     final succeeded = await _run(
-      () => widget.service
-          .confirmPasswordReset(email, code.text, password.text),
+      () => widget.service.confirmPasswordReset(
+        email,
+        code.text,
+        password.text,
+      ),
       'Senha redefinida. Conta conectada.',
     );
     if (succeeded && mounted) await _synchronize();
