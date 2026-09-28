@@ -1,5 +1,8 @@
 # Publicação e atualizações
 
+> Checklist único de todos os Secrets usados no CI/CD, com como conferir
+> cada um: `docs/SECRETS.md`.
+
 O Fluxo+ continua totalmente funcional sem internet. Quando uma versão pública
 é compilada pelo GitHub Actions, o endereço do repositório é incorporado ao app.
 Ao iniciar com conexão, ele consulta a última GitHub Release e oferece o arquivo

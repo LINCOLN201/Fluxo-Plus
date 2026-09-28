@@ -6,6 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
+import '../observability/error_reporter.dart';
+
 /// Notificação de "chegou atualização", mesmo com o app fechado.
 ///
 /// Usa um único tópico do Firebase Cloud Messaging (`atualizacoes`), sem
@@ -36,6 +38,7 @@ class PushNotificationService {
       debugPrint('Notificações push desativadas: $error');
       return;
     }
+    ErrorReporter.attach();
 
     await _initLocalNotifications();
 

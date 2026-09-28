@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../database/app_database.dart';
+import '../observability/error_reporter.dart';
 
 class CloudSyncService {
   CloudSyncService(this._database, this._client);
@@ -52,8 +53,9 @@ class CloudSyncService {
       await _client!.auth.updateUser(
         UserAttributes(data: {'full_name': value}),
       );
-    } catch (_) {
+    } catch (e, st) {
       // Sem internet o nome continua salvo neste aparelho.
+      ErrorReporter.record(e, st, reason: 'CloudSyncService.savePreferredName');
     }
   }
 
@@ -76,7 +78,10 @@ class CloudSyncService {
       await _client!.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
-    } catch (_) {
+    } catch (e, st) {
+      // Erros de rede/config (ex.: endereço do Supabase errado) caem aqui.
+      // A pessoa só vê a mensagem amigável, mas a causa real fica registrada.
+      ErrorReporter.record(e, st, reason: 'CloudSyncService.signIn');
       throw const CloudSyncException(
         'Não foi possível conectar. Verifique sua internet e tente novamente.',
       );
@@ -100,7 +105,8 @@ class CloudSyncService {
       );
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
-    } catch (_) {
+    } catch (e, st) {
+      ErrorReporter.record(e, st, reason: 'CloudSyncService.signUp');
       throw const CloudSyncException(
         'Não foi possível criar a conta. Verifique sua internet.',
       );
@@ -117,7 +123,12 @@ class CloudSyncService {
       );
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
-    } catch (_) {
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'CloudSyncService.resendConfirmation',
+      );
       throw const CloudSyncException(
         'Não foi possível reenviar. Verifique sua internet.',
       );
@@ -134,7 +145,8 @@ class CloudSyncService {
       );
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
-    } catch (_) {
+    } catch (e, st) {
+      ErrorReporter.record(e, st, reason: 'CloudSyncService.verifyEmailCode');
       throw const CloudSyncException(
         'Não foi possível validar o código. Verifique sua internet.',
       );
