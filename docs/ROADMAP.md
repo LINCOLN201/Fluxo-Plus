@@ -157,6 +157,14 @@ está à frente do que foi pesquisado:
 
 ## Concluído
 
+### 0.6.2 (hotfix, PR #19)
+- [x] Corrige o Secret `SUPABASE_URL` de produção, que apontava para um
+      projeto inexistente desde a 0.6.0 — sincronização com a nuvem nunca
+      havia funcionado de fato em nenhuma versão publicada.
+- [x] CI passa a validar de verdade a conexão com o Supabase antes de
+      compilar, para esse tipo de erro não chegar mais em silêncio a uma
+      versão publicada.
+
 ### 0.6.0 (PR #6)
 - [x] Site oficial (início, privacidade, e-mail confirmado) e workflow do Pages.
 - [x] Valores em centavos inteiros (schema v3) com migração testada.
