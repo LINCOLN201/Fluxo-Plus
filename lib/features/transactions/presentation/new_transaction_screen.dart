@@ -35,6 +35,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
   int? _accountId;
   int? _categoryId;
   bool _isPaid = false;
+  bool _recurring = false;
   bool _loading = true;
   bool _saving = false;
 
@@ -50,6 +51,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
       _nameController.text = transaction.description;
       _installmentsController.text = transaction.installmentCount.toString();
       _isPaid = transaction.isPaid;
+      _recurring = transaction.recurringGroup != null;
     } else {
       _isPaid = _type == TransactionType.income;
     }
@@ -120,12 +122,17 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
         installmentGroup: current?.installmentGroup,
         installmentNumber: current?.installmentNumber ?? 1,
         installmentCount: current?.installmentCount ?? 1,
+        recurringGroup: current?.recurringGroup,
       );
       if (current == null) {
-        await widget.repository.createInstallments(
-          transaction,
-          int.parse(_installmentsController.text),
-        );
+        if (_recurring) {
+          await widget.repository.createRecurring(transaction);
+        } else {
+          await widget.repository.createInstallments(
+            transaction,
+            int.parse(_installmentsController.text),
+          );
+        }
       } else {
         await widget.repository.update(transaction);
       }
@@ -213,9 +220,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                               decimal: true,
                             ),
                             decoration: InputDecoration(
-                              labelText: widget.transaction == null
-                                  ? 'Valor de cada parcela'
-                                  : 'Valor',
+                              labelText:
+                                  widget.transaction == null && !_recurring
+                                      ? 'Valor de cada parcela'
+                                      : 'Valor',
                               prefixText: r'R$ ',
                               prefixIcon:
                                   const Icon(Icons.attach_money_rounded),
@@ -228,28 +236,39 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                                   : null;
                             },
                           ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _installmentsController,
-                            enabled: widget.transaction == null,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: 'Parcelas',
-                              helperText: widget.transaction == null
-                                  ? 'Um vencimento será criado por mês'
-                                  : 'O parcelamento não muda durante a edição',
-                              prefixIcon:
-                                  const Icon(Icons.view_timeline_rounded),
-                            ),
-                            validator: (value) {
-                              final count = int.tryParse(value ?? '');
-                              return count == null || count < 1 || count > 120
-                                  ? 'Informe entre 1 e 120 parcelas'
-                                  : null;
-                            },
-                            onChanged: (_) => setState(() {}),
-                          ),
                           if (widget.transaction == null) ...[
+                            const SizedBox(height: 4),
+                            SwitchListTile.adaptive(
+                              value: _recurring,
+                              contentPadding: EdgeInsets.zero,
+                              secondary: const Icon(Icons.repeat_rounded),
+                              title: const Text('Repetir todo mês'),
+                              subtitle: const Text(
+                                'Aluguel, assinaturas, salário — sem data '
+                                'para acabar',
+                              ),
+                              onChanged: (value) =>
+                                  setState(() => _recurring = value),
+                            ),
+                          ],
+                          if (widget.transaction == null && !_recurring) ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _installmentsController,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(
+                                labelText: 'Parcelas',
+                                helperText: 'Um vencimento será criado por mês',
+                                prefixIcon: Icon(Icons.view_timeline_rounded),
+                              ),
+                              validator: (value) {
+                                final count = int.tryParse(value ?? '');
+                                return count == null || count < 1 || count > 120
+                                    ? 'Informe entre 1 e 120 parcelas'
+                                    : null;
+                              },
+                              onChanged: (_) => setState(() {}),
+                            ),
                             const SizedBox(height: 10),
                             _InstallmentSummary(
                               amount: AppFormatters.parseCurrency(

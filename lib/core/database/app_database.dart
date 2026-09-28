@@ -181,6 +181,16 @@ class AppDatabase {
         )
       ''');
       await _createTransactionsTable(txn, 'transactions');
+      // Adicionada fora do CREATE TABLE porque _createTransactionsTable
+      // também monta a tabela temporária da migração de centavos (v3), que
+      // precisa continuar representando o esquema de antes desta coluna.
+      await txn.execute(
+        'ALTER TABLE transactions ADD COLUMN recurring_group TEXT',
+      );
+      await txn.execute(
+        'CREATE INDEX idx_transactions_recurring_group '
+        'ON transactions(recurring_group)',
+      );
       await _createGoalsTable(txn, 'goals');
       await txn.execute('''
         CREATE TABLE settings (
@@ -284,6 +294,15 @@ class AppDatabase {
     }
     if (oldVersion < 3) {
       await database.transaction(_upgradeToCents);
+    }
+    if (oldVersion < 4) {
+      await database.execute(
+        'ALTER TABLE transactions ADD COLUMN recurring_group TEXT',
+      );
+      await database.execute(
+        'CREATE INDEX idx_transactions_recurring_group '
+        'ON transactions(recurring_group)',
+      );
     }
   }
 

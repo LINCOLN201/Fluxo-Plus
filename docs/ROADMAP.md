@@ -148,9 +148,15 @@ item nesta sessão de trabalho.
 ## Fase 2 — 0.8.0: recursos Premium
 
 - [ ] Histórico de backups na nuvem (voltar a uma versão anterior).
-- [ ] Lançamentos recorrentes (aluguel, assinaturas, salário) —
+- [x] Lançamentos recorrentes (aluguel, assinaturas, salário) —
       **(auditoria 28/09/2026)** todo concorrente pesquisado (Mobills,
-      Organizze, GuiaBolso) tem isso; é o recurso mais básico que falta.
+      Organizze, GuiaBolso) tem isso; era o recurso mais básico que faltava.
+      Diferente de parcelas (quantidade fixa e conhecida), uma recorrência
+      não tem fim: `TransactionRepository.createRecurring` gera 12 meses de
+      início e `extendRecurringOccurrences` (chamado ao abrir o app) completa
+      o horizonte aos poucos, sem gerar anos de lançamentos de uma vez.
+      "Parar de repetir" apaga só as ocorrências futuras pendentes, mantém
+      o histórico pago.
 - [ ] Cartões de crédito com fatura e fechamento — **(auditoria
       28/09/2026)** segundo recurso mais citado nos comparativos depois de
       Open Finance; Organizze mostra fatura e limite na tela inicial.

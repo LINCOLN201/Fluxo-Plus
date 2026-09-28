@@ -22,6 +22,7 @@ abstract final class SnapshotMigrator {
       'installment_group',
       'installment_number',
       'installment_count',
+      'recurring_group',
       'created_at',
     ],
     'goals': [

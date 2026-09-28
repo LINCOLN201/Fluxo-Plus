@@ -1,5 +1,6 @@
 import '../../../core/database/app_database.dart';
 import '../../../core/utils/installment_schedule.dart';
+import '../../../core/utils/money.dart';
 import '../../../shared/models/account.dart';
 import '../../../shared/models/category.dart';
 import '../../../shared/models/finance_transaction.dart';
@@ -123,6 +124,124 @@ class TransactionRepository {
       }
       return ids;
     });
+  }
+
+  /// Gera as próximas [monthsAhead] ocorrências mensais (a primeira na data
+  /// de [transaction], as seguintes um mês depois cada uma), vinculadas por
+  /// um `recurring_group` compartilhado. Ao contrário de [createInstallments]
+  /// (quantidade fixa e conhecida, ex.: 12x de um parcelamento), uma
+  /// recorrência não tem fim — o grupo é completado aos poucos por
+  /// [extendRecurringOccurrences] conforme o tempo passa, em vez de gerar
+  /// anos de lançamentos de uma vez.
+  Future<List<int>> createRecurring(
+    FinanceTransaction transaction, {
+    int monthsAhead = 12,
+  }) async {
+    final group = 'recorrente-${DateTime.now().microsecondsSinceEpoch}';
+    final dates = InstallmentSchedule.dueDates(transaction.date, monthsAhead);
+    return _database.db.transaction((txn) async {
+      final ids = <int>[];
+      for (var index = 0; index < dates.length; index++) {
+        ids.add(
+          await txn.insert(
+            'transactions',
+            FinanceTransaction(
+              type: transaction.type,
+              amount: transaction.amount,
+              categoryId: transaction.categoryId,
+              accountId: transaction.accountId,
+              date: dates[index],
+              description: transaction.description,
+              createdAt: transaction.createdAt,
+              isPaid: index == 0 ? transaction.isPaid : false,
+              recurringGroup: group,
+            ).toMap(),
+          ),
+        );
+      }
+      return ids;
+    });
+  }
+
+  /// Completa cada recorrência existente até ter pelo menos [monthsAhead]
+  /// meses de lançamentos à frente de hoje, gerando mais ocorrências só
+  /// quando o horizonte já gerado está a menos de [refillThreshold] meses
+  /// do fim. Chamado uma vez ao abrir o app (ver `main_shell.dart`) — sem
+  /// isso, uma recorrência criada há muito tempo ficaria sem novos
+  /// lançamentos assim que as ocorrências geradas inicialmente acabassem.
+  Future<void> extendRecurringOccurrences({
+    int monthsAhead = 12,
+    int refillThreshold = 3,
+  }) async {
+    // As colunas fora do MAX() aqui vêm da MESMA linha que tem a maior
+    // data — comportamento específico do SQLite (garantido quando a
+    // consulta tem um único MAX()/MIN()), não um SELECT ambíguo: assim a
+    // nova ocorrência copia valor/categoria/conta da última gerada, não de
+    // uma linha qualquer do grupo.
+    final groupRows = await _database.db.rawQuery('''
+      SELECT recurring_group, MAX(date) AS last_date, type, amount_cents,
+             category_id, account_id, description
+      FROM transactions
+      WHERE recurring_group IS NOT NULL
+      GROUP BY recurring_group
+    ''');
+    final now = DateTime.now();
+    final refillBefore = DateTime(now.year, now.month + refillThreshold);
+    for (final row in groupRows) {
+      final lastDate = DateTime.parse(row['last_date'] as String);
+      if (!lastDate.isBefore(refillBefore)) continue;
+      final template = FinanceTransaction(
+        type: TransactionType.values.byName(row['type'] as String),
+        amount: Money.fromCents(row['amount_cents']),
+        categoryId: row['category_id'] as int,
+        accountId: row['account_id'] as int,
+        date: lastDate,
+        description: row['description'] as String,
+        createdAt: now,
+      );
+      final targetLastDate = DateTime(now.year, now.month + monthsAhead);
+      final monthsToAdd = (targetLastDate.year - lastDate.year) * 12 +
+          (targetLastDate.month - lastDate.month);
+      if (monthsToAdd <= 0) continue;
+      // dueDates(lastDate, monthsToAdd + 1) inclui lastDate no índice 0
+      // (já existe no banco); skip(1) fica só com as datas novas.
+      final dates =
+          InstallmentSchedule.dueDates(lastDate, monthsToAdd + 1).skip(1);
+      await _database.db.transaction((txn) async {
+        for (final date in dates) {
+          await txn.insert(
+            'transactions',
+            FinanceTransaction(
+              type: template.type,
+              amount: template.amount,
+              categoryId: template.categoryId,
+              accountId: template.accountId,
+              date: date,
+              description: template.description,
+              createdAt: now,
+              isPaid: false,
+              recurringGroup: row['recurring_group'] as String,
+            ).toMap(),
+          );
+        }
+      });
+    }
+  }
+
+  /// Cancela uma recorrência: apaga só as ocorrências futuras e ainda
+  /// pendentes daquele grupo — o histórico (passadas ou já pagas) fica
+  /// intacto.
+  Future<void> stopRecurring(String group) async {
+    final today = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+    await _database.db.delete(
+      'transactions',
+      where: 'recurring_group = ? AND is_paid = 0 AND date >= ?',
+      whereArgs: [group, today.toIso8601String()],
+    );
   }
 
   Future<void> update(FinanceTransaction transaction) async {
