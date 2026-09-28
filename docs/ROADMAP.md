@@ -219,6 +219,11 @@ está à frente do que foi pesquisado:
       de deep link). Depende do modelo de e-mail "Reset Password" no painel
       do Supabase mostrar `{{ .Token }}`, igual ao de confirmação — conferir
       ao testar.
+- [x] Cadastro travava pedindo um código de confirmação que, em projetos
+      Supabase com confirmação por e-mail desligada, nunca chega — a pessoa
+      ficava esperando indefinidamente. `CloudSyncService.signUp` agora
+      devolve se a conta já veio confirmada/logada; nesse caso o app pula
+      direto para a sincronização, sem pedir código nenhum.
 
 ### 0.6.2 (hotfix, PR #19)
 - [x] Corrige o Secret `SUPABASE_URL` de produção, que apontava para um

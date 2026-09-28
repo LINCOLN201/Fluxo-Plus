@@ -126,9 +126,13 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
     }
     if (result != 'submit') return;
     final accountEmail = email.text.trim();
+    // Alguns projetos Supabase confirmam e logam a conta na hora do
+    // cadastro, sem exigir código — preenchido dentro do _run abaixo. Sem
+    // isso, a pessoa ficava esperando um e-mail que nunca chega.
+    var alreadyConfirmed = false;
     final succeeded = await _run(() async {
       if (createAccount) {
-        await widget.service.signUp(
+        alreadyConfirmed = await widget.service.signUp(
           accountEmail,
           password.text,
           name: name.text,
@@ -136,13 +140,11 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
       } else {
         await widget.service.signIn(accountEmail, password.text);
       }
-    },
-        createAccount
-            ? 'Código de confirmação enviado por e-mail.'
-            : 'Conectado.');
-    if (createAccount && succeeded && mounted) {
+    }, createAccount ? 'Conta criada.' : 'Conectado.');
+    if (!succeeded || !mounted) return;
+    if (createAccount && !alreadyConfirmed) {
       await _confirmEmailCode(accountEmail);
-    } else if (succeeded && mounted) {
+    } else {
       await _synchronize();
     }
   }

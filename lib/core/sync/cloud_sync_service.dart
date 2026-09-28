@@ -88,14 +88,18 @@ class CloudSyncService {
     }
   }
 
-  Future<void> signUp(
+  /// Devolve `true` quando a conta já foi confirmada e logada na hora do
+  /// cadastro (alguns projetos Supabase têm a confirmação por e-mail
+  /// desligada) — nesse caso não existe código nenhum para digitar, e
+  /// esperar por um e-mail que nunca chega deixaria a pessoa travada.
+  Future<bool> signUp(
     String email,
     String password, {
     String? name,
   }) async {
     _requireClient();
     try {
-      await _client!.auth.signUp(
+      final response = await _client!.auth.signUp(
         email: email,
         password: password,
         emailRedirectTo: confirmationRedirect,
@@ -103,6 +107,7 @@ class CloudSyncService {
             ? null
             : {'full_name': name.trim()},
       );
+      return response.session != null;
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (e, st) {
