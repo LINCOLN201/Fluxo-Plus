@@ -11,6 +11,7 @@ abstract final class CategoryIcons {
     ('celebration', Icons.celebration_rounded, 'Lazer'),
     ('school', Icons.school_rounded, 'Educação'),
     ('shopping_bag', Icons.shopping_bag_rounded, 'Compras'),
+    ('subscriptions', Icons.subscriptions_rounded, 'Assinaturas'),
     ('payments', Icons.payments_rounded, 'Salário'),
     ('work', Icons.work_rounded, 'Trabalho'),
     ('add_circle', Icons.add_circle_rounded, 'Outros ganhos'),

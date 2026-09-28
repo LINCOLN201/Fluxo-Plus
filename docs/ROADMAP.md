@@ -215,10 +215,25 @@ está à frente do que foi pesquisado:
   Aqui) é cobrança indevida após cancelamento — um fluxo de cancelamento
   fácil dentro do app (Fase 1, Pix Automático) já nasce em vantagem de
   confiança.
+- Seção de assinaturas/streamers com total mensal e catálogo dos serviços
+  mais comuns — ideia do dono do produto, não vista nos concorrentes
+  pesquisados (que só têm "categoria", sem uma visão dedicada de quanto
+  sai todo mês em streaming/música/nuvem).
 
 ---
 
 ## Concluído
+
+### Pós-0.6.3
+- [x] Seção "Assinaturas" — lista dedicada de streamers/serviços por
+      assinatura (Netflix, Spotify, Disney+ etc.), com catálogo dos mais
+      comuns no Brasil (ícone + cor, sem logo de ninguém) e opção "Outro"
+      pra nome livre. Reaproveita o motor de recorrências (schema v5: nova
+      categoria padrão "Assinaturas", `TransactionRepository
+      .listActiveSubscriptions()`) — sem infraestrutura nova. Mostra o
+      total mensal e a próxima cobrança de cada uma; cancelar usa o mesmo
+      `stopRecurring` (mantém o histórico pago). Acessível em "Mais" no
+      celular e na barra lateral no desktop.
 
 ### Pós-0.6.2 (continuação)
 - [x] "Excluir conta" — botão na tela de sincronização apaga a conta e o

@@ -28,6 +28,7 @@ import '../../../core/update/app_update.dart';
 import '../../../core/premium/premium_service.dart';
 import '../../premium/presentation/premium_screen.dart';
 import '../../notifications/presentation/notification_center_screen.dart';
+import '../../subscriptions/presentation/subscriptions_screen.dart';
 import '../../../shared/models/category.dart';
 
 class MainShell extends StatefulWidget {
@@ -116,6 +117,7 @@ class _MainShellState extends State<MainShell> {
     (Icons.category_outlined, 'Categorias'),
     (Icons.settings_outlined, 'Configurações'),
     (Icons.workspace_premium_outlined, 'Premium'),
+    (Icons.subscriptions_outlined, 'Assinaturas'),
   ];
 
   Future<void> _addTransaction() async {
@@ -228,7 +230,11 @@ class _MainShellState extends State<MainShell> {
           identityCheck: widget.identityCheck,
           screenPrivacyService: widget.screenPrivacyService,
         ),
-      _ => PremiumScreen(service: widget.premiumService),
+      7 => PremiumScreen(service: widget.premiumService),
+      _ => SubscriptionsScreen(
+          repository: widget.transactionRepository,
+          onChanged: _dataChanged,
+        ),
     };
   }
 
@@ -392,6 +398,12 @@ class _MobileMore extends StatelessWidget {
             title: 'Metas',
             subtitle: 'Transforme planos em progresso',
             onTap: () => onSelected(3),
+          ),
+          _MoreTile(
+            icon: Icons.subscriptions_outlined,
+            title: 'Assinaturas',
+            subtitle: 'Streamers, música e nuvem que você paga todo mês',
+            onTap: () => onSelected(8),
           ),
           const SizedBox(height: 22),
           const _MoreSectionTitle(

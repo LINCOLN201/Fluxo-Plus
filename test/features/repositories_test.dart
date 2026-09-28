@@ -40,9 +40,9 @@ void main() {
         createdAt: date,
       );
 
-  test('primeiro uso cria conta principal e 11 categorias padrão', () async {
+  test('primeiro uso cria conta principal e 12 categorias padrão', () async {
     expect(await transactions.getAccounts(), hasLength(1));
-    expect(await transactions.getAllCategories(), hasLength(11));
+    expect(await transactions.getAllCategories(), hasLength(12));
   });
 
   test('parcelas geram vencimentos mensais e só a primeira pode estar paga',

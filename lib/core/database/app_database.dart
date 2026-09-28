@@ -218,6 +218,7 @@ class AppDatabase {
         ('Lazer', 'expense', 'celebration'),
         ('Cartão de crédito', 'expense', 'credit_card'),
         ('Internet', 'expense', 'wifi'),
+        ('Assinaturas', 'expense', 'subscriptions'),
         ('Outras despesas', 'expense', 'more_horiz'),
       ];
       for (final category in categories) {
@@ -302,6 +303,14 @@ class AppDatabase {
       await database.execute(
         'CREATE INDEX idx_transactions_recurring_group '
         'ON transactions(recurring_group)',
+      );
+    }
+    if (oldVersion < 5) {
+      await _ensureCategory(
+        database,
+        name: 'Assinaturas',
+        icon: 'subscriptions',
+        color: CategoryPalette.defaults['Assinaturas']!,
       );
     }
   }
