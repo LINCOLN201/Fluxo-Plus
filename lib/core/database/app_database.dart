@@ -4,10 +4,11 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:sqflite_sqlcipher/sqflite.dart'
-    show SqlCipherOpenDatabaseOptions;
+import 'package:sqflite_sqlcipher/sqflite.dart' as sqlcipher
+    show SqlCipherOpenDatabaseOptions, databaseFactory;
 
 import '../constants/app_constants.dart';
+import '../observability/error_reporter.dart';
 import '../theme/category_palette.dart';
 import 'database_key_service.dart';
 import 'safety_copy_cipher.dart';
@@ -47,6 +48,9 @@ class AppDatabase {
     // Só Android tem um sqlite3 com SQLCipher disponível hoje; ver
     // docs/ROADMAP.md para as demais plataformas.
     final password = Platform.isAndroid ? await _keyService.rawKey() : null;
+    if (password != null) {
+      await migrateToCipherIfNeeded(path, password);
+    }
     _database = await _factory.openDatabase(
       path,
       options: password == null
@@ -57,7 +61,7 @@ class AppDatabase {
               onCreate: _create,
               onUpgrade: _upgrade,
             )
-          : SqlCipherOpenDatabaseOptions(
+          : sqlcipher.SqlCipherOpenDatabaseOptions(
               version: AppConstants.databaseVersion,
               password: password,
               onConfigure: (database) =>
@@ -67,6 +71,88 @@ class AppDatabase {
             ),
     );
     await safetyCopyDate(); // apaga a cópia de restauração vencida
+  }
+
+  /// Converte um banco antigo, sem cifra, para o formato SQLCipher — quem já
+  /// tinha o app antes da 0.6.0 tinha esse arquivo em texto puro; sem isso, a
+  /// abertura com senha falha e a pessoa perde os dados (já aconteceu antes).
+  ///
+  /// Segue a receita oficial do SQLCipher (ATTACH + `sqlcipher_export`) e só
+  /// substitui o arquivo original depois de confirmar que a cópia cifrada
+  /// abre de verdade com a senha nova; o original vira `.pre-cipher-backup`
+  /// em vez de ser apagado, como rede de segurança.
+  ///
+  /// Não roda no `flutter test`: o SQLCipher nativo só existe numa build
+  /// Android de verdade (mesma limitação já registrada em
+  /// `docs/ROADMAP.md`), então isto não tem como ser validado fora de um
+  /// aparelho real.
+  Future<void> migrateToCipherIfNeeded(String path, String password) async {
+    final file = File(path);
+    if (!await file.exists()) return; // banco novo, nada a migrar
+    if (!await _looksLikePlaintextSqlite(file)) return; // já cifrado
+
+    final tmpFile = File('$path.cipher-tmp');
+    if (await tmpFile.exists()) await tmpFile.delete();
+
+    Database? plain;
+    try {
+      plain = await sqlcipher.databaseFactory.openDatabase(
+        path,
+        options: OpenDatabaseOptions(readOnly: true),
+      );
+      final escapedTmpPath = tmpFile.path.replaceAll("'", "''");
+      await plain.execute(
+        "ATTACH DATABASE '$escapedTmpPath' AS encrypted KEY $password",
+      );
+      await plain.execute("SELECT sqlcipher_export('encrypted')");
+      await plain.execute('DETACH DATABASE encrypted');
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'AppDatabase.migrateToCipherIfNeeded.export',
+      );
+      if (await tmpFile.exists()) await tmpFile.delete();
+      rethrow;
+    } finally {
+      await plain?.close();
+    }
+
+    Database? verify;
+    try {
+      verify = await sqlcipher.databaseFactory.openDatabase(
+        tmpFile.path,
+        options: sqlcipher.SqlCipherOpenDatabaseOptions(password: password),
+      );
+      await verify.rawQuery('SELECT COUNT(*) FROM sqlite_master');
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'AppDatabase.migrateToCipherIfNeeded.verify',
+      );
+      await verify?.close();
+      if (await tmpFile.exists()) await tmpFile.delete();
+      rethrow;
+    }
+    await verify.close();
+
+    final backup = File('$path.pre-cipher-backup');
+    if (await backup.exists()) await backup.delete();
+    await file.rename(backup.path);
+    await tmpFile.rename(path);
+  }
+
+  static const _sqliteMagic = 'SQLite format 3\u0000';
+
+  Future<bool> _looksLikePlaintextSqlite(File file) async {
+    if (await file.length() < _sqliteMagic.length) return false;
+    final header = await file.openRead(0, _sqliteMagic.length).first;
+    final magicBytes = _sqliteMagic.codeUnits;
+    for (var i = 0; i < magicBytes.length; i++) {
+      if (header[i] != magicBytes[i]) return false;
+    }
+    return true;
   }
 
   Future<void> _create(Database database, int version) async {

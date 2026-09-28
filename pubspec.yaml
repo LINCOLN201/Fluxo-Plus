@@ -1,7 +1,7 @@
 name: fluxo_plus
 description: Finanças pessoais modernas, seguras e offline-first.
 publish_to: none
-version: 0.6.1+17
+version: 0.6.2+18
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -26,6 +26,7 @@ dependencies:
   flutter_secure_storage: ^11.2.0
   shared_preferences: ^2.5.5
   firebase_core: ^4.15.0
+  firebase_crashlytics: ^5.4.0
   firebase_messaging: ^16.7.0
   flutter_local_notifications: ^19.4.2
   sqflite_sqlcipher: ^3.4.1

@@ -82,12 +82,68 @@ condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
   - [ ] Mesma coisa no Windows: precisa de um `sqlite3` compilado com
         SQLCipher, sem pacote Flutter pronto para isso hoje; exige compilar
         e testar a DLL num PC Windows de verdade.
-  - [ ] Migração automática de bancos antigos (sem criptografia) para o
-        formato cifrado — hoje quem já tinha o app precisa exportar um
-        backup local antes de atualizar e restaurar depois. Não foi testado
-        porque a função do SQLCipher que faz essa conversão só existe na
-        build Android, sem como validar fora de um aparelho real.
+  - [x] Migração automática de bancos antigos (sem criptografia) para o
+        formato cifrado — implementada em `AppDatabase.migrateToCipherIfNeeded`
+        (28/09/2026), seguindo a receita oficial do SQLCipher (ATTACH +
+        `sqlcipher_export`); o arquivo original vira `.pre-cipher-backup` em
+        vez de ser apagado, como rede de segurança. **Ainda não validada num
+        aparelho Android real** — o SQLCipher nativo não existe fora de uma
+        build Android, então isso não roda no `flutter test` (só a lógica de
+        quando migrar ou não está coberta por teste). Testar isso num
+        aparelho de verdade, com um banco antigo de exemplo, antes de
+        confiar 100% nela.
 - [ ] Criptografia de ponta a ponta no backup da nuvem.
+
+## Fase 1.6 — Fundação de engenharia (auditoria 28/09/2026)
+
+Auditoria técnica pedida depois do incidente do Secret do Supabase (v0.6.1),
+antes de continuar com features novas. Detalhe completo do que motivou cada
+item nesta sessão de trabalho.
+
+- [x] Relatório de erros em produção (Firebase Crashlytics) —
+      `lib/core/observability/error_reporter.dart`, ligado junto do resto do
+      Firebase (opcional, sem `google-services.json` não faz nada). Um crash
+      de produção só foi descoberto porque a pessoa avisou manualmente, dias
+      depois, com dados já perdidos — agora fica registrado sozinho.
+- [x] `release.yml` passa a rodar a mesma checagem de conexão com o Supabase
+      que o `quality.yml` já tinha, nos dois jobs (`android` e `windows`) —
+      antes só rodava no push para `dev`, então um Secret podia quebrar
+      entre isso e a publicação da tag sem nada acusar.
+- [x] Job `windows` do `release.yml` passa a rodar `flutter analyze` e
+      `flutter test` antes de compilar — antes só compilava, sem nenhuma
+      checagem própria da plataforma.
+- [x] Erros antes silenciosamente descartados (`catch (_) {}`) em
+      `cloud_sync_service.dart` e `premium_service.dart` agora são
+      registrados no relatório de erros, sem mudar o comportamento visível
+      para quem usa o app.
+- [x] `ANDROID_KEYSTORE_BASE64`/`ANDROID_STORE_PASSWORD`/`ANDROID_KEY_ALIAS`
+      passam a ser validados de verdade (`keytool -list`) antes de assinar o
+      APK, não só conferidos como "não vazio".
+- [x] `FIREBASE_SERVICE_ACCOUNT_BASE64`/`FIREBASE_PROJECT_ID` passam a ser
+      validados (JSON decodifica, campos certos presentes, `project_id`
+      bate) antes de tentar notificar — antes um valor errado (não ausente)
+      falhava de um jeito confuso dentro do script Python.
+- [x] `docs/SECRETS.md`: checklist único com todos os Secrets do CI/CD e
+      como conferir cada um, referenciado de `docs/RELEASES.md` e
+      `docs/SUPABASE.md`.
+- [x] Tabelas órfãs `transactions`/`goals` identificadas no projeto Supabase
+      (não usadas por nenhum código do app — só `user_backups` e
+      `premium_subscriptions` são usadas) — deixadas como estão, decisão de
+      apagar ou não fica com quem administra o projeto (**(você)**), por ser
+      uma mudança destrutiva num banco também usado por outra coisa.
+- [ ] **(você)** No painel do Supabase (Authentication → Policies → Password
+      Security), ativar a proteção contra senha vazada
+      (`auth_leaked_password_protection`) — não é algo alterável por SQL.
+- [ ] Cobertura de testes: sem nenhum teste para `cloud_sync_service.dart`
+      (o serviço que falhou silenciosamente), `push_notification_service.dart`
+      e as telas de Configurações (sincronização, backup, segurança), Contas,
+      Categorias, Metas, Relatórios e Onboarding. Escopo grande demais para
+      resolver de uma vez; entra como item recorrente até fechar.
+- [ ] `biometric_service.dart` não tem nenhum ajuste por plataforma nem
+      teste que confirme que funciona igual no Windows (Windows Hello via
+      `local_auth`) — comportamento hoje só verificado "de olho".
+- [ ] `dashboard_screen.dart` (1099 linhas) e `main_shell.dart` (714)
+      continuam sem a divisão em telas menores já prevista na Fase 3.
 
 ## Fase 2 — 0.8.0: recursos Premium
 
@@ -156,6 +212,14 @@ está à frente do que foi pesquisado:
 ---
 
 ## Concluído
+
+### 0.6.2 (hotfix, PR #19)
+- [x] Corrige o Secret `SUPABASE_URL` de produção, que apontava para um
+      projeto inexistente desde a 0.6.0 — sincronização com a nuvem nunca
+      havia funcionado de fato em nenhuma versão publicada.
+- [x] CI passa a validar de verdade a conexão com o Supabase antes de
+      compilar, para esse tipo de erro não chegar mais em silêncio a uma
+      versão publicada.
 
 ### 0.6.0 (PR #6)
 - [x] Site oficial (início, privacidade, e-mail confirmado) e workflow do Pages.

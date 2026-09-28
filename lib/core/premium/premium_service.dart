@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../database/app_database.dart';
+import '../observability/error_reporter.dart';
 import 'premium_entitlement.dart';
 
 class PremiumService {
@@ -36,7 +37,8 @@ class PremiumService {
           : _fromMap(Map<String, dynamic>.from(row));
       await _writeCache(user.id, entitlement);
       return entitlement;
-    } catch (_) {
+    } catch (e, st) {
+      ErrorReporter.record(e, st, reason: 'PremiumService.load');
       return await _readCache(user.id) ?? const PremiumEntitlement.free();
     }
   }

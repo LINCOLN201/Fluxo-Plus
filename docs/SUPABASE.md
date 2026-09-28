@@ -1,5 +1,8 @@
 # Supabase: autenticação, sincronização e backup
 
+> Checklist único de todos os Secrets usados no CI/CD, com como conferir
+> cada um: `docs/SECRETS.md`.
+
 O Fluxo+ continua offline-first. O Supabase é opcional e armazena um snapshot
 JSON do banco local por usuário. Cada usuário só acessa o próprio backup por
 meio de Row Level Security (RLS).
