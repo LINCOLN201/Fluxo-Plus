@@ -43,8 +43,11 @@ completo em `docs/RELEASES.md`, seção 5.
 - [x] **(código)** Workflow de publicação manda o aviso automaticamente a
       cada versão nova (job "Avisar quem já instalou").
 - [ ] **(você)** Criar o projeto no [Firebase](https://console.firebase.google.com)
-      e cadastrar `FIREBASE_PROJECT_ID` e `FIREBASE_SERVICE_ACCOUNT_BASE64`
-      nos Secrets do GitHub (`docs/RELEASES.md`, seção 5).
+      e cadastrar `FIREBASE_PROJECT_ID`, `FIREBASE_SERVICE_ACCOUNT_BASE64` **e
+      `GOOGLE_SERVICES_JSON_BASE64`** nos Secrets do GitHub (`docs/RELEASES.md`,
+      seção 5) — os três são necessários; faltando o terceiro, o aviso "sai"
+      mas nenhum aparelho recebe (era exatamente o caso da v0.6.3: só os dois
+      primeiros nunca foram cadastrados, então o job era pulado silenciosamente).
 - [ ] **(você)** Testar no aparelho: publicar uma versão de teste e conferir
       se a notificação chega com o app fechado.
 - Só Android por enquanto; o Windows continua avisando só quando o app abre.
@@ -225,6 +228,21 @@ está à frente do que foi pesquisado:
 ## Concluído
 
 ### Pós-0.6.3
+- [x] Notificação push de atualização nunca chegava a nenhum aparelho —
+      relatado depois da v0.6.3 sair sem avisar quem já tinha o app.
+      Investigando o log do job "Avisar quem já instalou" dessa publicação:
+      "Firebase não configurado — pulando notificação." Não era bug: os
+      Secrets `FIREBASE_PROJECT_ID`/`FIREBASE_SERVICE_ACCOUNT_BASE64` nunca
+      foram cadastrados. Só que também tinha um bug real por trás — mesmo
+      cadastrando os dois, `release.yml` nunca embutia o
+      `google-services.json` no APK publicado (só o passo a passo local
+      mencionava isso), então nenhum build publicado teria o Firebase
+      configurado de verdade, e a notificação nunca chegaria a lugar
+      nenhum mesmo com os Secrets certos. Corrigido: novo Secret
+      `GOOGLE_SERVICES_JSON_BASE64` + passo "Configurar Firebase (opcional)"
+      no job `android`, com `scripts/check_google_services_secret.py`
+      validando o JSON antes de compilar. Documentado em
+      `docs/RELEASES.md` (seção 5.3) e `docs/SECRETS.md`.
 - [x] Seção "Assinaturas" — lista dedicada de streamers/serviços por
       assinatura (Netflix, Spotify, Disney+ etc.), com catálogo dos mais
       comuns no Brasil (ícone + cor, sem logo de ninguém) e opção "Outro"

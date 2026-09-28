@@ -41,12 +41,21 @@ tem o app instalado (ver `docs/RELEASES.md`, seção 2).
 |---|---|---|
 | `FIREBASE_PROJECT_ID` | `release.yml` (job `notify`) | O passo "Enviar notificação push" agora confere que bate com o `project_id` de dentro do JSON da conta de serviço, antes de tentar notificar. |
 | `FIREBASE_SERVICE_ACCOUNT_BASE64` | idem | O mesmo passo decodifica o Base64, valida que é um JSON de verdade e que tem `project_id`, `client_email` e `private_key` preenchidos. |
+| `GOOGLE_SERVICES_JSON_BASE64` | `release.yml` (job `android`) | O passo "Configurar Firebase (opcional)" decodifica e roda `scripts/check_google_services_secret.py`, que confere que é um JSON válido com um app Android cadastrado para `br.com.fluxoplus.app`. **Sem esse Secret, o job `notify` pode até enviar a notificação, mas nenhum aparelho a recebe** — o APK publicado nunca teria o Firebase configurado de verdade, então nunca se inscreve em nenhum tópico. |
 
-Sem esses dois, o job `notify` é pulado silenciosamente ("Firebase não
-configurado — pulando notificação.") — isso é esperado e não quebra a
-publicação. Um valor **presente mas errado** agora falha o job com uma
-mensagem dizendo qual Secret conferir, em vez de falhar de um jeito confuso
-lá dentro do script Python.
+Sem `FIREBASE_PROJECT_ID`/`FIREBASE_SERVICE_ACCOUNT_BASE64`, o job `notify` é
+pulado silenciosamente ("Firebase não configurado — pulando notificação.") —
+isso é esperado e não quebra a publicação. Sem `GOOGLE_SERVICES_JSON_BASE64`,
+o passo "Configurar Firebase" também é pulado, silenciosamente, e o build
+segue normal. Um valor **presente mas errado**, em qualquer um dos três,
+falha o job com uma mensagem dizendo qual Secret conferir, em vez de falhar
+de um jeito confuso lá dentro do build.
+
+**Os três juntos são necessários** para a notificação chegar de verdade no
+aparelho de quem já instalou: `GOOGLE_SERVICES_JSON_BASE64` prepara o app
+compilado para receber, `FIREBASE_PROJECT_ID`/`FIREBASE_SERVICE_ACCOUNT_BASE64`
+autorizam o CI a enviar. Faltando qualquer um dos três, nada quebra, mas a
+notificação simplesmente não chega.
 
 ## Ao trocar qualquer Secret
 
