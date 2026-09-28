@@ -4,6 +4,16 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
+  # Alternativa manual: o push da tag deixou de disparar o workflow em
+  # algumas publicações (sem causa clara pelo lado do repositório). Com
+  # isso, dá para rodar a mesma publicação escolhendo a tag já existente
+  # em Actions → Publicar versão → Run workflow, sem depender do evento
+  # de push.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag já existente para publicar (ex.: v0.6.1)'
+        required: true
 
 permissions:
   contents: write
