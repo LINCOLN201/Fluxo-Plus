@@ -153,6 +153,55 @@ class CloudSyncService {
     }
   }
 
+  /// Envia um código de 8 dígitos por e-mail para redefinir a senha —
+  /// mesmo mecanismo de código usado na confirmação de cadastro, para não
+  /// precisar de um link que abra o app (deep link).
+  Future<void> requestPasswordReset(String email) async {
+    _requireClient();
+    try {
+      await _client!.auth.resetPasswordForEmail(email);
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'CloudSyncService.requestPasswordReset',
+      );
+      throw const CloudSyncException(
+        'Não foi possível enviar o código. Verifique sua internet.',
+      );
+    }
+  }
+
+  /// Confirma o código enviado por [requestPasswordReset] e troca a senha.
+  Future<void> confirmPasswordReset(
+    String email,
+    String code,
+    String newPassword,
+  ) async {
+    _requireClient();
+    try {
+      await _client!.auth.verifyOTP(
+        email: email,
+        token: code.trim(),
+        type: OtpType.recovery,
+      );
+      await _client!.auth.updateUser(UserAttributes(password: newPassword));
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'CloudSyncService.confirmPasswordReset',
+      );
+      throw const CloudSyncException(
+        'Não foi possível redefinir a senha. Verifique sua internet.',
+      );
+    }
+  }
+
   Future<void> signOut() async => _client?.auth.signOut();
 
   Future<DateTime> uploadBackup() async {
