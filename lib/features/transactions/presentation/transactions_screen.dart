@@ -79,6 +79,36 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     _refresh();
   }
 
+  Future<void> _stopRecurring(TransactionRecord record) async {
+    final group = record.transaction.recurringGroup;
+    if (group == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Parar de repetir?'),
+        content: Text(
+          'Os próximos vencimentos ainda pendentes de '
+          '“${record.transaction.name}” serão removidos. '
+          'Os já pagos continuam no histórico.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Parar de repetir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await widget.repository.stopRecurring(group);
+    widget.onChanged();
+    _refresh();
+  }
+
   Future<void> _delete(TransactionRecord record) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -192,6 +222,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     onOpen: () => _open(records[index]),
                     onTogglePaid: () => _togglePaid(records[index]),
                     onDelete: () => _delete(records[index]),
+                    onStopRecurring: () => _stopRecurring(records[index]),
                   ),
                 );
               },
@@ -354,12 +385,14 @@ class _TransactionCard extends StatelessWidget {
     required this.onOpen,
     required this.onTogglePaid,
     required this.onDelete,
+    required this.onStopRecurring,
   });
 
   final TransactionRecord record;
   final VoidCallback onOpen;
   final VoidCallback onTogglePaid;
   final VoidCallback onDelete;
+  final VoidCallback onStopRecurring;
 
   @override
   Widget build(BuildContext context) {
@@ -371,7 +404,9 @@ class _TransactionCard extends StatelessWidget {
     final overdue = !transaction.isPaid && dueDate.isBefore(today);
     final installment = transaction.installmentCount > 1
         ? ' • ${transaction.installmentNumber}/${transaction.installmentCount}'
-        : '';
+        : transaction.recurringGroup != null
+            ? ' • Recorrente'
+            : '';
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -454,6 +489,8 @@ class _TransactionCard extends StatelessWidget {
                         onTogglePaid();
                       } else if (value == 'edit') {
                         onOpen();
+                      } else if (value == 'stop_recurring') {
+                        onStopRecurring();
                       } else {
                         onDelete();
                       }
@@ -473,6 +510,11 @@ class _TransactionCard extends StatelessWidget {
                         value: 'edit',
                         child: Text('Editar'),
                       ),
+                      if (transaction.recurringGroup != null)
+                        const PopupMenuItem(
+                          value: 'stop_recurring',
+                          child: Text('Parar de repetir'),
+                        ),
                       const PopupMenuItem(
                         value: 'delete',
                         child: Text('Excluir'),

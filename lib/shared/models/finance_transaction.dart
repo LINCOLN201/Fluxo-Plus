@@ -15,6 +15,7 @@ class FinanceTransaction {
     this.installmentGroup,
     this.installmentNumber = 1,
     this.installmentCount = 1,
+    this.recurringGroup,
   });
 
   final int? id;
@@ -29,6 +30,7 @@ class FinanceTransaction {
   final String? installmentGroup;
   final int installmentNumber;
   final int installmentCount;
+  final String? recurringGroup;
 
   String get name => description;
   double get installmentTotal => amount * installmentCount;
@@ -47,6 +49,7 @@ class FinanceTransaction {
         installmentGroup: map['installment_group'] as String?,
         installmentNumber: (map['installment_number'] as int?) ?? 1,
         installmentCount: (map['installment_count'] as int?) ?? 1,
+        recurringGroup: map['recurring_group'] as String?,
       );
 
   Map<String, Object?> toMap() => {
@@ -61,6 +64,7 @@ class FinanceTransaction {
         'installment_group': installmentGroup,
         'installment_number': installmentNumber,
         'installment_count': installmentCount,
+        'recurring_group': recurringGroup,
         'created_at': createdAt.toIso8601String(),
       };
 }

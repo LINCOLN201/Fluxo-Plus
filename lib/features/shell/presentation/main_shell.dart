@@ -94,6 +94,7 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     _loadUserName();
+    widget.transactionRepository.extendRecurringOccurrences();
   }
 
   Future<void> _loadUserName() async {
