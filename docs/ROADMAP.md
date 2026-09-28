@@ -63,8 +63,9 @@ Implementação **(código)** — detalhes em
 - [ ] Edge Function `pix-webhook` (valida e atualiza `premium_subscriptions`).
 - [ ] Tela de checkout e de "cancelar assinatura" na aba Premium.
 - [ ] Testes com o ambiente de homologação (sandbox) do PSP.
-- [ ] **Excluir conta pelo app** (apaga conta e backup na nuvem) — a política
-      de privacidade já promete esse direito (LGPD).
+- [x] **Excluir conta pelo app** (apaga conta e backup na nuvem) — a política
+      de privacidade já prometia esse direito (LGPD); agora tem botão na tela
+      de sincronização, com confirmação em duas etapas (aviso + PIN/biometria).
 - [ ] Termos de uso publicados no site.
 - [ ] Ligar `AppConstants.premiumEnforced = true`, com aviso prévio a quem já
       usa a nuvem.
@@ -218,6 +219,15 @@ está à frente do que foi pesquisado:
 ---
 
 ## Concluído
+
+### Pós-0.6.2 (continuação)
+- [x] "Excluir conta" — botão na tela de sincronização apaga a conta e o
+      backup na nuvem (inclusive assinatura Premium, se houver) pra sempre,
+      sem precisar abrir uma issue no GitHub. Função `delete_own_account()`
+      no Supabase (SECURITY DEFINER, só apaga a própria conta de quem
+      chama), com `ON DELETE CASCADE` já existente cuidando do resto.
+      Confirmação em duas etapas: diálogo de aviso + PIN/biometria
+      (`IdentityCheck`). Dados deste aparelho não são afetados.
 
 ### Pós-0.6.2
 - [x] "Esqueci minha senha" — não existia no app; agora usa o mesmo padrão

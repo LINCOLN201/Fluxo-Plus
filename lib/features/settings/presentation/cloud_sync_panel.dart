@@ -444,6 +444,44 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
     if (ok) widget.onDataChanged();
   }
 
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded),
+        title: const Text('Excluir conta?'),
+        content: const Text(
+          'Isso apaga sua conta e o backup na nuvem para sempre, inclusive a '
+          'assinatura Premium, se houver. Os dados guardados neste aparelho '
+          'não são afetados, mas não poderão mais ser sincronizados com essa '
+          'conta. Essa ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Excluir conta'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    if (!await widget.identityCheck.confirm(
+      context,
+      reason: 'Confirme para excluir sua conta e o backup na nuvem.',
+    )) {
+      return;
+    }
+    await _run(widget.service.deleteAccount, 'Conta excluída.');
+  }
+
   static String _format(DateTime value) =>
       DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(value.toLocal());
 
@@ -588,6 +626,16 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
                     ),
                   ),
                 ],
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _busy ? null : _deleteAccount,
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.error,
+                  ),
+                  child: const Text('Excluir conta'),
+                ),
               ),
             ],
             if (_busy) const LinearProgressIndicator(),
