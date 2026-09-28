@@ -33,8 +33,7 @@ Não há plano vitalício: os serviços de nuvem têm custo recorrente.
 
 Pix Automático (recorrência autorizada uma vez pelo usuário no app do banco).
 A integração depende da escolha do PSP; ver
-`docs/superpowers/specs/2026-09-24-versao-0.6.0-orientacoes.md` (seção 9) e
-`docs/PIX.md` (passo a passo de como plugar o PSP escolhido).
+`docs/superpowers/specs/2026-09-24-versao-0.6.0-orientacoes.md`.
 
 ## Estado da implementação
 
@@ -46,11 +45,3 @@ integração do Pix Automático entrar em produção.
 
 Somente um backend confiável poderá criar ou alterar assinaturas. O aplicativo
 cliente possui acesso de leitura apenas à assinatura do usuário autenticado.
-
-As três Edge Functions (`supabase/functions/pix-assinar`, `pix-cancelar`,
-`pix-webhook`) já existem prontas, mas atrás de um adaptador de PSP genérico
-(`supabase/functions/_shared/pix_adapter.ts`) que hoje só lança um erro claro
-("PSP não configurado") — nenhuma delas fala com nenhum PSP de verdade ainda,
-de propósito, para não haver nenhuma credencial paga no código sem que você
-peça. Falta só escrever a implementação desse adaptador para o PSP escolhido;
-ver `docs/PIX.md`.
