@@ -224,6 +224,15 @@ está à frente do que foi pesquisado:
       ficava esperando indefinidamente. `CloudSyncService.signUp` agora
       devolve se a conta já veio confirmada/logada; nesse caso o app pula
       direto para a sincronização, sem pedir código nenhum.
+- [x] Dashboard tinha um botão de mês que só mostrava o mês atual e não
+      fazia nada ao tocar (`onPressed: () {}`, nunca implementado) — quem
+      lançava uma conta com vencimento no mês seguinte via o resumo do
+      Dashboard sempre zerado, sem nenhum jeito de olhar aquele outro mês.
+      Agora o botão navega entre meses (setas + toque volta pro mês atual)
+      e a previsão salarial e as despesas por categoria passam a refletir
+      o mês escolhido ("Saldo total" continua histórico, de todas as
+      contas, e "Transações recentes" continua mostrando os últimos
+      lançamentos de qualquer mês — os dois por design, sem mudança aqui).
 
 ### 0.6.2 (hotfix, PR #19)
 - [x] Corrige o Secret `SUPABASE_URL` de produção, que apontava para um

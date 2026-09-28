@@ -35,16 +35,24 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   late Future<DashboardSummary> _summary;
+  var _month = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _summary = widget.repository.load(DateTime.now());
+    _summary = widget.repository.load(_month);
   }
 
   Future<void> _refresh() async {
-    setState(() => _summary = widget.repository.load(DateTime.now()));
+    setState(() => _summary = widget.repository.load(_month));
     await _summary;
+  }
+
+  void _changeMonth(DateTime month) {
+    setState(() {
+      _month = DateTime(month.year, month.month);
+      _summary = widget.repository.load(_month);
+    });
   }
 
   @override
@@ -72,6 +80,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onNotifications: widget.onNotifications,
                     onOpenTransactions: widget.onOpenTransactions,
                     userName: widget.userName,
+                    month: _month,
+                    onMonthChanged: _changeMonth,
                   )
                 : _DesktopDashboard(
                     summary: snapshot.requireData,
@@ -80,6 +90,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onOpenTransactions: widget.onOpenTransactions,
                     onNotifications: widget.onNotifications,
                     updateAvailable: widget.updateAvailable,
+                    month: _month,
+                    onMonthChanged: _changeMonth,
                   );
           },
         );
@@ -96,6 +108,8 @@ class _DesktopDashboard extends StatelessWidget {
     required this.onOpenTransactions,
     required this.onNotifications,
     required this.updateAvailable,
+    required this.month,
+    required this.onMonthChanged,
   });
 
   final DashboardSummary summary;
@@ -104,6 +118,8 @@ class _DesktopDashboard extends StatelessWidget {
   final ValueChanged<TransactionType?> onOpenTransactions;
   final VoidCallback onNotifications;
   final bool updateAvailable;
+  final DateTime month;
+  final ValueChanged<DateTime> onMonthChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +164,7 @@ class _DesktopDashboard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _MonthButton(),
+                    _MonthSelector(month: month, onChanged: onMonthChanged),
                     const SizedBox(width: 12),
                     FilledButton.icon(
                       onPressed: onAddTransaction,
@@ -292,6 +308,8 @@ class _MobileDashboard extends StatelessWidget {
     required this.updateAvailable,
     required this.onNotifications,
     required this.onOpenTransactions,
+    required this.month,
+    required this.onMonthChanged,
     this.userName,
   });
 
@@ -300,6 +318,8 @@ class _MobileDashboard extends StatelessWidget {
   final bool updateAvailable;
   final VoidCallback onNotifications;
   final ValueChanged<TransactionType?> onOpenTransactions;
+  final DateTime month;
+  final ValueChanged<DateTime> onMonthChanged;
   final String? userName;
 
   @override
@@ -372,7 +392,11 @@ class _MobileDashboard extends StatelessWidget {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 22),
+              const SizedBox(height: 14),
+              Center(
+                child: _MonthSelector(month: month, onChanged: onMonthChanged),
+              ),
+              const SizedBox(height: 14),
               _SalaryForecastCard(
                 income: summary.monthIncome,
                 expense: summary.monthExpense,
@@ -1019,18 +1043,52 @@ class _TransactionList extends StatelessWidget {
   }
 }
 
-class _MonthButton extends StatelessWidget {
+/// Navega entre meses no Dashboard. Antes disso o botão só mostrava o mês
+/// atual e não fazia nada ao tocar — quem lançava contas num mês diferente
+/// (ex.: vencimento no mês seguinte) via o Dashboard sempre zerado, sem
+/// nenhum jeito de olhar aquele outro mês.
+class _MonthSelector extends StatelessWidget {
+  const _MonthSelector({required this.month, required this.onChanged});
+
+  final DateTime month;
+  final ValueChanged<DateTime> onChanged;
+
+  bool get _isCurrentMonth {
+    final now = DateTime.now();
+    return month.year == now.year && month.month == now.month;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: () {},
-      icon: const Icon(Icons.calendar_month_outlined, size: 17),
-      label: Text(DateFormat('MMMM / yyyy', 'pt_BR').format(DateTime.now())),
-      style: OutlinedButton.styleFrom(
-        foregroundColor: context.colors.textPrimary,
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        side: BorderSide(color: context.colors.border),
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'Mês anterior',
+          onPressed: () => onChanged(DateTime(month.year, month.month - 1)),
+          icon: const Icon(Icons.chevron_left_rounded),
+        ),
+        OutlinedButton.icon(
+          onPressed: _isCurrentMonth
+              ? null
+              : () {
+                  final now = DateTime.now();
+                  onChanged(DateTime(now.year, now.month));
+                },
+          icon: const Icon(Icons.calendar_month_outlined, size: 17),
+          label: Text(DateFormat('MMMM / yyyy', 'pt_BR').format(month)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: context.colors.textPrimary,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            side: BorderSide(color: context.colors.border),
+          ),
+        ),
+        IconButton(
+          tooltip: 'Próximo mês',
+          onPressed: () => onChanged(DateTime(month.year, month.month + 1)),
+          icon: const Icon(Icons.chevron_right_rounded),
+        ),
+      ],
     );
   }
 }
