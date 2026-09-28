@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluxo_plus/features/transactions/data/transaction_repository.dart';
+import 'package:fluxo_plus/shared/models/category.dart';
 import 'package:fluxo_plus/shared/models/finance_transaction.dart';
 
 import '../support/test_database.dart';
