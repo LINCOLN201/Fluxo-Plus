@@ -137,9 +137,14 @@ class AppDatabase {
     }
     await verify.close();
 
+    // Copia (não move) o original para o backup antes do passo final, para
+    // o `rename` abaixo ser a única operação que troca o arquivo em uso —
+    // `rename` sobrescreve o destino de forma atômica no mesmo volume, sem
+    // a janela em que nenhum arquivo existiria em `path` se o processo
+    // fosse encerrado exatamente entre duas operações separadas.
     final backup = File('$path.pre-cipher-backup');
     if (await backup.exists()) await backup.delete();
-    await file.rename(backup.path);
+    await file.copy(backup.path);
     await tmpFile.rename(path);
   }
 
