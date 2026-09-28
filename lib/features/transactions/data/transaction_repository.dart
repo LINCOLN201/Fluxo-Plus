@@ -293,6 +293,48 @@ class TransactionRepository {
     );
     return rows.map(TransactionRecord.fromMap).toList();
   }
+
+  /// Assinaturas ativas (streamers, música, nuvem etc.): lançamentos
+  /// recorrentes da categoria "Assinaturas". Mesma lógica de
+  /// [extendRecurringOccurrences] — como há um único MIN() na consulta, as
+  /// colunas soltas vêm da mesma linha da próxima cobrança pendente daquele
+  /// grupo, então descrição e valor batem com a próxima ocorrência, não com
+  /// uma linha qualquer do grupo.
+  Future<List<SubscriptionSummary>> listActiveSubscriptions() async {
+    final rows = await _database.db.rawQuery('''
+      SELECT t.recurring_group AS recurring_group, t.description,
+             t.amount_cents, MIN(t.date) AS next_date
+      FROM transactions t
+      INNER JOIN categories c ON c.id = t.category_id
+      WHERE c.name = 'Assinaturas' AND t.recurring_group IS NOT NULL
+        AND t.is_paid = 0
+      GROUP BY t.recurring_group
+      ORDER BY next_date ASC
+    ''');
+    return rows.map(SubscriptionSummary.fromMap).toList();
+  }
+}
+
+class SubscriptionSummary {
+  const SubscriptionSummary({
+    required this.recurringGroup,
+    required this.description,
+    required this.amount,
+    required this.nextDate,
+  });
+
+  final String recurringGroup;
+  final String description;
+  final double amount;
+  final DateTime nextDate;
+
+  factory SubscriptionSummary.fromMap(Map<String, Object?> map) =>
+      SubscriptionSummary(
+        recurringGroup: map['recurring_group'] as String,
+        description: map['description'] as String,
+        amount: Money.fromCents(map['amount_cents']),
+        nextDate: DateTime.parse(map['next_date'] as String),
+      );
 }
 
 class TransactionRecord {

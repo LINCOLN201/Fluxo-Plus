@@ -13,6 +13,7 @@ abstract final class CategoryPalette {
     'Lazer': 0xFFB7791F,
     'Cartão de crédito': 0xFF5A5A60,
     'Internet': 0xFF3F6E7A,
+    'Assinaturas': 0xFF6A4FA0,
     'Outras despesas': 0xFF6E6E72,
   };
 
