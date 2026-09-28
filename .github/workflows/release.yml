@@ -18,6 +18,14 @@ on:
 permissions:
   contents: write
 
+# Publicar pela tag (push) usa a própria tag como referência. Publicar pelo
+# botão "Run workflow" deixa escolher a branch onde RODAR o workflow (para
+# ter o gatilho manual disponível, precisa ser uma branch que já o tem) —
+# por isso a tag de verdade a publicar vem do campo "tag" preenchido ali,
+# não da branch escolhida.
+env:
+  RELEASE_REF: ${{ github.event.inputs.tag || github.ref_name }}
+
 jobs:
   verify-main:
     name: Confirmar tag na main
@@ -25,11 +33,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_REF }}
           fetch-depth: 0
       - name: Verificar origem da versão
         run: |
           git fetch origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+          if ! git merge-base --is-ancestor HEAD origin/main; then
             echo "A tag não pertence à branch main. Publicação bloqueada."
             exit 1
           fi
@@ -40,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -64,7 +75,7 @@ jobs:
           EOF
       - name: Gerar APK
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_REF#v}"
           flutter build apk --release \
             --build-name="$VERSION" \
             --build-number="${{ github.run_number }}" \
@@ -93,6 +104,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -101,7 +114,7 @@ jobs:
       - name: Gerar aplicativo Windows
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = "$env:RELEASE_REF".TrimStart("v")
           flutter build windows --release `
             --build-name="$version" `
             --build-number="${{ github.run_number }}" `
@@ -127,12 +140,12 @@ jobs:
 
   release:
     name: GitHub Release
-    if: startsWith(github.ref, 'refs/tags/')
     needs: [android, windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_REF }}
           sparse-checkout: docs/releases
       # O texto de docs/releases/<tag>.md aparece no aviso de atualização do
       # app (só as primeiras linhas), por isso vem antes das notas automáticas.
@@ -140,7 +153,7 @@ jobs:
         id: notes
         shell: bash
         run: |
-          file="docs/releases/${GITHUB_REF_NAME}.md"
+          file="docs/releases/${RELEASE_REF}.md"
           if [ -f "$file" ]; then echo "path=$file" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/download-artifact@v4
         with:
@@ -152,6 +165,7 @@ jobs:
           sha256sum fluxo-plus-windows.zip > fluxo-plus-windows.zip.sha256
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.RELEASE_REF }}
           body_path: ${{ steps.notes.outputs.path }}
           generate_release_notes: true
           files: |
@@ -177,7 +191,7 @@ jobs:
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_SERVICE_ACCOUNT_JSON: service-account.json
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ env.RELEASE_REF }}
         run: |
           echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" | base64 --decode > service-account.json
           python3 scripts/notify_update.py
