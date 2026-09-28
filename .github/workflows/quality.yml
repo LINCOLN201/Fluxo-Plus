@@ -25,6 +25,29 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      # Confirma que SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY realmente
+      # apontam para um projeto Supabase no ar, sem nunca imprimir o
+      # valor deles no log. Pego numa versão publicada com um Secret
+      # apontando para um projeto que não existia mais: o build passava
+      # normal (nada aqui valida isso em tempo de compilação), e só
+      # quebrava no aparelho da pessoa, na hora de fazer login.
+      - name: Confirmar conexão com o Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "Secrets do Supabase não configurados — pulando checagem."
+            exit 0
+          fi
+          if curl -sf -o /dev/null --max-time 15 \
+              -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+              "$SUPABASE_URL/auth/v1/settings"; then
+            echo "Conectou no Supabase configurado."
+          else
+            echo "Não conseguiu conectar no Supabase configurado — confira o Secret SUPABASE_URL (projeto pausado, apagado ou endereço errado)."
+            exit 1
+          fi
       - name: Compilar APK de teste
         run: >
           flutter build apk --debug
