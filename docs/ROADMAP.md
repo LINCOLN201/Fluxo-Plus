@@ -92,11 +92,24 @@ condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
 ## Fase 2 — 0.8.0: recursos Premium
 
 - [ ] Histórico de backups na nuvem (voltar a uma versão anterior).
-- [ ] Lançamentos recorrentes (aluguel, assinaturas, salário).
-- [ ] Cartões de crédito com fatura e fechamento.
+- [ ] Lançamentos recorrentes (aluguel, assinaturas, salário) —
+      **(auditoria 28/09/2026)** todo concorrente pesquisado (Mobills,
+      Organizze, GuiaBolso) tem isso; é o recurso mais básico que falta.
+- [ ] Cartões de crédito com fatura e fechamento — **(auditoria
+      28/09/2026)** segundo recurso mais citado nos comparativos depois de
+      Open Finance; Organizze mostra fatura e limite na tela inicial.
+- [ ] Edição em lote de transações (marcar várias e editar/excluir de uma
+      vez) — **(auditoria 28/09/2026)** reclamação real e recorrente sobre
+      o Mobills no Reclame Aqui por não ter isso; barato de implementar,
+      ninguém reclama se já vier pronto.
 - [ ] Orçamento por categoria com alertas.
-- [ ] Relatórios avançados (tendências, patrimônio).
+- [ ] Relatórios avançados (tendências, patrimônio) — concorrentes bem
+      avaliados (Organizze) também são criticados por não terem
+      profundidade aqui; é diferencial, não só paridade.
 - [ ] Exportação PDF e Excel.
+- [ ] Widget de tela inicial (Android/iOS) — **(auditoria 28/09/2026)**
+      citado como recurso esperado em comparativos de apps financeiros;
+      não é oferecido hoje.
 
 ## Fase 3 — Qualidade e distribuição
 
@@ -116,6 +129,29 @@ condição de corrida no bloqueio do PIN, builds de produção sem ofuscação.
 - [ ] Sincronização granular (mesclar alterações em vez de escolher um lado).
 - [ ] Web/PWA com armazenamento compatível.
 - [ ] Inteligência financeira (análises, alertas e previsões).
+- [ ] **(você, decisão de negócio)** Open Finance — conectar direto no banco
+      e importar transações automaticamente, sem lançar na mão. **(auditoria
+      28/09/2026)** é a diferença nº 1 entre o Fluxo+ e todo concorrente
+      pesquisado (Mobills, Organizze, GuiaBolso) — todos usam isso. Exige
+      credenciamento no Banco Central/Open Finance Brasil; projeto grande,
+      fica de fora por enquanto, mas é o maior gap competitivo do produto.
+- [ ] Conta compartilhada (casal/família): convidar alguém para ver/editar
+      a mesma conta na nuvem — **(auditoria 28/09/2026)** Organizze tem, e
+      existem apps só para isso (Noh, Juntos). O Fluxo+ já tem conta na
+      nuvem, então é uma extensão natural, não uma feature nova do zero.
+
+### O que o Fluxo+ já tem de diferencial (auditoria 28/09/2026)
+
+Não é só ficar correndo atrás da concorrência — nesses pontos o Fluxo+ já
+está à frente do que foi pesquisado:
+- Banco de dados local criptografado (SQLCipher) — não visto nos
+  concorrentes pesquisados.
+- Backup local sem depender de nuvem de terceiro.
+- Notificação de atualização com o app fechado.
+- A reclamação mais comum sobre concorrentes pagos (Mobills, no Reclame
+  Aqui) é cobrança indevida após cancelamento — um fluxo de cancelamento
+  fácil dentro do app (Fase 1, Pix Automático) já nasce em vantagem de
+  confiança.
 
 ---
 
