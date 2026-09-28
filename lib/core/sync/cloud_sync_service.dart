@@ -187,7 +187,7 @@ class CloudSyncService {
         token: code.trim(),
         type: OtpType.recovery,
       );
-      await _client!.auth.updateUser(UserAttributes(password: newPassword));
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
     } catch (e, st) {
