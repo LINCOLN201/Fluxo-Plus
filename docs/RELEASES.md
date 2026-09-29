@@ -149,10 +149,19 @@ Em Settings → Secrets and variables → Actions do repositório, adicione:
 
 - `FIREBASE_PROJECT_ID` — o Project ID da etapa 5.1.
 - `FIREBASE_SERVICE_ACCOUNT_BASE64` — o conteúdo em Base64 da etapa 5.2.
+- `GOOGLE_SERVICES_JSON_BASE64` — o `google-services.json` baixado na etapa
+  5.1, em Base64 (mesmo comando do 5.2, trocando o nome do arquivo). **Sem
+  esse terceiro Secret, o job de aviso pode até rodar e "enviar" a
+  notificação, mas nenhum aparelho a recebe** — o APK publicado nunca tem o
+  Firebase configurado de verdade, então nunca se inscreve em nenhum tópico.
+  É o erro mais fácil de cometer aqui: configurar só os dois primeiros e
+  achar que basta.
 
-Na próxima tag publicada, o job **"Avisar quem já instalou (push)"** do
-`release.yml` roda automaticamente e manda a notificação. Sem esses dois
-Secrets, esse job é pulado — nada quebra.
+Na próxima tag publicada, o passo **"Configurar Firebase (opcional)"** (job
+`android`) embute o `google-services.json` no build, e o job **"Avisar quem
+já instalou (push)"** manda a notificação pro tópico. Faltando qualquer um
+dos três Secrets, o passo correspondente é pulado — nada quebra, só a
+notificação não chega.
 
 O app se inscreve sozinho no aviso assim que abre pela primeira vez, sem
 conta nem cadastro: é um único tópico do Firebase Cloud Messaging

@@ -101,6 +101,23 @@ jobs:
             -storepass "$STORE_PASSWORD" \
             -alias "$KEY_ALIAS" > /dev/null \
             || (echo "Não foi possível abrir o keystore com os Secrets ANDROID_* configurados — confira ANDROID_KEYSTORE_BASE64/ANDROID_STORE_PASSWORD/ANDROID_KEY_ALIAS." && exit 1)
+      # Sem isso, o APK publicado nunca tem o Firebase configurado de
+      # verdade: mesmo com o job "Avisar quem já instalou" enviando a
+      # notificação depois, nenhum aparelho a recebe, porque o app
+      # compilado nunca se inscreveu em nenhum tópico do Firebase Cloud
+      # Messaging. Opcional — sem o Secret, o build segue normal, só sem
+      # notificação push (mesmo padrão dos outros Secrets opcionais).
+      - name: Configurar Firebase (opcional)
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          GOOGLE_SERVICES_JSON_PATH: android/app/google-services.json
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "Secret GOOGLE_SERVICES_JSON_BASE64 ausente — build sem notificação push."
+            exit 0
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > "$GOOGLE_SERVICES_JSON_PATH"
+          python3 scripts/check_google_services_secret.py
       - name: Gerar APK
         run: |
           VERSION="${RELEASE_REF#v}"
