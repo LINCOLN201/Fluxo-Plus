@@ -30,7 +30,7 @@ Legenda: **(você)** depende do dono do produto · **(código)** é implementaç
 - [ ] **(você)** Com o Supabase ativo, rodar o trecho "Reforço de segurança"
       do `supabase/schema.sql` no SQL Editor (ou pedir para eu aplicar).
 
-## Notificação push de atualização (pronta, falta você configurar)
+## Notificação push de atualização (concluída, validada no aparelho)
 
 Avisa quem já instalou o Fluxo+ quando sai uma versão nova, com notificação
 de verdade na barra do celular — mesmo com o app fechado. Passo a passo
@@ -42,14 +42,11 @@ completo em `docs/RELEASES.md`, seção 5.
       aberto, em segundo plano ou fechado.
 - [x] **(código)** Workflow de publicação manda o aviso automaticamente a
       cada versão nova (job "Avisar quem já instalou").
-- [ ] **(você)** Criar o projeto no [Firebase](https://console.firebase.google.com)
-      e cadastrar `FIREBASE_PROJECT_ID`, `FIREBASE_SERVICE_ACCOUNT_BASE64` **e
-      `GOOGLE_SERVICES_JSON_BASE64`** nos Secrets do GitHub (`docs/RELEASES.md`,
-      seção 5) — os três são necessários; faltando o terceiro, o aviso "sai"
-      mas nenhum aparelho recebe (era exatamente o caso da v0.6.3: só os dois
-      primeiros nunca foram cadastrados, então o job era pulado silenciosamente).
-- [ ] **(você)** Testar no aparelho: publicar uma versão de teste e conferir
-      se a notificação chega com o app fechado.
+- [x] **(você)** Projeto criado no Firebase e os 3 Secrets cadastrados
+      (`FIREBASE_PROJECT_ID`, `FIREBASE_SERVICE_ACCOUNT_BASE64`,
+      `GOOGLE_SERVICES_JSON_BASE64`).
+- [x] **(você)** Testado no aparelho real (29/09/2026): notificação da
+      v0.6.5 chegou com o app fechado.
 - Só Android por enquanto; o Windows continua avisando só quando o app abre.
 
 ## Fase 1 — 0.7.0: assinatura Premium por Pix Automático
@@ -242,7 +239,9 @@ está à frente do que foi pesquisado:
       `GOOGLE_SERVICES_JSON_BASE64` + passo "Configurar Firebase (opcional)"
       no job `android`, com `scripts/check_google_services_secret.py`
       validando o JSON antes de compilar. Documentado em
-      `docs/RELEASES.md` (seção 5.3) e `docs/SECRETS.md`.
+      `docs/RELEASES.md` (seção 5.3) e `docs/SECRETS.md`. **Validado no
+      aparelho real** (29/09/2026): notificação da v0.6.5 chegou com o app
+      fechado, depois dos 3 Secrets cadastrados.
 - [x] Seção "Assinaturas" — lista dedicada de streamers/serviços por
       assinatura (Netflix, Spotify, Disney+ etc.), com catálogo dos mais
       comuns no Brasil (ícone + cor, sem logo de ninguém) e opção "Outro"
