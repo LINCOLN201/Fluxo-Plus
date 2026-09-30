@@ -224,6 +224,25 @@ está à frente do que foi pesquisado:
 
 ## Concluído
 
+### Pós-0.6.5 (revisão de uso real)
+- [x] "Ver todas" no Dashboard (mobile) era só texto decorativo, sem
+      nenhuma ação ao tocar — mesmo padrão do bug antigo do seletor de
+      mês. Agora "Transações recentes" abre a lista completa e "Despesas
+      por categoria" abre as transações já filtradas por despesa.
+- [x] Relatórios: a seta "próximo mês" ficava desabilitada assim que a
+      tela mostrava o mês atual (`canGoForward: !_isCurrentMonth`),
+      impedindo navegar pra qualquer mês futuro — mesmo tendo lançamentos
+      lá (lançamentos recorrentes geram até 12 meses à frente). Bug real,
+      não só falta de dado: a consulta em `ReportRepository` já aceitava
+      qualquer mês, só a navegação da tela estava travada. Removida a
+      trava, igual já funcionava no seletor de mês do Dashboard.
+- [x] Metas: não existia jeito de somar valor ao progresso sem reabrir o
+      formulário inteiro e reescrever o "valor atual" na mão. Botão
+      "Adicionar valor" em cada meta, com um diálogo simples que soma ao
+      valor já guardado.
+- [x] "Assinaturas" sai de dentro de "Mais" e vira aba direta na barra
+      inferior (depois de "Relatórios"), a pedido do dono do produto.
+
 ### Pós-0.6.3
 - [x] Notificação push de atualização nunca chegava a nenhum aparelho —
       relatado depois da v0.6.3 sair sem avisar quem já tinha o app.

@@ -263,15 +263,16 @@ class _MainShellState extends State<MainShell> {
                   : _page(),
               bottomNavigationBar: _MobileNavigation(
                 selectedIndex: _showMobileMore
-                    ? 3
+                    ? 4
                     : switch (_selectedIndex) {
                         0 => 0,
                         1 => 1,
                         4 => 2,
-                        _ => 3,
+                        8 => 3,
+                        _ => 4,
                       },
                 onSelected: (value) => setState(() {
-                  if (value == 3) {
+                  if (value == 4) {
                     _showMobileMore = true;
                   } else {
                     _showMobileMore = false;
@@ -279,7 +280,7 @@ class _MainShellState extends State<MainShell> {
                       _transactionType = null;
                       _transactionRevision++;
                     }
-                    _selectedIndex = const [0, 1, 4][value];
+                    _selectedIndex = const [0, 1, 4, 8][value];
                   }
                 }),
                 onAdd: _addTransaction,
@@ -398,12 +399,6 @@ class _MobileMore extends StatelessWidget {
             title: 'Metas',
             subtitle: 'Transforme planos em progresso',
             onTap: () => onSelected(3),
-          ),
-          _MoreTile(
-            icon: Icons.subscriptions_outlined,
-            title: 'Assinaturas',
-            subtitle: 'Streamers, música e nuvem que você paga todo mês',
-            onTap: () => onSelected(8),
           ),
           const SizedBox(height: 22),
           const _MoreSectionTitle(
@@ -644,6 +639,7 @@ class _MobileNavigation extends StatelessWidget {
       (Icons.home_rounded, 'Início'),
       (Icons.swap_horiz_rounded, 'Transações'),
       (Icons.bar_chart_rounded, 'Relatórios'),
+      (Icons.subscriptions_rounded, 'Assinaturas'),
       (Icons.more_horiz_rounded, 'Mais'),
     ];
     return Container(
@@ -687,7 +683,7 @@ class _MobileNavigation extends StatelessWidget {
             ),
           ),
           ...List.generate(
-            2,
+            3,
             (offset) => _mobileItem(context, items[offset + 2], offset + 2),
           ),
         ],
@@ -700,7 +696,7 @@ class _MobileNavigation extends StatelessWidget {
     return InkWell(
       onTap: () => onSelected(index),
       child: SizedBox(
-        width: 68,
+        width: 56,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -712,8 +708,11 @@ class _MobileNavigation extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               item.$2,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9.5,
                 color: selected
                     ? context.colors.primary
                     : context.colors.textMuted,
