@@ -416,6 +416,7 @@ class _MobileDashboard extends StatelessWidget {
               const SizedBox(height: 22),
               _MobileSectionTitle(
                 title: 'Despesas por categoria',
+                onVerTodas: () => onOpenTransactions(TransactionType.expense),
               ),
               const SizedBox(height: 12),
               Container(
@@ -429,6 +430,7 @@ class _MobileDashboard extends StatelessWidget {
               const SizedBox(height: 22),
               _MobileSectionTitle(
                 title: 'Transações recentes',
+                onVerTodas: () => onOpenTransactions(null),
               ),
               const SizedBox(height: 10),
               _TransactionList(
@@ -1116,9 +1118,10 @@ class _LegendDot extends StatelessWidget {
 }
 
 class _MobileSectionTitle extends StatelessWidget {
-  const _MobileSectionTitle({required this.title});
+  const _MobileSectionTitle({required this.title, required this.onVerTodas});
 
   final String title;
+  final VoidCallback onVerTodas;
 
   @override
   Widget build(BuildContext context) {
@@ -1134,9 +1137,16 @@ class _MobileSectionTitle extends StatelessWidget {
             ),
           ),
         ),
-        Text(
-          'Ver todas',
-          style: TextStyle(color: context.colors.primary, fontSize: 11),
+        InkWell(
+          onTap: onVerTodas,
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+            child: Text(
+              'Ver todas',
+              style: TextStyle(color: context.colors.primary, fontSize: 11),
+            ),
+          ),
         ),
       ],
     );

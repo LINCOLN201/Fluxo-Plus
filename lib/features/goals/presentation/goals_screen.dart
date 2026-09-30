@@ -140,6 +140,57 @@ class _GoalsScreenState extends State<GoalsScreen> {
     setState(_reload);
   }
 
+  Future<void> _addProgress(Goal goal) async {
+    final amount = TextEditingController();
+    final key = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Adicionar valor a "${goal.name}"'),
+        content: Form(
+          key: key,
+          child: TextFormField(
+            controller: amount,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: 'Valor a adicionar'),
+            validator: (value) {
+              final parsed = AppFormatters.parseCurrency(value ?? '');
+              return parsed == null || parsed <= 0
+                  ? 'Informe um valor maior que zero'
+                  : null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (key.currentState!.validate()) Navigator.pop(context, true);
+            },
+            child: const Text('Adicionar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final added = AppFormatters.parseCurrency(amount.text)!;
+    await widget.repository.save(
+      Goal(
+        id: goal.id,
+        name: goal.name,
+        targetAmount: goal.targetAmount,
+        currentAmount: goal.currentAmount + added,
+        deadline: goal.deadline,
+        createdAt: goal.createdAt,
+      ),
+    );
+    setState(_reload);
+  }
+
   Future<void> _delete(Goal goal) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -209,7 +260,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 padding: const EdgeInsets.all(20),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: columns,
-                  mainAxisExtent: 230,
+                  mainAxisExtent: 264,
                   crossAxisSpacing: 14,
                   mainAxisSpacing: 14,
                 ),
@@ -286,6 +337,19 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                             ],
+                          ),
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              onPressed: () => _addProgress(goal),
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: const Text('Adicionar valor'),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(0, 32),
+                              ),
+                            ),
                           ),
                         ],
                       ),

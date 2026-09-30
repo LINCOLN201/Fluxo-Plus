@@ -34,11 +34,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
     });
   }
 
-  bool get _isCurrentMonth {
-    final now = DateTime.now();
-    return _month.year == now.year && _month.month == now.month;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +64,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 children: [
                   _MonthNavigator(
                     month: _month,
-                    canGoForward: !_isCurrentMonth,
                     onPrevious: () => _moveMonth(-1),
                     onNext: () => _moveMonth(1),
                   ),
@@ -107,13 +101,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 class _MonthNavigator extends StatelessWidget {
   const _MonthNavigator({
     required this.month,
-    required this.canGoForward,
     required this.onPrevious,
     required this.onNext,
   });
 
   final DateTime month;
-  final bool canGoForward;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
 
@@ -144,7 +136,7 @@ class _MonthNavigator extends StatelessWidget {
           ),
         ),
         IconButton.filledTonal(
-          onPressed: canGoForward ? onNext : null,
+          onPressed: onNext,
           icon: const Icon(Icons.chevron_right_rounded),
           tooltip: 'Próximo mês',
         ),
