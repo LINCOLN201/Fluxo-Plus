@@ -19,6 +19,7 @@ class DashboardScreen extends StatefulWidget {
     required this.updateAvailable,
     required this.onNotifications,
     required this.onOpenTransactions,
+    required this.onOpenMore,
     this.userName,
   });
 
@@ -27,6 +28,7 @@ class DashboardScreen extends StatefulWidget {
   final bool updateAvailable;
   final VoidCallback onNotifications;
   final ValueChanged<TransactionType?> onOpenTransactions;
+  final VoidCallback onOpenMore;
   final String? userName;
 
   @override
@@ -79,6 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     updateAvailable: widget.updateAvailable,
                     onNotifications: widget.onNotifications,
                     onOpenTransactions: widget.onOpenTransactions,
+                    onOpenMore: widget.onOpenMore,
                     userName: widget.userName,
                     month: _month,
                     onMonthChanged: _changeMonth,
@@ -308,6 +311,7 @@ class _MobileDashboard extends StatelessWidget {
     required this.updateAvailable,
     required this.onNotifications,
     required this.onOpenTransactions,
+    required this.onOpenMore,
     required this.month,
     required this.onMonthChanged,
     this.userName,
@@ -318,6 +322,7 @@ class _MobileDashboard extends StatelessWidget {
   final bool updateAvailable;
   final VoidCallback onNotifications;
   final ValueChanged<TransactionType?> onOpenTransactions;
+  final VoidCallback onOpenMore;
   final DateTime month;
   final ValueChanged<DateTime> onMonthChanged;
   final String? userName;
@@ -364,22 +369,48 @@ class _MobileDashboard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: onNotifications,
-                    tooltip: 'Avisos e vencimentos',
-                    icon: Badge(
-                      isLabelVisible:
-                          updateAvailable || summary.pendingAlerts > 0,
-                      label: summary.pendingAlerts > 0
-                          ? Text('${summary.pendingAlerts}')
-                          : null,
-                      backgroundColor: context.colors.expense,
-                      child: Icon(
-                        updateAvailable
-                            ? Icons.notifications_active_rounded
-                            : Icons.notifications_none_rounded,
-                        color: context.colors.textPrimary,
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: context.colors.surface,
+                      border: Border.all(color: context.colors.border),
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    padding: const EdgeInsets.all(3),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: onNotifications,
+                          tooltip: 'Avisos e vencimentos',
+                          icon: Badge(
+                            isLabelVisible:
+                                updateAvailable || summary.pendingAlerts > 0,
+                            label: summary.pendingAlerts > 0
+                                ? Text('${summary.pendingAlerts}')
+                                : null,
+                            backgroundColor: context.colors.expense,
+                            child: Icon(
+                              updateAvailable
+                                  ? Icons.notifications_active_rounded
+                                  : Icons.notifications_none_rounded,
+                              color: context.colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: 1,
+                          height: 20,
+                          color: context.colors.border,
+                        ),
+                        IconButton(
+                          onPressed: onOpenMore,
+                          tooltip: 'Mais — contas, metas, configurações',
+                          icon: Icon(
+                            Icons.settings_outlined,
+                            color: context.colors.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
