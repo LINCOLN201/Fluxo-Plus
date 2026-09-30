@@ -9,7 +9,6 @@ import 'package:fluxo_plus/core/premium/premium_service.dart';
 import 'package:fluxo_plus/core/security/biometric_service.dart';
 import 'package:fluxo_plus/core/security/identity_check.dart';
 import 'package:fluxo_plus/core/security/pin_service.dart';
-import 'package:fluxo_plus/core/security/screen_privacy_service.dart';
 import 'package:fluxo_plus/core/sync/cloud_sync_service.dart';
 import 'package:fluxo_plus/core/theme/app_theme.dart';
 import 'package:fluxo_plus/core/update/update_service.dart';
@@ -102,7 +101,6 @@ void main() {
                 biometricService: BiometricService(),
                 biometricEnabled: () => false,
               ),
-              screenPrivacyService: ScreenPrivacyService(opened.database),
             ),
           ),
         );

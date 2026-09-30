@@ -25,7 +25,8 @@ básicos ou metas.
 ## Preços de referência
 
 - mensal: R$ 9,90;
-- anual: R$ 79,90.
+- anual: R$ 118,80 (12 × o valor mensal, sem desconto — mesmo preço parcelado
+  no ano).
 
 Não há plano vitalício: os serviços de nuvem têm custo recorrente.
 

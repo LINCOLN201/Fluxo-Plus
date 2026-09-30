@@ -6,6 +6,16 @@ import '../../../core/constants/app_constants.dart';
 import '../../../core/premium/premium_entitlement.dart';
 import '../../../core/premium/premium_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/utils/formatters.dart';
+
+enum _PlanPeriod { monthly, yearly }
+
+extension on _PlanPeriod {
+  String get label => this == _PlanPeriod.monthly ? 'Mensal' : 'Anual';
+  double get price => this == _PlanPeriod.monthly ? 9.90 : 9.90 * 12;
+  String get billingNote =>
+      this == _PlanPeriod.monthly ? 'por mês' : 'por ano (12x R\$ 9,90)';
+}
 
 class PremiumScreen extends StatefulWidget {
   const PremiumScreen({super.key, required this.service});
@@ -18,6 +28,7 @@ class PremiumScreen extends StatefulWidget {
 
 class _PremiumScreenState extends State<PremiumScreen> {
   late Future<PremiumEntitlement> _entitlement;
+  var _selectedPlan = _PlanPeriod.monthly;
 
   @override
   void initState() {
@@ -27,6 +38,41 @@ class _PremiumScreenState extends State<PremiumScreen> {
 
   void _refresh() {
     setState(() => _entitlement = widget.service.load(refresh: true));
+  }
+
+  Future<void> _subscribe() async {
+    final plan = _selectedPlan;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Assinar plano ${plan.label}'),
+        content: Text(
+          '${AppFormatters.currency(plan.price)} ${plan.billingNote}. A '
+          'cobrança é feita pela Play Store e renova automaticamente até '
+          'você cancelar — o cancelamento é sempre feito por lá, a '
+          'qualquer momento, sem multa.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Assinaturas ainda não estão abertas nesta versão. Nenhuma '
+          'cobrança foi realizada.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -53,72 +99,75 @@ class _PremiumScreenState extends State<PremiumScreen> {
             children: [
               _Hero(entitlement: entitlement),
               const SizedBox(height: 22),
-              Text(
-                'Escolha seu plano',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final cards = [
-                    const _PlanCard(
-                      title: 'Mensal',
-                      price: 'R\$ 9,90',
-                      detail: 'por mês',
-                    ),
-                    const _PlanCard(
-                      title: 'Anual',
-                      price: 'R\$ 79,90',
-                      detail: 'economize 32%',
-                      featured: true,
-                    ),
-                  ];
-                  if (constraints.maxWidth < 760) {
-                    return Column(
+              if (!entitlement.isActive) ...[
+                Text(
+                  'Escolha seu plano',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                const SizedBox(height: 12),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final cards = [
+                      _PlanCard(
+                        period: _PlanPeriod.monthly,
+                        selected: _selectedPlan == _PlanPeriod.monthly,
+                        onTap: () =>
+                            setState(() => _selectedPlan = _PlanPeriod.monthly),
+                      ),
+                      _PlanCard(
+                        period: _PlanPeriod.yearly,
+                        selected: _selectedPlan == _PlanPeriod.yearly,
+                        onTap: () =>
+                            setState(() => _selectedPlan = _PlanPeriod.yearly),
+                      ),
+                    ];
+                    if (constraints.maxWidth < 760) {
+                      return Column(
+                        children: [
+                          for (final card in cards) ...[
+                            card,
+                            const SizedBox(height: 10),
+                          ],
+                        ],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        for (final card in cards) ...[
-                          card,
-                          const SizedBox(height: 10),
+                        for (var index = 0; index < cards.length; index++) ...[
+                          Expanded(child: cards[index]),
+                          if (index != cards.length - 1)
+                            const SizedBox(width: 12),
                         ],
                       ],
                     );
-                  }
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (var index = 0; index < cards.length; index++) ...[
-                        Expanded(child: cards[index]),
-                        if (index != cards.length - 1)
-                          const SizedBox(width: 12),
-                      ],
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
               const _Benefits(),
               const SizedBox(height: 20),
-              FilledButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'As assinaturas ainda não estão abertas. '
-                      'Nenhuma cobrança foi realizada.',
-                    ),
+              if (!entitlement.isActive) ...[
+                FilledButton.icon(
+                  onPressed: _subscribe,
+                  icon: const Icon(Icons.rocket_launch_rounded),
+                  label: Text(
+                    'Assinar ${_selectedPlan.label} — '
+                    '${AppFormatters.currency(_selectedPlan.price)}',
                   ),
                 ),
-                icon: const Icon(Icons.rocket_launch_rounded),
-                label: const Text('Quero conhecer o Premium'),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'O aplicativo local continuará gratuito e open source. '
-                'A cobrança será ativada somente após integração oficial.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: context.colors.textMuted, fontSize: 12),
-              ),
+                const SizedBox(height: 10),
+                Text(
+                  'O aplicativo local continua gratuito. A cobrança só é '
+                  'ativada depois que a assinatura for processada pela Play '
+                  'Store.',
+                  textAlign: TextAlign.center,
+                  style:
+                      TextStyle(color: context.colors.textMuted, fontSize: 12),
+                ),
+              ],
             ],
           );
         },
@@ -153,7 +202,17 @@ class _Hero extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: colors.surface,
+        gradient: active
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colors.primary.withValues(alpha: .16),
+                  colors.surface,
+                ],
+              )
+            : null,
+        color: active ? null : colors.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: active ? colors.primary : colors.border,
@@ -178,21 +237,31 @@ class _Hero extends StatelessWidget {
               _StatusPill(active: active),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           Row(
             children: [
               Container(
-                width: 56,
-                height: 56,
+                width: 60,
+                height: 60,
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(18),
+                  color:
+                      active ? colors.primary : accent.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: active
+                      ? [
+                          BoxShadow(
+                            color: colors.primary.withValues(alpha: .35),
+                            blurRadius: 18,
+                            offset: const Offset(0, 6),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Icon(
                   active
                       ? Icons.workspace_premium_rounded
                       : Icons.verified_user_outlined,
-                  color: accent,
+                  color: active ? colors.onPrimary : accent,
                   size: 30,
                 ),
               ),
@@ -205,8 +274,9 @@ class _Hero extends StatelessWidget {
                       entitlement.label,
                       style: TextStyle(
                         color: colors.textPrimary,
-                        fontSize: 26,
+                        fontSize: 27,
                         fontWeight: FontWeight.w900,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -288,56 +358,66 @@ class _StatusPill extends StatelessWidget {
 
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
-    required this.title,
-    required this.price,
-    required this.detail,
-    this.featured = false,
+    required this.period,
+    required this.selected,
+    required this.onTap,
   });
 
-  final String title;
-  final String price;
-  final String detail;
-  final bool featured;
+  final _PlanPeriod period;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Card(
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
-        side: featured
-            ? BorderSide(color: context.colors.primary, width: 2)
-            : BorderSide.none,
+        side: BorderSide(
+          color: selected ? colors.primary : Colors.transparent,
+          width: 2,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.w800),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      period.label,
+                      style: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
                   ),
-                ),
-                if (featured)
-                  const Chip(
-                    label: Text('Melhor valor'),
-                    visualDensity: VisualDensity.compact,
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked_rounded
+                        : Icons.radio_button_off_rounded,
+                    color: selected ? colors.primary : colors.textMuted,
+                    size: 20,
                   ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              price,
-              style: const TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.w900,
+                ],
               ),
-            ),
-            Text(detail, style: TextStyle(color: context.colors.textMuted)),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                AppFormatters.currency(period.price),
+                style: const TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              Text(
+                period.billingNote,
+                style: TextStyle(color: colors.textMuted),
+              ),
+            ],
+          ),
         ),
       ),
     );

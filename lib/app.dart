@@ -300,7 +300,6 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
             localBackupService: widget.localBackupService,
             database: widget.database,
             identityCheck: _identityCheck,
-            screenPrivacyService: widget.screenPrivacyService,
           ),
       },
     );

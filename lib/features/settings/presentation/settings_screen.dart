@@ -7,7 +7,6 @@ import '../../../core/premium/premium_entitlement.dart';
 import '../../../core/premium/premium_service.dart';
 import '../../../core/security/identity_check.dart';
 import '../../../core/security/pin_service.dart';
-import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/update/update_prompt.dart';
@@ -34,7 +33,6 @@ class SettingsScreen extends StatelessWidget {
     required this.database,
     required this.onOpenPremium,
     required this.identityCheck,
-    required this.screenPrivacyService,
   });
 
   final ThemeMode themeMode;
@@ -51,7 +49,6 @@ class SettingsScreen extends StatelessWidget {
   final AppDatabase database;
   final VoidCallback onOpenPremium;
   final IdentityCheck identityCheck;
-  final ScreenPrivacyService screenPrivacyService;
 
   @override
   Widget build(BuildContext context) {
@@ -146,8 +143,6 @@ class SettingsScreen extends StatelessWidget {
             biometricEnabled: biometricEnabled,
             onBiometricChanged: onBiometricChanged,
             onChanged: onLockSettingsChanged,
-            screenPrivacyService: screenPrivacyService,
-            identityCheck: identityCheck,
           ),
           const SizedBox(height: 24),
           const SectionHeader(

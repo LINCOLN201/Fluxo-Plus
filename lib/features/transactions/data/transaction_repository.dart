@@ -46,6 +46,10 @@ class TransactionRepository {
     if (categoryId != null) {
       conditions.add('t.category_id = ?');
       arguments.add(categoryId);
+    } else {
+      // Assinaturas já têm tela própria; sem isso, apareciam duplicadas
+      // aqui e lá, sem nenhuma informação a mais na lista geral.
+      conditions.add("c.name != 'Assinaturas'");
     }
     if (payment == PaymentFilter.pending) {
       conditions.add('t.is_paid = 0');

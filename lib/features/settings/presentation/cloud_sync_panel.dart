@@ -541,11 +541,10 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
     if (!widget.allowed) return _locked(context);
     final user = widget.service.currentUser;
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         children: [
           ListTile(
-            contentPadding: EdgeInsets.zero,
             leading: Icon(
               user == null ? Icons.cloud_off_outlined : Icons.cloud_done,
               color: user == null ? null : context.colors.primary,
@@ -593,34 +592,29 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
             FutureBuilder<DateTime?>(
               future: _lastSync,
               builder: (context, snapshot) => ListTile(
-                contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.schedule_rounded),
                 title: const Text('Última sincronização'),
                 subtitle: Text(
                   snapshot.data == null
-                      ? 'Ainda não sincronizado'
+                      ? 'Ainda não sincronizado. Toque para sincronizar.'
                       : _format(snapshot.data!),
                 ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      onPressed: _busy ? null : _synchronize,
+                      icon: const Icon(Icons.sync_rounded),
+                      tooltip: 'Sincronizar agora',
+                    ),
+                    IconButton(
+                      onPressed: _busy ? null : _restore,
+                      icon: const Icon(Icons.cloud_download_outlined),
+                      tooltip: 'Restaurar da nuvem',
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : _synchronize,
-                    icon: const Icon(Icons.sync_rounded),
-                    label: const Text('Sincronizar'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy ? null : _restore,
-                    icon: const Icon(Icons.cloud_download_outlined),
-                    label: const Text('Restaurar'),
-                  ),
-                ),
-              ],
             ),
             Align(
               alignment: Alignment.centerRight,

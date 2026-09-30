@@ -5,7 +5,6 @@ import '../../../core/backup/local_backup_service.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/security/identity_check.dart';
 import '../../../core/security/pin_service.dart';
-import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/fluxo_mark.dart';
 import '../../dashboard/data/dashboard_repository.dart';
@@ -54,7 +53,6 @@ class MainShell extends StatefulWidget {
     required this.localBackupService,
     required this.database,
     required this.identityCheck,
-    required this.screenPrivacyService,
   });
 
   final DashboardRepository dashboardRepository;
@@ -77,7 +75,6 @@ class MainShell extends StatefulWidget {
   final LocalBackupService localBackupService;
   final AppDatabase database;
   final IdentityCheck identityCheck;
-  final ScreenPrivacyService screenPrivacyService;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -231,7 +228,6 @@ class _MainShellState extends State<MainShell> {
           database: widget.database,
           onOpenPremium: () => setState(() => _selectedIndex = 7),
           identityCheck: widget.identityCheck,
-          screenPrivacyService: widget.screenPrivacyService,
         ),
       7 => PremiumScreen(service: widget.premiumService),
       _ => SubscriptionsScreen(
