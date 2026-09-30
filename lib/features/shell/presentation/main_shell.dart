@@ -8,7 +8,6 @@ import '../../../core/security/pin_service.dart';
 import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/fluxo_mark.dart';
-import '../../../shared/widgets/section_header.dart';
 import '../../dashboard/data/dashboard_repository.dart';
 import '../../accounts/data/account_repository.dart';
 import '../../categories/data/category_repository.dart';
@@ -382,87 +381,131 @@ class _MobileMore extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const SectionHeader(
-            title: 'Organize sua vida financeira',
-            subtitle: 'Tudo que você usa no dia a dia',
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.35,
+            children: [
+              _MoreGridTile(
+                icon: Icons.account_balance_wallet_outlined,
+                title: 'Contas e carteiras',
+                onTap: () => onSelected(2),
+              ),
+              _MoreGridTile(
+                icon: Icons.category_outlined,
+                title: 'Categorias',
+                onTap: () => onSelected(5),
+              ),
+              _MoreGridTile(
+                icon: Icons.track_changes_rounded,
+                title: 'Metas',
+                onTap: () => onSelected(3),
+              ),
+              _MoreGridTile(
+                icon: Icons.settings_outlined,
+                title: 'Configurações',
+                onTap: () => onSelected(6),
+              ),
+            ],
           ),
           const SizedBox(height: 10),
-          _MoreTile(
-            icon: Icons.account_balance_wallet_outlined,
-            title: 'Contas e carteiras',
-            subtitle: 'Acompanhe onde está o seu dinheiro',
-            onTap: () => onSelected(2),
-          ),
-          _MoreTile(
-            icon: Icons.category_outlined,
-            title: 'Categorias',
-            subtitle: 'Crie e personalize seus tipos de gasto',
-            onTap: () => onSelected(5),
-          ),
-          _MoreTile(
-            icon: Icons.track_changes_rounded,
-            title: 'Metas',
-            subtitle: 'Transforme planos em progresso',
-            onTap: () => onSelected(3),
-          ),
-          const SizedBox(height: 22),
-          const SectionHeader(
-            title: 'Conta e aplicativo',
-            subtitle: 'Preferências, segurança e recursos',
-          ),
-          const SizedBox(height: 10),
-          _MoreTile(
-            icon: Icons.workspace_premium_outlined,
-            title: 'Fluxo+ Premium',
-            subtitle: 'Nuvem, automação e análises avançadas',
-            onTap: () => onSelected(7),
-            highlighted: true,
-          ),
-          _MoreTile(
-            icon: Icons.settings_outlined,
-            title: 'Configurações',
-            subtitle: 'Tema, segurança, backup e privacidade',
-            onTap: () => onSelected(6),
-          ),
+          _MorePremiumBanner(onTap: () => onSelected(7)),
         ],
       ),
     );
   }
 }
 
-class _MoreTile extends StatelessWidget {
-  const _MoreTile({
+class _MoreGridTile extends StatelessWidget {
+  const _MoreGridTile({
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.onTap,
-    this.highlighted = false,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
   final VoidCallback onTap;
-  final bool highlighted;
 
   @override
   Widget build(BuildContext context) {
-    final color = highlighted ? context.colors.warning : context.colors.primary;
     return Card(
-      margin: const EdgeInsets.only(bottom: 9),
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: context.colors.primary.withValues(alpha: .14),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: context.colors.primary, size: 19),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                title,
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MorePremiumBanner extends StatelessWidget {
+  const _MorePremiumBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      color: context.colors.primary.withValues(alpha: .10),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: context.colors.primary.withValues(alpha: .4)),
+      ),
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: .14),
-          child: Icon(icon, color: color),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: context.colors.primary,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(
+            Icons.workspace_premium_rounded,
+            color: context.colors.onPrimary,
+          ),
         ),
         title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.w800),
+          'Fluxo+ Premium',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            color: context.colors.primary,
+          ),
         ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right_rounded),
+        subtitle: const Text('Nuvem, automação e análises avançadas'),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: context.colors.primary,
+        ),
       ),
     );
   }

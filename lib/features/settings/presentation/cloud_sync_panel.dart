@@ -486,19 +486,17 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
       DateFormat('dd/MM/yyyy HH:mm', 'pt_BR').format(value.toLocal());
 
   Widget _locked(BuildContext context) {
-    return Card(
-      child: ListTile(
-        contentPadding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
-        leading: Icon(Icons.cloud_outlined, color: context.colors.primary),
-        title: const Text('Backup na nuvem é Premium'),
-        subtitle: const Text(
-          'Guarde seus dados automaticamente e use o Fluxo+ em mais de um '
-          'aparelho. O backup local continua gratuito.',
-        ),
-        trailing: TextButton(
-          onPressed: widget.onOpenPremium,
-          child: const Text('Conhecer'),
-        ),
+    return ListTile(
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 16, 12),
+      leading: Icon(Icons.cloud_outlined, color: context.colors.primary),
+      title: const Text('Backup na nuvem é Premium'),
+      subtitle: const Text(
+        'Guarde seus dados automaticamente e use o Fluxo+ em mais de um '
+        'aparelho. O backup local continua gratuito.',
+      ),
+      trailing: TextButton(
+        onPressed: widget.onOpenPremium,
+        child: const Text('Conhecer'),
       ),
     );
   }
@@ -532,115 +530,111 @@ class _CloudSyncPanelState extends State<CloudSyncPanel> {
   @override
   Widget build(BuildContext context) {
     if (!widget.service.isConfigured) {
-      return const Card(
-        child: ListTile(
-          leading: Icon(Icons.cloud_off_outlined),
-          title: Text('Supabase não configurado'),
-          subtitle: Text(
-            'Compile com SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY.',
-          ),
+      return const ListTile(
+        leading: Icon(Icons.cloud_off_outlined),
+        title: Text('Supabase não configurado'),
+        subtitle: Text(
+          'Compile com SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY.',
         ),
       );
     }
     if (!widget.allowed) return _locked(context);
     final user = widget.service.currentUser;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                user == null ? Icons.cloud_off_outlined : Icons.cloud_done,
-                color: user == null ? null : context.colors.primary,
-              ),
-              // E-mails longos não quebram no meio da palavra.
-              title: Text(
-                user?.email ?? 'Conecte sua conta',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                user == null
-                    ? 'Entre para sincronizar seus dispositivos.'
-                    : 'Seus aparelhos compartilham o mesmo backup.',
-              ),
-              trailing: user == null
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        FilledButton(
-                          onPressed: _busy ? null : _authenticate,
-                          child: const Text('Entrar'),
-                        ),
-                      ],
-                    )
-                  : TextButton(
-                      onPressed: _busy
-                          ? null
-                          : () => _run(
-                              widget.service.signOut, 'Conta desconectada.'),
-                      child: const Text('Sair'),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              user == null ? Icons.cloud_off_outlined : Icons.cloud_done,
+              color: user == null ? null : context.colors.primary,
             ),
-            if (user == null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: _busy ? null : _resendConfirmation,
-                  icon: const Icon(Icons.mark_email_unread_outlined),
-                  label: const Text('Reenviar confirmação'),
+            // E-mails longos não quebram no meio da palavra.
+            title: Text(
+              user?.email ?? 'Conecte sua conta',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              user == null
+                  ? 'Entre para sincronizar seus dispositivos.'
+                  : 'Seus aparelhos compartilham o mesmo backup.',
+            ),
+            trailing: user == null
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FilledButton(
+                        onPressed: _busy ? null : _authenticate,
+                        child: const Text('Entrar'),
+                      ),
+                    ],
+                  )
+                : TextButton(
+                    onPressed: _busy
+                        ? null
+                        : () =>
+                            _run(widget.service.signOut, 'Conta desconectada.'),
+                    child: const Text('Sair'),
+                  ),
+          ),
+          if (user == null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _busy ? null : _resendConfirmation,
+                icon: const Icon(Icons.mark_email_unread_outlined),
+                label: const Text('Reenviar confirmação'),
+              ),
+            ),
+          if (user != null) ...[
+            const Divider(),
+            FutureBuilder<DateTime?>(
+              future: _lastSync,
+              builder: (context, snapshot) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.schedule_rounded),
+                title: const Text('Última sincronização'),
+                subtitle: Text(
+                  snapshot.data == null
+                      ? 'Ainda não sincronizado'
+                      : _format(snapshot.data!),
                 ),
               ),
-            if (user != null) ...[
-              const Divider(),
-              FutureBuilder<DateTime?>(
-                future: _lastSync,
-                builder: (context, snapshot) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.schedule_rounded),
-                  title: const Text('Última sincronização'),
-                  subtitle: Text(
-                    snapshot.data == null
-                        ? 'Ainda não sincronizado'
-                        : _format(snapshot.data!),
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _busy ? null : _synchronize,
+                    icon: const Icon(Icons.sync_rounded),
+                    label: const Text('Sincronizar'),
                   ),
                 ),
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: _busy ? null : _synchronize,
-                      icon: const Icon(Icons.sync_rounded),
-                      label: const Text('Sincronizar'),
-                    ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _busy ? null : _restore,
+                    icon: const Icon(Icons.cloud_download_outlined),
+                    label: const Text('Restaurar'),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _busy ? null : _restore,
-                      icon: const Icon(Icons.cloud_download_outlined),
-                      label: const Text('Restaurar'),
-                    ),
-                  ),
-                ],
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: _busy ? null : _deleteAccount,
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.error,
-                  ),
-                  child: const Text('Excluir conta'),
                 ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: _busy ? null : _deleteAccount,
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.error,
+                ),
+                child: const Text('Excluir conta'),
               ),
-            ],
-            if (_busy) const LinearProgressIndicator(),
+            ),
           ],
-        ),
+          if (_busy) const LinearProgressIndicator(),
+        ],
       ),
     );
   }
