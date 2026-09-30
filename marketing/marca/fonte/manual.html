@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Manual da marca Fluxo</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  @page { size: 297mm 210mm; margin: 0; }
+  body { background: #333; }
+  .pag { width: 297mm; height: 210mm; padding: 18mm 20mm; position: relative; overflow: hidden;
+         background: var(--grafite); color: var(--texto); page-break-after: always; display: flex; flex-direction: column; }
+  .pag.claro { background: var(--papel); color: var(--tinta); }
+  .cab { display: flex; justify-content: space-between; font-size: 9pt; font-weight: 700; letter-spacing: .14em;
+         text-transform: uppercase; color: var(--suave); }
+  .cab b { color: var(--lima); }
+  .claro .cab b { color: var(--lima-escuro); }
+  h1 { font-size: 34pt; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-top: 10mm; }
+  h1 em { font-style: normal; color: var(--lima); }
+  .claro h1 em { color: var(--lima-escuro); }
+  h3 { font-size: 12pt; font-weight: 800; margin-bottom: 2mm; }
+  p, li { font-size: 10.5pt; line-height: 1.55; color: var(--suave); font-weight: 500; }
+  .claro p, .claro li { color: #55555a; }
+  ul { padding-left: 5mm; }
+  .grade { display: grid; gap: 8mm; margin-top: 10mm; }
+  .caixa { border: 1px solid var(--borda); border-radius: 5mm; padding: 7mm; }
+  .claro .caixa { border-color: #e4e4e1; background: #fff; }
+  .centro { display: grid; place-items: center; }
+  .rot { font-size: 8.5pt; color: var(--suave); font-weight: 600; margin-top: 3mm; }
+  .cor { border-radius: 5mm; height: 46mm; padding: 5mm; display: flex; flex-direction: column; justify-content: flex-end;
+         font-size: 9pt; font-weight: 700; }
+  .cor span { display: block; font-weight: 500; opacity: .8; }
+  .x { position: relative; }
+  .x::after { content: "✕"; position: absolute; top: 3mm; right: 4mm; color: var(--perigo); font-size: 14pt; font-weight: 800; }
+</style>
+</head>
+<body>
+
+<!-- 1 · Capa -->
+<section class="pag">
+  <img src="../logos/fluxo-simbolo-lima.svg" style="position:absolute;width:190mm;right:-50mm;top:-20mm;opacity:.08">
+  <div class="cab"><span>Manual da marca</span><span>v1.0 · 2026</span></div>
+  <img src="../logos/fluxo-horizontal-lima.svg" style="height:26mm;align-self:flex-start;margin-top:auto">
+  <p style="font-size:16pt;margin-top:10mm;color:var(--texto)">Tecnologia que organiza, com você no controle.</p>
+  <p style="margin-top:3mm">Identidade visual do ecossistema Fluxo e dos produtos Fluxo+ e FluxoCheck.</p>
+</section>
+
+<!-- 2 · Essência -->
+<section class="pag claro">
+  <div class="cab"><span><b>01</b> · Essência</span><span>Fluxo</span></div>
+  <h1>Quem é <em>a Fluxo.</em></h1>
+  <div class="grade" style="grid-template-columns:repeat(3,1fr)">
+    <div class="caixa"><h3>Propósito</h3><p>Dar às pessoas e às equipes ferramentas simples para colocar a vida e o trabalho em ordem — sem abrir mão do controle sobre os próprios dados.</p></div>
+    <div class="caixa"><h3>O que fazemos</h3><p>Um ecossistema de apps que transformam rotinas bagunçadas em fluxos claros: as finanças da casa (Fluxo+) e a operação da loja (FluxoCheck).</p></div>
+    <div class="caixa"><h3>Como fazemos</h3><p>Simples de usar, funcionando até sem internet, com privacidade por padrão e sem letra miúda: prometemos só o que entregamos.</p></div>
+  </div>
+  <div class="grade" style="grid-template-columns:repeat(4,1fr);margin-top:8mm">
+    <div class="caixa"><h3>Clara</h3><p>Fala simples. Uma ideia por vez.</p></div>
+    <div class="caixa"><h3>Confiável</h3><p>Promete só o que entrega.</p></div>
+    <div class="caixa"><h3>Próxima</h3><p>Trata por "você", sem julgamento.</p></div>
+    <div class="caixa"><h3>Prática</h3><p>Resolve o problema do dia a dia.</p></div>
+  </div>
+  <p class="rot" style="margin-top:auto">Personalidade da marca</p>
+</section>
+
+<!-- 3 · Arquitetura -->
+<section class="pag">
+  <div class="cab"><span><b>02</b> · Arquitetura de marca</span><span>Fluxo</span></div>
+  <h1>Uma marca-mãe, <em>produtos da mesma família.</em></h1>
+  <div class="centro" style="margin-top:12mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:18mm"></div>
+  <div style="height:10mm;width:1px;background:var(--borda);margin:5mm auto"></div>
+  <div class="grade" style="grid-template-columns:repeat(3,1fr);margin-top:0">
+    <div class="caixa centro" style="height:46mm"><img src="../logos/fluxo-plus-horizontal-lima.svg" style="height:13mm"><div class="rot">Finanças pessoais · pessoas</div></div>
+    <div class="caixa centro" style="height:46mm"><img src="../logos/fluxocheck-horizontal-lima.svg" style="height:13mm"><div class="rot">Rotinas e prevenção no varejo · empresas</div></div>
+    <div class="caixa centro" style="height:46mm;border-style:dashed"><p style="font-weight:700">fluxo + nome</p><div class="rot">Próximos produtos</div></div>
+  </div>
+  <p style="margin-top:8mm">Todo produto usa o F da marca-mãe com um <b style="color:var(--texto)">selo</b> no canto inferior direito e o nome escrito como "fluxo" + sufixo. O selo resume a função do produto: <b style="color:var(--texto)">+</b> para somar e organizar, <b style="color:var(--texto)">✓</b> para conferir.</p>
+</section>
+
+<!-- 4 · Símbolo -->
+<section class="pag claro">
+  <div class="cab"><span><b>03</b> · Símbolo</span><span>Fluxo</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14mm;margin-top:10mm;flex:1">
+    <div>
+      <h1 style="margin-top:0">Um F que <em>flui.</em></h1>
+      <p style="margin-top:6mm">A haste e o braço superior formam uma só faixa que sobe e corre para a direita — o movimento de algo que entra em ordem. O braço do meio fica solto, como um canal por onde o fluxo passa.</p>
+      <p style="margin-top:4mm">Todas as formas seguem a <b style="color:var(--tinta)">linguagem folha</b>: um canto reto e o canto oposto arredondado. É o mesmo gesto dos ícones originais do Fluxo+ e do FluxoCheck, agora unificado.</p>
+      <p style="margin-top:4mm">Construído numa grade de 512 unidades; raios de 76–96 u nas curvas principais.</p>
+    </div>
+    <div class="caixa centro" style="position:relative;background:
+        repeating-linear-gradient(0deg,#ecece9 0 1px,transparent 1px 8mm),repeating-linear-gradient(90deg,#ecece9 0 1px,transparent 1px 8mm),#fff">
+      <img src="../logos/fluxo-simbolo-grafite.svg" style="height:100mm">
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Versões -->
+<section class="pag">
+  <div class="cab"><span><b>04</b> · Versões do logo</span><span>Fluxo</span></div>
+  <h1>Três formatos, <em>três cores.</em></h1>
+  <div class="grade" style="grid-template-columns:2fr 1fr 1fr">
+    <div class="caixa centro" style="height:44mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:14mm"><div class="rot">Horizontal · uso principal</div></div>
+    <div class="caixa centro" style="height:44mm"><img src="../logos/fluxo-simbolo-lima.svg" style="height:20mm"><div class="rot">Símbolo · espaços pequenos</div></div>
+    <div class="caixa centro" style="height:44mm"><img src="../logos/fluxo-icone-app.svg" style="height:24mm"><div class="rot">Ícone · apps e avatares</div></div>
+  </div>
+  <div class="grade" style="grid-template-columns:repeat(3,1fr);margin-top:6mm">
+    <div class="caixa centro" style="height:34mm;background:var(--grafite)"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm"><div class="rot">Lima · fundos escuros</div></div>
+    <div class="caixa centro" style="height:34mm;background:var(--lima);border:0"><img src="../logos/fluxo-horizontal-grafite.svg" style="height:10mm"><div class="rot" style="color:#2c3a14">Grafite · fundos claros e lima</div></div>
+    <div class="caixa centro" style="height:34mm;background:#2a2a2e"><img src="../logos/fluxo-horizontal-branco.svg" style="height:10mm"><div class="rot">Branco · fotos e 1 cor</div></div>
+  </div>
+</section>
+
+<!-- 6 · Proteção e mínimo -->
+<section class="pag claro">
+  <div class="cab"><span><b>05</b> · Área de proteção e tamanho mínimo</span><span>Fluxo</span></div>
+  <h1>Espaço para <em>respirar.</em></h1>
+  <div class="grade" style="grid-template-columns:3fr 2fr">
+    <div class="caixa centro" style="height:92mm">
+      <div style="padding:10mm;outline:1.5px dashed #c22b2b;background:rgba(194,43,43,.05)"><img src="../logos/fluxo-horizontal-grafite.svg" style="height:22mm;display:block;outline:1px solid #ccc"></div>
+      <div class="rot">Margem livre mínima = metade da altura do símbolo (½F) em todos os lados.</div>
+    </div>
+    <div class="caixa" style="height:92mm;display:flex;flex-direction:column;justify-content:center;gap:8mm">
+      <div style="display:flex;align-items:center;gap:6mm"><img src="../logos/fluxo-horizontal-grafite.svg" style="height:6mm"><p><b style="color:var(--tinta)">Horizontal</b><br>mín. 24 mm · 96 px de largura</p></div>
+      <div style="display:flex;align-items:center;gap:6mm"><img src="../logos/fluxo-simbolo-grafite.svg" style="height:6mm"><p><b style="color:var(--tinta)">Símbolo</b><br>mín. 6 mm · 16 px de altura</p></div>
+      <div style="display:flex;align-items:center;gap:6mm"><img src="../logos/fluxocheck-simbolo-grafite.svg" style="height:10mm"><p><b style="color:var(--tinta)">Símbolo com selo</b><br>mín. 10 mm · 32 px (abaixo disso, use o F sem selo)</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · Cores -->
+<section class="pag">
+  <div class="cab"><span><b>06</b> · Cores</span><span>Fluxo</span></div>
+  <h1>Grafite e lima: <em>contraste que se reconhece.</em></h1>
+  <div class="grade" style="grid-template-columns:2fr 2fr 1fr 1fr 1fr">
+    <div class="cor" style="background:#0a0a0b;border:1px solid var(--borda)">Grafite<span>#0A0A0B · RGB 10 10 11 · CMYK ≈ 0 0 0 100</span></div>
+    <div class="cor" style="background:#c6ff5e;color:#0a0a0b">Lima<span>#C6FF5E · RGB 198 255 94 · CMYK ≈ 22 0 63 0</span></div>
+    <div class="cor" style="background:#151516;border:1px solid var(--borda)">Superfície<span>#151516</span></div>
+    <div class="cor" style="background:#f2f2f0;color:#0a0a0b">Papel<span>#F2F2F0</span></div>
+    <div class="cor" style="background:#4a7010">Lima escuro<span>#4A7010</span></div>
+  </div>
+  <div class="grade" style="grid-template-columns:1fr 1fr 1fr;margin-top:6mm">
+    <p><b style="color:var(--texto)">Proporção:</b> ~70% grafite, ~20% neutros, ~10% lima. A lima é destaque, não fundo — exceto em peças de chamada.</p>
+    <p><b style="color:var(--texto)">Sobre fundo claro</b>, texto de destaque usa Lima escuro (#4A7010), que tem contraste de leitura; a lima pura some no branco.</p>
+    <p><b style="color:var(--texto)">Apoio funcional:</b> âmbar #F2B84B (atenção) e vermelho #FF5C5C (erro/despesa) só em interfaces e dados, nunca na marca.</p>
+  </div>
+</section>
+
+<!-- 8 · Tipografia -->
+<section class="pag claro">
+  <div class="cab"><span><b>07</b> · Tipografia</span><span>Fluxo</span></div>
+  <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:14mm;margin-top:10mm;flex:1">
+    <div>
+      <div style="font-size:120pt;font-weight:800;letter-spacing:-.05em;line-height:.9">Aa</div>
+      <div style="font-size:30pt;font-weight:800;letter-spacing:-.03em;margin-top:6mm">Manrope</div>
+      <p style="margin-top:3mm">Fonte livre (SIL Open Font License), geométrica e legível em telas pequenas. É a mesma dos apps e do logotipo.</p>
+      <p style="margin-top:3mm;font-size:13pt;color:var(--tinta);letter-spacing:.02em">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz 0123456789 R$ %</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6mm;justify-content:center">
+      <div class="caixa"><div style="font-size:24pt;font-weight:800;letter-spacing:-.03em">Títulos</div><p>ExtraBold 800 · espaçamento −3%</p></div>
+      <div class="caixa"><div style="font-size:15pt;font-weight:700">Subtítulos e etiquetas</div><p>Bold 700 · etiquetas em CAIXA ALTA +12%</p></div>
+      <div class="caixa"><div style="font-size:12pt;font-weight:500">Textos corridos e legendas</div><p>Medium 500 · entrelinha 1,4–1,6</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · Usos incorretos -->
+<section class="pag">
+  <div class="cab"><span><b>08</b> · Usos incorretos</span><span>Fluxo</span></div>
+  <h1>O que <em>não fazer.</em></h1>
+  <div class="grade" style="grid-template-columns:repeat(4,1fr)">
+    <div class="caixa centro x" style="height:44mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm;transform:scaleX(1.5)"><div class="rot">Distorcer</div></div>
+    <div class="caixa centro x" style="height:44mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm;filter:hue-rotate(160deg)"><div class="rot">Trocar as cores</div></div>
+    <div class="caixa centro x" style="height:44mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm;transform:rotate(-12deg)"><div class="rot">Girar</div></div>
+    <div class="caixa centro x" style="height:44mm;background:linear-gradient(135deg,#c6ff5e,#f2f2f0)"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm"><div class="rot" style="color:#333">Pouco contraste</div></div>
+    <div class="caixa centro x" style="height:44mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:10mm;filter:drop-shadow(3mm 3mm 2mm #000) drop-shadow(0 0 3mm #c6ff5e)"><div class="rot">Sombras e brilhos</div></div>
+    <div class="caixa centro x" style="height:44mm"><div style="display:flex;align-items:center;gap:3mm"><img src="../logos/fluxo-simbolo-lima.svg" style="height:10mm"><span style="font-family:serif;font-size:22pt;color:var(--lima)">Fluxo</span></div><div class="rot">Recriar com outra fonte</div></div>
+    <div class="caixa centro x" style="height:44mm"><div style="display:flex;flex-direction:column;align-items:center"><img src="../logos/fluxo-simbolo-lima.svg" style="height:14mm"><img src="../logos/fluxo-horizontal-lima.svg" style="height:6mm;clip-path:inset(0 0 0 26%);margin-top:2mm"></div><div class="rot">Reorganizar os elementos</div></div>
+    <div class="caixa centro x" style="height:44mm"><div style="display:flex;align-items:center;gap:3mm"><img src="../logos/fluxo-simbolo-lima.svg" style="height:10mm"><span style="font-size:14pt;font-weight:800;color:var(--texto)">FLUXO CHECK</span></div><div class="rot">Escrever o produto fora do padrão</div></div>
+  </div>
+</section>
+
+<!-- 10 · Aplicações -->
+<section class="pag claro">
+  <div class="cab"><span><b>09</b> · Aplicações</span><span>Fluxo</span></div>
+  <h1>A marca <em>no dia a dia.</em></h1>
+  <div style="display:flex;gap:5mm;margin-top:8mm;align-items:flex-end">
+    <img src="../templates/ig-institucional.png" style="height:62mm;border-radius:2mm">
+    <img src="../templates/ig-produto-fluxo-plus.png" style="height:62mm;border-radius:2mm">
+    <img src="../templates/ig-produto-fluxocheck.png" style="height:62mm;border-radius:2mm;box-shadow:0 0 0 1px #e4e4e1">
+    <img src="../templates/ig-frase.png" style="height:62mm;border-radius:2mm">
+    <img src="../templates/story-padrao.png" style="height:62mm;border-radius:2mm">
+  </div>
+  <div style="display:flex;gap:5mm;margin-top:5mm;align-items:flex-end">
+    <img src="../templates/slide-capa.png" style="height:44mm;border-radius:2mm">
+    <img src="../templates/cartao-frente.png" style="height:30mm;border-radius:2mm">
+    <img src="../templates/cartao-verso.png" style="height:30mm;border-radius:2mm;box-shadow:0 0 0 1px #e4e4e1">
+    <img src="../logos/fluxo-plus-icone-app.svg" style="height:22mm">
+    <img src="../logos/fluxocheck-icone-app.svg" style="height:22mm">
+  </div>
+  <p class="rot" style="margin-top:auto">Arquivos editáveis em marketing/marca/fonte/templates.html · PNGs em marketing/marca/templates/</p>
+</section>
+
+<!-- 11 · Voz -->
+<section class="pag">
+  <div class="cab"><span><b>10</b> · Tom de voz</span><span>Fluxo</span></div>
+  <h1>Como a Fluxo <em>fala.</em></h1>
+  <div class="grade" style="grid-template-columns:1fr 1fr">
+    <div class="caixa"><h3 style="color:var(--lima)">Assim</h3><ul>
+      <li>"Aquele boleto não te pega mais de surpresa."</li>
+      <li>"Seus dados ficam no seu aparelho."</li>
+      <li>"A rotina da loja conferida e registrada."</li>
+      <li>Frases curtas, verbos de ação, "você".</li>
+    </ul></div>
+    <div class="caixa"><h3 style="color:var(--perigo)">Não assim</h3><ul>
+      <li>"Pare de gastar com besteira!" — julgamento.</li>
+      <li>"A solução definitiva e revolucionária." — exagero.</li>
+      <li>"Otimize sua gestão orçamentária holística." — jargão.</li>
+      <li>Prometer recurso que ainda não existe.</li>
+    </ul></div>
+  </div>
+  <p style="margin-top:8mm"><b style="color:var(--texto)">B2C (Fluxo+)</b>: leve, próximo, com humor ocasional. <b style="color:var(--texto)">B2B (FluxoCheck)</b>: mesmo jeito simples, mas objetivo — fala de tempo, conformidade e evidência.</p>
+  <img src="../logos/fluxo-simbolo-lima.svg" style="height:14mm;align-self:flex-end;margin-top:auto">
+</section>
+
+</body>
+</html>

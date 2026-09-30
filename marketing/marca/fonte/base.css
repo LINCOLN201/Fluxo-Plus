@@ -1,0 +1,63 @@
+/* Base visual da marca Fluxo — compartilhada por templates e manual. */
+@font-face {
+  font-family: "Manrope";
+  src: url("../../../assets/fonts/Manrope-Variable.ttf") format("truetype");
+  font-weight: 200 800;
+}
+:root {
+  --grafite: #0a0a0b;
+  --superficie: #151516;
+  --superficie-2: #1a1a1c;
+  --borda: #262628;
+  --texto: #f2f2f0;
+  --suave: #8a8a8e;
+  --lima: #c6ff5e;
+  --lima-escuro: #4a7010;
+  --papel: #f5f5f3;
+  --tinta: #1a1a1b;
+  --alerta: #f2b84b;
+  --perigo: #ff5c5c;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Manrope", sans-serif; -webkit-font-smoothing: antialiased; }
+
+/* Peças renderizáveis */
+.peca { position: relative; overflow: hidden; background: var(--grafite); color: var(--texto); }
+.post { width: 1080px; height: 1350px; padding: 96px 88px; display: flex; flex-direction: column; }
+.story { width: 1080px; height: 1920px; padding: 220px 88px 200px; display: flex; flex-direction: column; }
+.claro { background: var(--papel); color: var(--tinta); }
+.lima { background: var(--lima); color: var(--grafite); }
+
+/* Tipografia */
+.titulo { font-size: 104px; line-height: 1.02; font-weight: 800; letter-spacing: -.035em; }
+.titulo em { font-style: normal; color: var(--lima); }
+.claro .titulo em { color: var(--lima-escuro); }
+.lima .titulo em { color: var(--grafite); text-decoration: underline 10px; text-underline-offset: 14px; }
+.apoio { font-size: 40px; line-height: 1.4; color: var(--suave); font-weight: 500; }
+.claro .apoio { color: #6e6e72; }
+.lima .apoio { color: #2c3a14; }
+.etiqueta { display: inline-flex; align-items: center; gap: 14px; align-self: flex-start;
+  font-size: 26px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--lima); border: 2px solid currentColor; border-radius: 999px; padding: 10px 26px; }
+.claro .etiqueta { color: var(--lima-escuro); }
+.lima .etiqueta { color: var(--grafite); }
+.etiqueta img { height: 28px; }
+
+/* Rodapé padrão: logo à esquerda, @ à direita */
+.rodape { margin-top: auto; display: flex; align-items: center; gap: 20px;
+  font-size: 30px; font-weight: 600; color: var(--suave); }
+.rodape img { height: 56px; }
+.rodape .arroba { margin-left: auto; }
+.claro .rodape, .lima .rodape { color: inherit; opacity: .75; }
+
+/* Elementos gráficos */
+.brilho { position: absolute; width: 900px; height: 900px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(198,255,94,.16), transparent 65%); }
+.onda { position: absolute; pointer-events: none; opacity: .09; }
+.cartao { background: var(--superficie); border: 2px solid var(--borda); border-radius: 36px; padding: 40px 44px; }
+.claro .cartao { background: #fff; border-color: #e4e4e1; }
+.lista { display: grid; gap: 30px; }
+.item { display: flex; align-items: center; gap: 30px; font-size: 40px; font-weight: 600; }
+.item svg { width: 64px; height: 64px; flex: none; color: var(--lima); }
+.item small { display: block; font-size: 28px; color: var(--suave); font-weight: 500; margin-top: 4px; }
+.num { font-size: 56px; font-weight: 800; color: var(--lima); width: 110px; flex: none; }

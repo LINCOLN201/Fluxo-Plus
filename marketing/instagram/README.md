@@ -4,10 +4,13 @@ Kit para abrir e alimentar o perfil oficial da **Fluxo Ecossistema**: dados do
 perfil, identidade visual, os 9 primeiros posts (já em imagem), capas de
 destaques, modelo de story, legendas e calendário do primeiro mês.
 
-O perfil é da **marca-mãe** (Fluxo). Cada app do ecossistema aparece como
-produto dentro dele — o **Fluxo+** (finanças pessoais) é o primeiro e, por
-enquanto, o único no ar. Quando surgir um app novo, ele ganha destaque e posts
-próprios, sem precisar abrir outra conta.
+O perfil é da **marca-mãe** (Fluxo). Cada produto aparece dentro dele:
+**Fluxo+** (finanças pessoais, para pessoas) e **FluxoCheck** (rotinas e
+prevenção no varejo, para empresas). Produto novo ganha destaque e posts
+próprios, sem abrir outra conta.
+
+Logos, cores e regras de uso vêm do [manual da marca](../marca/) — as peças
+daqui usam os arquivos de `marketing/marca/logos/`.
 
 Todas as imagens estão em [`imagens/`](imagens/) e são geradas a partir de
 [`fonte/pecas.html`](fonte/pecas.html) — para editar um texto, altere o HTML e rode:
@@ -39,7 +42,7 @@ node marketing/instagram/fonte/render.mjs   # requer o pacote playwright
 
 | Campo | Conteúdo |
 |---|---|
-| Foto | [`imagens/perfil.png`](imagens/perfil.png) — logotipo "fluxo" (1080×1080, recortada em círculo) |
+| Foto | [`imagens/perfil.png`](imagens/perfil.png) — símbolo F da Fluxo (1080×1080, recortada em círculo) |
 | Nome | `Fluxo Ecossistema · Apps` (o nome entra na busca) |
 | Usuário | `@fluxoecossistema` |
 | Categoria | Empresa de tecnologia |
@@ -48,10 +51,10 @@ node marketing/instagram/fonte/render.mjs   # requer o pacote playwright
 **Bio** (até 150 caracteres):
 
 ```
-Apps que organizam a vida, com você no controle 💚
-🔒 Privados · 🔓 Código aberto
-💰 Fluxo+: finanças pessoais grátis
-⬇️ Baixe no link
+Tecnologia que organiza, com você no controle 💚
+💰 Fluxo+ · finanças pessoais grátis
+✅ FluxoCheck · rotinas do varejo
+🔒 Privado por padrão · ⬇️ link
 ```
 
 ## 3. Destaques (stories fixos)
@@ -62,6 +65,7 @@ Suba cada capa como story, fixe em um destaque e use a imagem como capa.
 |---|---|---|
 | Sobre | [`destaque-sobre.png`](imagens/destaque-sobre.png) | Quem é a Fluxo, princípios, bastidores |
 | Fluxo+ | [`destaque-fluxo-plus.png`](imagens/destaque-fluxo-plus.png) | Tutoriais do app (instalar o APK, backup), Premium quando abrir |
+| FluxoCheck | [`destaque-fluxocheck.png`](imagens/destaque-fluxocheck.png) | O que faz, rotinas que cobre, como pedir uma demonstração |
 | Novidades | [`destaque-novidades.png`](imagens/destaque-novidades.png) | Cada versão nova de qualquer app (notas em `docs/releases/`) |
 | Dicas | [`destaque-dicas.png`](imagens/destaque-dicas.png) | Dicas de finanças e organização |
 | Dúvidas | [`destaque-duvidas.png`](imagens/destaque-duvidas.png) | Perguntas frequentes |
@@ -70,25 +74,15 @@ Cada app novo do ecossistema ganha um destaque próprio, com o logo dele.
 
 ## 4. Identidade visual
 
-Mesma identidade **Grafite** do Fluxo+ (`lib/core/theme/app_colors.dart`),
-usada como identidade da marca-mãe.
+Siga o **[manual da marca](../marca/manual-da-marca-fluxo.pdf)**. Resumo:
 
-| Uso | Cor |
-|---|---|
-| Fundo | `#0A0A0B` |
-| Cartões | `#151516` / borda `#262628` |
-| Texto | `#F2F2F0` · secundário `#8A8A8E` |
-| Destaque (verde-limão) | `#C6FF5E` |
-| Alerta / despesa | `#F2B84B` / `#FF5C5C` |
-
-- **Marca-mãe:** logotipo "fluxo" em Manrope ExtraBold, verde-limão. Assina os
-  posts institucionais (rodapé "fluxo ecossistema").
-- **Produtos:** cada app usa o próprio ícone. Posts do Fluxo+ levam o "F+" e o
-  nome "Fluxo+" no rodapé.
-- Fonte: **Manrope** (ExtraBold nos títulos, Medium nos textos).
-- Formato dos posts: **1080×1350 (4:5)** — ocupa mais espaço no feed.
-- Uma ideia por post; destaque em verde só a parte mais importante da frase.
-- Etiqueta no topo (`PRIVACIDADE`, `DICA DO FLUXO`…) diz o assunto na hora.
+- **Símbolo F** da Fluxo; produtos levam um selo: **+** (Fluxo+) e **✓** (FluxoCheck).
+- **Cores:** grafite `#0A0A0B` e lima `#C6FF5E` (≈70% grafite, 10% lima).
+- **Fonte:** Manrope — ExtraBold nos títulos, Medium nos textos.
+- **Formato:** 1080×1350 (4:5). Uma ideia por post; verde só no trecho-chave.
+- Posts institucionais assinam com o logo **fluxo**; posts de produto, com o
+  logo do produto.
+- Para posts novos, use os [templates](../marca/templates/) prontos.
 
 ## 5. Tom de voz
 
@@ -104,7 +98,7 @@ usada como identidade da marca-mãe.
 | Pilar | % do feed | Exemplos |
 |---|---|---|
 | Educação e organização | 35% | 50/30/20, reserva de emergência, assinaturas esquecidas, rotina |
-| Produtos | 30% | Recursos e tutoriais do Fluxo+, novidades de versão, lançamentos de apps novos |
+| Produtos | 30% | Fluxo+ (recursos, tutoriais) · FluxoCheck (rotinas, bastidores de piloto sem expor o cliente) · novidades |
 | Marca e princípios | 20% | Privacidade, código aberto, gratuito, visão do ecossistema |
 | Comunidade e bastidores | 15% | Enquetes, dúvidas, depoimentos, como os apps são feitos |
 
@@ -114,7 +108,7 @@ Frequência inicial realista: **3 posts por semana** (seg/qua/sex) + **stories
 ## 7. Os 9 primeiros posts
 
 Poste **na ordem 01 → 09**. O post 01 apresenta a Fluxo; do 02 ao 05 o
-Fluxo+; 06 e 07 são dicas; 08 traz os princípios da marca; o 09 (verde,
+Fluxo+; 06 é dica; 07 apresenta o FluxoCheck; 08 traz os princípios da marca; o 09 (verde,
 "Baixe agora") fica no topo da grade, porque o feed mostra o mais recente primeiro.
 
 ### Post 01 — Fluxo Ecossistema · [`post-01.png`](imagens/post-01.png)
@@ -122,17 +116,14 @@ Fluxo+; 06 e 07 são dicas; 08 traz os princípios da marca; o 09 (verde,
 ```
 Prazer, somos a Fluxo 💚
 
-Um ecossistema de apps para organizar a vida sem abrir mão da sua privacidade.
+Criamos apps que transformam rotinas bagunçadas em fluxos claros — em casa e no trabalho.
 
-Aqui a tecnologia trabalha para você — não o contrário:
-🔒 Seus dados são seus
-📱 Funciona no seu aparelho, até sem internet
-🔓 Código aberto
-🎁 O essencial é sempre gratuito
+💰 Fluxo+ · finanças pessoais, grátis e de código aberto
+✅ FluxoCheck · checklists e prevenção para o varejo
 
-Nosso primeiro app já está no ar: o Fluxo+, de finanças pessoais. E vem mais por aí 👀
+Simples de usar, funcionando até sem internet e com os seus dados protegidos. E vem mais por aí 👀
 
-#fluxoecossistema #tecnologia #privacidade #opensource #fluxoplus
+#fluxoecossistema #tecnologia #produtividade #fluxoplus #fluxocheck
 ```
 
 ### Post 02 — Fluxo+: apresentação · [`post-02.png`](imagens/post-02.png)
@@ -210,31 +201,35 @@ Salve e mande para quem precisa 📌
 #educacaofinanceira #regra503020 #financaspessoais #dicasdefinancas #fluxoplus
 ```
 
-### Post 07 — Vencimentos · [`post-07.png`](imagens/post-07.png)
+### Post 07 — FluxoCheck · [`post-07.png`](imagens/post-07.png)
 
 ```
-Juros de atraso é o dinheiro mais bobo que existe. 💸
+Além das finanças de casa, a Fluxo também organiza a rotina da loja 🏪
 
-No Fluxo+ você cadastra contas com vencimento, divide compras em parcelas e marca lançamentos recorrentes. O app avisa o que vence e mostra o que já foi pago.
+O FluxoCheck é o nosso sistema de checklists para o varejo:
+✅ Temperaturas, balanças, NR-12/EPI e hortifrúti por horário
+📴 Funciona offline e sincroniza sozinho
+⚠️ Divergência registrada vira ação corretiva
+📄 Relatórios em PDF para a liderança de prevenção
 
-Chega de "ih, esqueci o boleto".
+Tem loja ou trabalha com prevenção de perdas? Chama no direct para conhecer 👇
 
-#fluxoplus #contasapagar #organizacaofinanceira #controlefinanceiro #financaspessoais
+#fluxocheck #fluxoecossistema #varejo #prevencaodeperdas #supermercado
 ```
 
 ### Post 08 — Princípios da Fluxo · [`post-08.png`](imagens/post-08.png)
 
 ```
-Todo app da Fluxo nasce destes 4 princípios:
+Todo produto da Fluxo nasce destes 4 princípios:
 
-🔒 Privacidade por padrão — seus dados são seus, não produto
-📱 Seus dados no seu aparelho — nuvem só quando você escolher
-🔓 Código aberto — qualquer pessoa pode conferir o código no GitHub
-🎁 O essencial é gratuito — sem anúncios e sem pegadinha
+➡️ Simples de verdade — feito para o dia a dia, não para especialistas
+📴 Funciona sem internet — registra offline e sincroniza quando der
+🔒 Privacidade por padrão — seus dados protegidos e sob seu controle
+🤝 Sem letra miúda — prometemos só o que entregamos
 
-O Fluxo+ foi o primeiro. Os próximos seguem o mesmo caminho.
+É assim no Fluxo+, é assim no FluxoCheck e vai ser assim nos próximos.
 
-#fluxoecossistema #privacidade #opensource #codigoaberto #tecnologia
+#fluxoecossistema #privacidade #tecnologia #produtividade #fluxoplus
 ```
 
 ### Post 09 — Baixe · [`post-09.png`](imagens/post-09.png)
@@ -258,8 +253,8 @@ O app avisa sozinho quando sair versão nova. Conta pra gente o que achou nos co
 |---|---|---|---|---|
 | 1 | 01 Fluxo Ecossistema | 02 Fluxo+ | 03 Privacidade | Bastidores: por que a Fluxo nasceu |
 | 2 | 04 Offline | 05 Recursos | 06 Dica 50/30/20 | Enquete: "Você anota seus gastos?" |
-| 3 | 07 Vencimentos | 08 Princípios da Fluxo | 09 Baixe agora | Tutorial: como instalar o Fluxo+ |
-| 4 | Dica: reserva de emergência | Novidade da última versão do Fluxo+ | Carrossel: assinaturas esquecidas | Caixa de perguntas: "Que app você quer que a Fluxo crie?" |
+| 3 | 07 FluxoCheck | 08 Princípios da Fluxo | 09 Baixe agora | Tutorial: como instalar o Fluxo+ |
+| 4 | Dica: vencimentos e juros de atraso | Novidade da última versão do Fluxo+ | Carrossel: assinaturas esquecidas | Caixa de perguntas: "Que app você quer que a Fluxo crie?" |
 
 Horários com bom alcance para público brasileiro: **12h–13h** e **19h–21h**
 (ajuste depois pelos Insights do perfil).
@@ -279,6 +274,6 @@ Horários com bom alcance para público brasileiro: **12h–13h** e **19h–21h*
 - [ ] Conta criada com o @ escolhido e 2FA ativo
 - [ ] Conta profissional (Empresa · Empresa de tecnologia)
 - [ ] Foto, nome, bio e link preenchidos
-- [ ] 5 destaques criados com as capas (Sobre, Fluxo+, Novidades, Dicas, Dúvidas)
+- [ ] 6 destaques criados com as capas (Sobre, Fluxo+, FluxoCheck, Novidades, Dicas, Dúvidas)
 - [ ] Posts 01 a 09 publicados conforme o calendário
 - [ ] Link do Instagram adicionado no rodapé do site (`site/index.html`)

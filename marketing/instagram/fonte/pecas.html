@@ -31,12 +31,8 @@
   .quad { width: 1080px; height: 1080px; }
   .story { width: 1080px; height: 1920px; }
 
-  .marca { background: var(--lime);
-           -webkit-mask: url("../../../assets/icon/fluxo_mark.png") center / contain no-repeat;
-           mask: url("../../../assets/icon/fluxo_mark.png") center / contain no-repeat; }
   .rodape { margin-top: auto; display: flex; align-items: center; gap: 20px;
             font-size: 30px; font-weight: 600; color: var(--muted); }
-  .rodape .marca { width: 52px; height: 57px; }
   .rodape .arroba { margin-left: auto; }
   .etiqueta { display: inline-block; align-self: flex-start; font-size: 26px; font-weight: 700;
               letter-spacing: .12em; text-transform: uppercase; color: var(--lime);
@@ -54,8 +50,6 @@
   .item svg { width: 64px; height: 64px; flex: none; color: var(--lime); }
   .item small { display: block; font-size: 28px; color: var(--muted); font-weight: 500; margin-top: 4px; }
 
-  .logotipo { font-weight: 800; letter-spacing: -.06em; color: var(--lime); line-height: 1; }
-  .rodape .logotipo { font-size: 44px; }
   .x { color: var(--red); } .ok { color: var(--lime); }
 </style>
 </head>
@@ -64,24 +58,24 @@
 <!-- ========== FOTO DE PERFIL (1080x1080; o Instagram recorta em círculo) ========== -->
 <div class="peca quad" id="perfil" style="display:grid;place-items:center">
   <div class="brilho" style="left:90px;top:90px"></div>
-  <div class="logotipo" style="font-size:250px;position:relative;top:-14px">fluxo</div>
+  <img src="../../marca/logos/fluxo-simbolo-lima.svg" style="width:500px;position:relative;left:10px">
 </div>
 
 <!-- ========== POST 01 — Fluxo Ecossistema ========== -->
 <div class="peca post" id="post-01">
   <div class="brilho" style="right:-300px;top:-250px"></div>
   <span class="etiqueta">Chegamos</span>
-  <div class="logotipo" style="font-size:230px;margin:120px 0 70px">fluxo</div>
+  <img src="../../marca/logos/fluxo-horizontal-lima.svg" style="height:170px;align-self:flex-start;margin:120px 0 80px">
   <h1 style="font-size:96px">Tecnologia que organiza a vida, <em>com você no controle.</em></h1>
-  <p class="sub" style="margin-top:44px">Somos a Fluxo, um ecossistema de apps simples, privados e de código aberto.</p>
-  <div class="rodape"><span class="logotipo">fluxo</span><span>ecossistema</span><span class="arroba">@fluxoecossistema</span></div>
+  <p class="sub" style="margin-top:44px">Somos a Fluxo: apps que transformam rotinas bagunçadas em fluxos claros — em casa e no trabalho.</p>
+  <div class="rodape"><img src="../../marca/logos/fluxo-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 02 — Fluxo+: apresentação ========== -->
 <div class="peca post" id="post-02">
   <div class="brilho" style="right:-300px;top:-250px"></div>
   <span class="etiqueta">Conheça o Fluxo+</span>
-  <div class="marca" style="width:220px;height:240px;margin:110px 0 64px"></div>
+  <img src="../../marca/logos/fluxo-plus-simbolo-lima.svg" style="height:230px;align-self:flex-start;margin:110px 0 64px">
   <h1>Seu dinheiro organizado, <em>no seu aparelho.</em></h1>
   <p class="sub" style="margin-top:44px">Fluxo+ é o app de finanças pessoais gratuito, offline e de código aberto.</p>
   <div class="rodape"><span>Android · Windows</span><span class="arroba">@fluxoecossistema</span></div>
@@ -97,7 +91,7 @@
     <div class="item"><span class="ok">✓</span> Bloqueio por PIN e biometria</div>
     <div class="item"><span class="ok">✓</span> Backup protegido por senha</div>
   </div>
-  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-plus-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 04 — Fluxo+: offline ========== -->
@@ -108,7 +102,7 @@
   </svg>
   <h1 style="margin-top:70px">Sem sinal? <em>Sem problema.</em></h1>
   <p class="sub" style="margin-top:44px">O Fluxo+ funciona 100% sem internet. Anote o gasto na fila do mercado, no metrô ou no meio do mato.</p>
-  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-plus-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 05 — Fluxo+: recursos ========== -->
@@ -122,7 +116,7 @@
     <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><div>Metas com prazo<small>Veja quanto falta para chegar lá</small></div></div>
     <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><div>Relatórios mensais<small>Entenda para onde o dinheiro foi</small></div></div>
   </div>
-  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-plus-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 06 — Dica 50/30/20 ========== -->
@@ -140,19 +134,22 @@
     <div class="item"><b style="width:130px;font-size:56px;color:#8fb83f">30%</b><div>Desejos<small>Lazer, delivery, assinaturas</small></div></div>
     <div class="item"><b style="width:130px;font-size:56px;color:#6f9433">20%</b><div>Futuro<small>Reserva de emergência e metas</small></div></div>
   </div>
-  <div class="rodape"><div class="marca"></div><span>Salve para lembrar</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-simbolo-lima.svg" style="height:52px"><span>Salve para lembrar</span><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
-<!-- ========== POST 07 — Vencimentos ========== -->
+<!-- ========== POST 07 — FluxoCheck ========== -->
 <div class="peca post" id="post-07">
-  <span class="etiqueta">Vencimentos</span>
-  <h1 style="margin-top:70px;font-size:90px">Aquele boleto <em>não te pega mais</em> de surpresa.</h1>
-  <div class="lista" style="margin-top:70px">
-    <div class="cartao item" style="justify-content:space-between"><div>Aluguel<small>vence em 2 dias</small></div><b style="color:var(--amber)">R$ 1.200</b></div>
-    <div class="cartao item" style="justify-content:space-between"><div>Internet<small>paga · recorrente</small></div><b class="ok">R$ 99,90</b></div>
-    <div class="cartao item" style="justify-content:space-between"><div>Notebook<small>parcela 4 de 10</small></div><b>R$ 320</b></div>
+  <div class="brilho" style="right:-300px;bottom:-300px"></div>
+  <span class="etiqueta">Para empresas</span>
+  <img src="../../marca/logos/fluxocheck-horizontal-lima.svg" style="height:96px;align-self:flex-start;margin-top:80px">
+  <h1 style="margin-top:60px;font-size:84px">A rotina da loja <em>conferida e registrada.</em></h1>
+  <div class="lista" style="margin-top:60px;gap:26px">
+    <div class="item" style="font-size:36px"><span class="ok">✓</span> Checklists por horário no celular da equipe</div>
+    <div class="item" style="font-size:36px"><span class="ok">✓</span> Funciona offline e sincroniza sozinho</div>
+    <div class="item" style="font-size:36px"><span class="ok">✓</span> Divergências viram ações corretivas</div>
+    <div class="item" style="font-size:36px"><span class="ok">✓</span> Relatórios em PDF para a liderança</div>
   </div>
-  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 08 — Princípios do ecossistema ========== -->
@@ -160,18 +157,18 @@
   <span class="etiqueta">Nossos princípios</span>
   <h1 style="margin-top:70px;font-size:92px">O que guia tudo o que <em>a Fluxo cria.</em></h1>
   <div class="lista" style="margin-top:70px;gap:34px">
-    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div>Privacidade por padrão<small>Seus dados são seus, não produto</small></div></div>
-    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg><div>Seus dados no seu aparelho<small>Nuvem só quando você escolher</small></div></div>
-    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg><div>Código aberto<small>Confiança que qualquer um pode verificar</small></div></div>
-    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v9H4v-9M2 7h20v5H2zM12 21V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg><div>O essencial é gratuito<small>Sem anúncios e sem pegadinha</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h16M14 6l6 6-6 6"/></svg><div>Simples de verdade<small>Feito para o dia a dia, não para especialistas</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l20 20"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M19 12.9a10 10 0 0 0-2.3-1.6"/><path d="M1.4 9a15 15 0 0 1 4.3-2.7"/><path d="M22.6 9A15 15 0 0 0 10.7 5"/><path d="M12 20h.01"/></svg><div>Funciona sem internet<small>Registra offline e sincroniza quando der</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><div>Privacidade por padrão<small>Seus dados protegidos e sob seu controle</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg><div>Sem letra miúda<small>Promete só o que entrega</small></div></div>
   </div>
-  <div class="rodape"><span class="logotipo">fluxo</span><span>ecossistema</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape"><img src="../../marca/logos/fluxo-horizontal-lima.svg" style="height:52px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <!-- ========== POST 09 — Baixe ========== -->
 <div class="peca post" id="post-09" style="background:var(--lime);color:var(--bg)">
   <span class="etiqueta" style="color:var(--bg);border-color:var(--bg)">Baixe agora</span>
-  <div class="marca" style="width:220px;height:240px;margin:110px 0 64px;background:var(--bg)"></div>
+  <img src="../../marca/logos/fluxo-plus-simbolo-grafite.svg" style="height:230px;align-self:flex-start;margin:110px 0 64px">
   <h1>Comece hoje a organizar o seu fluxo.</h1>
   <p class="sub" style="margin-top:44px;color:#2c3a14">Fluxo+ é grátis para Android e Windows. Link na bio.</p>
   <div class="rodape" style="color:#2c3a14"><span>lincoln201.github.io/Fluxo-Plus</span><span class="arroba">@fluxoecossistema</span></div>
@@ -192,14 +189,15 @@
   <span class="etiqueta">Dica do Fluxo</span>
   <h1 style="margin-top:90px;font-size:112px">Anote o gasto <em>na hora</em>, não no fim do mês.</h1>
   <p class="sub" style="margin-top:56px;font-size:46px">Quem registra na hora esquece menos. No Fluxo+ leva 5 segundos — e funciona até sem sinal.</p>
-  <div class="rodape" style="font-size:36px"><div class="marca" style="width:70px;height:76px"></div><span>Fluxo+</span><span class="arroba">@fluxoecossistema</span></div>
+  <div class="rodape" style="font-size:36px"><img src="../../marca/logos/fluxo-horizontal-lima.svg" style="height:64px"><span class="arroba">@fluxoecossistema</span></div>
 </div>
 
 <script>
   // Ícones (Lucide-like) das capas de destaque.
   const capas = {
-    'destaque-sobre': '<path d="M3 12h4l3 8 4-16 3 8h4"/>',
-    'destaque-fluxo-plus': null, // usa o logo do Fluxo+
+    'destaque-sobre': 'fluxo-simbolo-lima.svg',
+    'destaque-fluxo-plus': 'fluxo-plus-simbolo-lima.svg',
+    'destaque-fluxocheck': 'fluxocheck-simbolo-lima.svg',
     'destaque-novidades': '<path d="M12 3l2.4 5.6L20 9.3l-4.3 3.9L17 19l-5-3-5 3 1.3-5.8L4 9.3l5.6-.7z"/>',
     'destaque-dicas': '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>',
     'destaque-duvidas': '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
@@ -209,8 +207,8 @@
     const no = tpl.content.firstElementChild.cloneNode(true);
     no.id = id;
     const svg = no.querySelector('svg');
-    if (icone) svg.innerHTML = icone;
-    else svg.outerHTML = '<div class="marca" style="width:250px;height:272px;margin-left:10px"></div>';
+    if (icone.endsWith('.svg')) svg.outerHTML = `<img src="../../marca/logos/${icone}" style="width:250px;margin-left:12px">`;
+    else svg.innerHTML = icone;
     document.body.appendChild(no);
   }
 </script>

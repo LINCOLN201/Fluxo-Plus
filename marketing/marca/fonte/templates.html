@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Templates da marca Fluxo</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  body { background: #333; display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; align-items: flex-start; }
+  /* Supergráfico: o símbolo ampliado e cortado no canto */
+  .super { position: absolute; pointer-events: none; opacity: .07; }
+</style>
+</head>
+<body>
+<!--
+  COMO EDITAR: cada peça é um bloco <div class="peca ..." id="...">.
+  Troque os textos entre as tags, mantenha as classes. Regras:
+  - .titulo: até ~8 palavras; envolva em <em> só o trecho de destaque.
+  - .apoio: até ~25 palavras.
+  - .etiqueta: 1 a 3 palavras (assunto).
+  - Logo do rodapé: fluxo (institucional), fluxo-plus ou fluxocheck (produto).
+  Depois rode: node marketing/marca/fonte/render.mjs
+-->
+
+<!-- ===================== INSTAGRAM · FEED 1080×1350 ===================== -->
+
+<!-- 1. Institucional (escuro) -->
+<div class="peca post" id="ig-institucional">
+  <img class="super" src="../logos/fluxo-simbolo-lima.svg" style="width:900px;right:-360px;top:-200px">
+  <span class="etiqueta">Fluxo Ecossistema</span>
+  <h1 class="titulo" style="margin-top:auto">Tecnologia que organiza, <em>com você no controle.</em></h1>
+  <p class="apoio" style="margin-top:44px">Texto de apoio com até vinte e cinco palavras explicando a ideia principal do post.</p>
+  <div class="rodape" style="margin-top:120px"><img src="../logos/fluxo-horizontal-lima.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 2. Produto — Fluxo+ -->
+<div class="peca post" id="ig-produto-fluxo-plus">
+  <div class="brilho" style="right:-300px;top:-250px"></div>
+  <span class="etiqueta"><img src="../logos/fluxo-plus-simbolo-lima.svg">Fluxo+</span>
+  <h1 class="titulo" style="margin-top:90px">Seu dinheiro organizado, <em>no seu aparelho.</em></h1>
+  <div class="cartao lista" style="margin-top:70px">
+    <div class="item"><span style="color:var(--lima)">✓</span> Benefício número um</div>
+    <div class="item"><span style="color:var(--lima)">✓</span> Benefício número dois</div>
+    <div class="item"><span style="color:var(--lima)">✓</span> Benefício número três</div>
+  </div>
+  <div class="rodape"><img src="../logos/fluxo-plus-horizontal-lima.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 3. Produto — FluxoCheck (versão clara: tom B2B) -->
+<div class="peca post claro" id="ig-produto-fluxocheck">
+  <img class="super" src="../logos/fluxocheck-simbolo-grafite.svg" style="width:820px;right:-320px;bottom:-240px;opacity:.05">
+  <span class="etiqueta"><img src="../logos/fluxocheck-simbolo-grafite.svg">FluxoCheck</span>
+  <h1 class="titulo" style="margin-top:90px">A rotina da loja <em>conferida e registrada.</em></h1>
+  <p class="apoio" style="margin-top:44px">Checklists de prevenção no celular da equipe, com relatórios prontos para a liderança.</p>
+  <div class="rodape"><img src="../logos/fluxocheck-horizontal-grafite.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 4. Dica / educativo -->
+<div class="peca post" id="ig-dica">
+  <span class="etiqueta">Dica do Fluxo</span>
+  <h1 class="titulo" style="margin-top:70px;font-size:96px">Título da dica <em>em destaque</em></h1>
+  <p class="apoio" style="margin-top:30px">Uma frase curta que contextualiza a dica.</p>
+  <div class="lista" style="margin-top:70px">
+    <div class="item"><span class="num">01</span><div>Primeiro passo<small>Explicação curta do passo</small></div></div>
+    <div class="item"><span class="num">02</span><div>Segundo passo<small>Explicação curta do passo</small></div></div>
+    <div class="item"><span class="num">03</span><div>Terceiro passo<small>Explicação curta do passo</small></div></div>
+  </div>
+  <div class="rodape"><img src="../logos/fluxo-simbolo-lima.svg"><span>Salve para lembrar</span><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 5. Frase / manifesto (lima) -->
+<div class="peca post lima" id="ig-frase">
+  <img class="super" src="../logos/fluxo-simbolo-grafite.svg" style="width:1000px;left:-420px;bottom:-300px;opacity:.08">
+  <div style="font-size:220px;font-weight:800;line-height:.8;margin-top:40px">“</div>
+  <h1 class="titulo" style="font-size:92px;margin-top:20px">Uma frase curta e marcante <em>que resume a ideia.</em></h1>
+  <p class="apoio" style="margin-top:44px">— Autor ou contexto</p>
+  <div class="rodape"><img src="../logos/fluxo-horizontal-grafite.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 6. Lançamento / novidade -->
+<div class="peca post" id="ig-novidade">
+  <div class="brilho" style="left:90px;top:120px"></div>
+  <span class="etiqueta">Novidade</span>
+  <div style="display:flex;align-items:baseline;gap:24px;margin-top:100px">
+    <span style="font-size:200px;font-weight:800;letter-spacing:-.05em;color:var(--lima);line-height:1">v0.0</span>
+  </div>
+  <h1 class="titulo" style="font-size:88px;margin-top:40px">O que mudou <em>nesta versão.</em></h1>
+  <div class="lista" style="margin-top:60px;gap:22px">
+    <div class="item" style="font-size:36px"><span style="color:var(--lima)">+</span> Melhoria número um</div>
+    <div class="item" style="font-size:36px"><span style="color:var(--lima)">+</span> Melhoria número dois</div>
+    <div class="item" style="font-size:36px"><span style="color:var(--lima)">+</span> Correção importante</div>
+  </div>
+  <div class="rodape"><img src="../logos/fluxo-plus-horizontal-lima.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- 7. Carrossel — capa -->
+<div class="peca post" id="ig-carrossel-capa">
+  <img class="super" src="../logos/fluxo-simbolo-lima.svg" style="width:900px;right:-380px;bottom:-260px">
+  <span class="etiqueta">Guia · 5 passos</span>
+  <h1 class="titulo" style="margin-top:auto;font-size:116px">Título do carrossel <em>que dá vontade de arrastar</em></h1>
+  <div class="rodape" style="margin-top:100px"><img src="../logos/fluxo-simbolo-lima.svg"><span class="arroba" style="font-size:34px;color:var(--lima)">Arraste →</span></div>
+</div>
+
+<!-- 8. Carrossel — página interna -->
+<div class="peca post" id="ig-carrossel-interna">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <span class="etiqueta">Passo 1</span><span style="font-size:30px;color:var(--suave);font-weight:600">1 / 5</span>
+  </div>
+  <div style="font-size:260px;font-weight:800;color:var(--lima);line-height:1;margin-top:80px;letter-spacing:-.05em">01</div>
+  <h2 class="titulo" style="font-size:80px;margin-top:30px">Título do passo</h2>
+  <p class="apoio" style="margin-top:36px">Explicação do passo em até trinta palavras, com linguagem simples e direta, sem jargão.</p>
+  <div class="rodape"><img src="../logos/fluxo-simbolo-lima.svg"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- ===================== STORIES 1080×1920 ===================== -->
+
+<div class="peca story" id="story-padrao">
+  <div class="brilho" style="right:-350px;top:-200px"></div>
+  <span class="etiqueta">Assunto</span>
+  <h1 class="titulo" style="margin-top:90px;font-size:112px">Título do story <em>em destaque.</em></h1>
+  <p class="apoio" style="margin-top:56px;font-size:46px">Texto de apoio curto. Deixe o terço inferior livre para enquete, link ou caixa de perguntas.</p>
+  <div class="rodape" style="font-size:36px"><img src="../logos/fluxo-horizontal-lima.svg" style="height:64px"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<div class="peca story lima" id="story-chamada">
+  <img class="super" src="../logos/fluxo-simbolo-grafite.svg" style="width:1100px;right:-420px;top:-160px;opacity:.08">
+  <img src="../logos/fluxo-simbolo-grafite.svg" style="height:180px;align-self:flex-start;margin-top:auto">
+  <h1 class="titulo" style="margin-top:80px;font-size:120px">Chamada para ação <em>aqui.</em></h1>
+  <div style="margin-top:80px;align-self:flex-start;background:var(--grafite);color:var(--lima);font-size:44px;font-weight:800;border-radius:999px;padding:30px 56px">Toque no link ↗</div>
+  <div class="rodape" style="font-size:36px;margin-top:auto"><span class="arroba">@fluxoecossistema</span></div>
+</div>
+
+<!-- ===================== OUTRAS REDES / DIGITAL ===================== -->
+
+<!-- Capa LinkedIn (1584×396) — área segura à direita: a foto do perfil cobre o canto inferior esquerdo -->
+<div class="peca" id="capa-linkedin" style="width:1584px;height:396px;display:flex;align-items:center;padding:0 100px 0 520px">
+  <img class="super" src="../logos/fluxo-simbolo-lima.svg" style="width:640px;left:-120px;top:-140px;opacity:.1">
+  <div>
+    <div class="titulo" style="font-size:68px">Tecnologia que organiza, <em>com você no controle.</em></div>
+    <div class="apoio" style="font-size:28px;margin-top:18px">Fluxo+ · finanças pessoais &nbsp;·&nbsp; FluxoCheck · rotinas do varejo</div>
+  </div>
+</div>
+
+<!-- Imagem de compartilhamento / Open Graph (1200×630) -->
+<div class="peca" id="og-compartilhamento" style="width:1200px;height:630px;padding:80px;display:flex;flex-direction:column">
+  <div class="brilho" style="right:-260px;top:-300px"></div>
+  <img src="../logos/fluxo-horizontal-lima.svg" style="height:84px;align-self:flex-start">
+  <div class="titulo" style="font-size:76px;margin-top:auto">Apps que organizam a vida, <em>com você no controle.</em></div>
+</div>
+
+<!-- Capa de apresentação (1920×1080) -->
+<div class="peca" id="slide-capa" style="width:1920px;height:1080px;padding:120px 140px;display:flex;flex-direction:column">
+  <img class="super" src="../logos/fluxo-simbolo-lima.svg" style="width:1300px;right:-420px;top:-160px">
+  <img src="../logos/fluxo-horizontal-lima.svg" style="height:96px;align-self:flex-start">
+  <div class="titulo" style="font-size:132px;margin-top:auto;max-width:1300px">Título da apresentação <em>em até duas linhas</em></div>
+  <div class="apoio" style="margin-top:40px">Subtítulo · Nome de quem apresenta · Data</div>
+</div>
+
+<!-- Slide de conteúdo (1920×1080) -->
+<div class="peca claro" id="slide-conteudo" style="width:1920px;height:1080px;padding:110px 140px;display:flex;flex-direction:column">
+  <span class="etiqueta">Seção</span>
+  <div class="titulo" style="font-size:88px;margin-top:50px">Título do slide <em>com o ponto principal</em></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:80px">
+    <div class="cartao"><div class="num" style="color:var(--lima-escuro)">01</div><div style="font-size:40px;font-weight:700;margin-top:16px">Tópico</div><div class="apoio" style="font-size:28px;margin-top:10px">Explicação curta do tópico.</div></div>
+    <div class="cartao"><div class="num" style="color:var(--lima-escuro)">02</div><div style="font-size:40px;font-weight:700;margin-top:16px">Tópico</div><div class="apoio" style="font-size:28px;margin-top:10px">Explicação curta do tópico.</div></div>
+    <div class="cartao"><div class="num" style="color:var(--lima-escuro)">03</div><div style="font-size:40px;font-weight:700;margin-top:16px">Tópico</div><div class="apoio" style="font-size:28px;margin-top:10px">Explicação curta do tópico.</div></div>
+  </div>
+  <div class="rodape" style="font-size:24px"><img src="../logos/fluxo-horizontal-grafite.svg" style="height:40px"><span class="arroba">01</span></div>
+</div>
+
+<!-- ===================== PAPELARIA ===================== -->
+
+<!-- Cartão de visita 90×50 mm a 300 dpi (1063×591) — frente -->
+<div class="peca" id="cartao-frente" style="width:1063px;height:591px;display:grid;place-items:center">
+  <img class="super" src="../logos/fluxo-simbolo-lima.svg" style="width:560px;right:-200px;bottom:-200px;opacity:.08">
+  <img src="../logos/fluxo-horizontal-lima.svg" style="height:120px">
+</div>
+
+<!-- Cartão de visita — verso -->
+<div class="peca claro" id="cartao-verso" style="width:1063px;height:591px;padding:80px 90px;display:flex;flex-direction:column">
+  <div style="font-size:52px;font-weight:800;letter-spacing:-.02em">Nome Sobrenome</div>
+  <div style="font-size:30px;color:#6e6e72;font-weight:600;margin-top:6px">Cargo · Fluxo Ecossistema</div>
+  <div style="margin-top:auto;font-size:28px;line-height:1.7;font-weight:600">
+    contato@fluxo.exemplo<br>(00) 00000-0000<br>@fluxoecossistema
+  </div>
+  <img src="../logos/fluxo-simbolo-grafite.svg" style="position:absolute;right:90px;bottom:80px;height:110px">
+</div>
+
+<!-- Assinatura de e-mail (600×160; use também a versão HTML em templates/assinatura-email.html) -->
+<div class="peca claro" id="assinatura-email" style="width:600px;height:160px;background:#fff;display:flex;align-items:center;gap:26px;padding:0 24px">
+  <img src="../logos/fluxo-icone-app.svg" style="height:96px">
+  <div style="border-left:2px solid #e4e4e1;padding-left:26px">
+    <div style="font-size:22px;font-weight:800">Nome Sobrenome</div>
+    <div style="font-size:15px;color:#6e6e72;font-weight:600">Cargo · Fluxo Ecossistema</div>
+    <div style="font-size:14px;color:#4a7010;font-weight:700;margin-top:8px">@fluxoecossistema · lincoln201.github.io/Fluxo-Plus</div>
+  </div>
+</div>
+
+</body>
+</html>
