@@ -203,40 +203,31 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Column(
         children: [
           ListTile(
-            contentPadding: EdgeInsets.zero,
             leading: Icon(
               Icons.enhanced_encryption_outlined,
               color: context.colors.primary,
             ),
             title: const Text('Backup local criptografado'),
-            subtitle: const Text(
-              'Gere um arquivo protegido por senha e guarde onde preferir. '
-              'Gratuito.',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
+            subtitle: const Text('Arquivo protegido por senha. Gratuito.'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
                   onPressed: _busy ? null : _export,
                   icon: const Icon(Icons.file_download_outlined),
-                  label: const Text('Exportar'),
+                  tooltip: 'Exportar backup',
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
+                IconButton(
                   onPressed: _busy ? null : _import,
                   icon: const Icon(Icons.file_upload_outlined),
-                  label: const Text('Importar'),
+                  tooltip: 'Importar backup',
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           FutureBuilder<DateTime?>(
             future: _safetyCopy,
@@ -245,21 +236,15 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
               if (date == null) return const SizedBox.shrink();
               return Align(
                 alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: TextButton.icon(
-                    onPressed: _busy ? null : () => _undo(date),
-                    icon: const Icon(Icons.undo_rounded),
-                    label: const Text('Desfazer última restauração'),
-                  ),
+                child: TextButton.icon(
+                  onPressed: _busy ? null : () => _undo(date),
+                  icon: const Icon(Icons.undo_rounded, size: 18),
+                  label: const Text('Desfazer última restauração'),
                 ),
               );
             },
           ),
-          if (_busy) ...[
-            const SizedBox(height: 12),
-            const LinearProgressIndicator(),
-          ],
+          if (_busy) const LinearProgressIndicator(),
         ],
       ),
     );

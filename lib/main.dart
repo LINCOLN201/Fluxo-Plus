@@ -55,7 +55,7 @@ Future<void> main() async {
       biometricService: BiometricService(),
       pinService: PinService(database),
       localBackupService: LocalBackupService(database),
-      screenPrivacyService: ScreenPrivacyService(database),
+      screenPrivacyService: ScreenPrivacyService(),
       pushNotificationService: PushNotificationService(),
     ),
   );
