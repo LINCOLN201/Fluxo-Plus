@@ -146,6 +146,8 @@ class _MainShellState extends State<MainShell> {
     });
   }
 
+  void _openMore() => setState(() => _showMobileMore = true);
+
   Future<void> _openNotifications() async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
@@ -199,6 +201,7 @@ class _MainShellState extends State<MainShell> {
           updateAvailable: widget.availableUpdate != null,
           onNotifications: _openNotifications,
           onOpenTransactions: _openTransactions,
+          onOpenMore: _openMore,
           userName: _userName,
         ),
       1 => TransactionsScreen(
@@ -256,6 +259,7 @@ class _MainShellState extends State<MainShell> {
                   ? _MobileMore(
                       userName: _userName,
                       email: widget.cloudSyncService.currentUser?.email,
+                      onBack: () => setState(() => _showMobileMore = false),
                       onSelected: (index) => setState(() {
                         _selectedIndex = index;
                         _showMobileMore = false;
@@ -263,26 +267,20 @@ class _MainShellState extends State<MainShell> {
                     )
                   : _page(),
               bottomNavigationBar: _MobileNavigation(
-                selectedIndex: _showMobileMore
-                    ? 4
-                    : switch (_selectedIndex) {
-                        0 => 0,
-                        1 => 1,
-                        4 => 2,
-                        8 => 3,
-                        _ => 4,
-                      },
+                selectedIndex: switch (_selectedIndex) {
+                  0 => 0,
+                  1 => 1,
+                  4 => 2,
+                  8 => 3,
+                  _ => -1,
+                },
                 onSelected: (value) => setState(() {
-                  if (value == 4) {
-                    _showMobileMore = true;
-                  } else {
-                    _showMobileMore = false;
-                    if (value == 1) {
-                      _transactionType = null;
-                      _transactionRevision++;
-                    }
-                    _selectedIndex = const [0, 1, 4, 8][value];
+                  _showMobileMore = false;
+                  if (value == 1) {
+                    _transactionType = null;
+                    _transactionRevision++;
                   }
+                  _selectedIndex = const [0, 1, 4, 8][value];
                 }),
                 onAdd: _addTransaction,
               ),
@@ -315,11 +313,13 @@ class _MainShellState extends State<MainShell> {
 class _MobileMore extends StatelessWidget {
   const _MobileMore({
     required this.onSelected,
+    required this.onBack,
     required this.userName,
     required this.email,
   });
 
   final ValueChanged<int> onSelected;
+  final VoidCallback onBack;
   final String? userName;
   final String? email;
 
@@ -328,7 +328,11 @@ class _MobileMore extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mais'),
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: onBack,
+          icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'Voltar',
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(18, 6, 18, 28),
@@ -620,7 +624,6 @@ class _MobileNavigation extends StatelessWidget {
       (Icons.swap_horiz_rounded, 'Transações'),
       (Icons.bar_chart_rounded, 'Relatórios'),
       (Icons.subscriptions_rounded, 'Assinaturas'),
-      (Icons.more_horiz_rounded, 'Mais'),
     ];
     return Container(
       height: 76,
@@ -663,7 +666,7 @@ class _MobileNavigation extends StatelessWidget {
             ),
           ),
           ...List.generate(
-            3,
+            2,
             (offset) => _mobileItem(context, items[offset + 2], offset + 2),
           ),
         ],
@@ -676,7 +679,7 @@ class _MobileNavigation extends StatelessWidget {
     return InkWell(
       onTap: () => onSelected(index),
       child: SizedBox(
-        width: 56,
+        width: 68,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -692,7 +695,7 @@ class _MobileNavigation extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 9.5,
+                fontSize: 10,
                 color: selected
                     ? context.colors.primary
                     : context.colors.textMuted,
