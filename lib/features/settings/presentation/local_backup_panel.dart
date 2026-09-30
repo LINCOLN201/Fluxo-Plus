@@ -202,67 +202,65 @@ class _LocalBackupPanelState extends State<LocalBackupPanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                Icons.enhanced_encryption_outlined,
-                color: context.colors.primary,
-              ),
-              title: const Text('Backup local criptografado'),
-              subtitle: const Text(
-                'Gere um arquivo protegido por senha e guarde onde preferir. '
-                'Gratuito.',
-              ),
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              Icons.enhanced_encryption_outlined,
+              color: context.colors.primary,
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _busy ? null : _export,
-                    icon: const Icon(Icons.file_download_outlined),
-                    label: const Text('Exportar'),
-                  ),
+            title: const Text('Backup local criptografado'),
+            subtitle: const Text(
+              'Gere um arquivo protegido por senha e guarde onde preferir. '
+              'Gratuito.',
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _busy ? null : _export,
+                  icon: const Icon(Icons.file_download_outlined),
+                  label: const Text('Exportar'),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _busy ? null : _import,
-                    icon: const Icon(Icons.file_upload_outlined),
-                    label: const Text('Importar'),
-                  ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _busy ? null : _import,
+                  icon: const Icon(Icons.file_upload_outlined),
+                  label: const Text('Importar'),
                 ),
-              ],
-            ),
-            FutureBuilder<DateTime?>(
-              future: _safetyCopy,
-              builder: (context, snapshot) {
-                final date = snapshot.data;
-                if (date == null) return const SizedBox.shrink();
-                return Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: TextButton.icon(
-                      onPressed: _busy ? null : () => _undo(date),
-                      icon: const Icon(Icons.undo_rounded),
-                      label: const Text('Desfazer última restauração'),
-                    ),
-                  ),
-                );
-              },
-            ),
-            if (_busy) ...[
-              const SizedBox(height: 12),
-              const LinearProgressIndicator(),
+              ),
             ],
+          ),
+          FutureBuilder<DateTime?>(
+            future: _safetyCopy,
+            builder: (context, snapshot) {
+              final date = snapshot.data;
+              if (date == null) return const SizedBox.shrink();
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: TextButton.icon(
+                    onPressed: _busy ? null : () => _undo(date),
+                    icon: const Icon(Icons.undo_rounded),
+                    label: const Text('Desfazer última restauração'),
+                  ),
+                ),
+              );
+            },
+          ),
+          if (_busy) ...[
+            const SizedBox(height: 12),
+            const LinearProgressIndicator(),
           ],
-        ),
+        ],
       ),
     );
   }

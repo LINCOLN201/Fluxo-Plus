@@ -155,22 +155,28 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'Local, gratuito, ou automático na nuvem (Premium)',
           ),
           const SizedBox(height: 12),
-          LocalBackupPanel(
-            service: localBackupService,
-            database: database,
-            onDataChanged: onDataChanged,
-            identityCheck: identityCheck,
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder<PremiumEntitlement>(
-            future: premiumService.load(),
-            builder: (context, snapshot) => CloudSyncPanel(
-              service: cloudSyncService,
-              onDataChanged: onDataChanged,
-              allowed: (snapshot.data ?? const PremiumEntitlement.free())
-                  .allows(PremiumFeature.cloudBackup),
-              onOpenPremium: onOpenPremium,
-              identityCheck: identityCheck,
+          Card(
+            child: Column(
+              children: [
+                LocalBackupPanel(
+                  service: localBackupService,
+                  database: database,
+                  onDataChanged: onDataChanged,
+                  identityCheck: identityCheck,
+                ),
+                const Divider(height: 1),
+                FutureBuilder<PremiumEntitlement>(
+                  future: premiumService.load(),
+                  builder: (context, snapshot) => CloudSyncPanel(
+                    service: cloudSyncService,
+                    onDataChanged: onDataChanged,
+                    allowed: (snapshot.data ?? const PremiumEntitlement.free())
+                        .allows(PremiumFeature.cloudBackup),
+                    onOpenPremium: onOpenPremium,
+                    identityCheck: identityCheck,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),
