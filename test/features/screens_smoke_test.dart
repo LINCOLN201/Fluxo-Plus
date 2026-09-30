@@ -107,18 +107,22 @@ void main() {
           ),
         );
         await settle(tester);
-        await tester.scrollUntilVisible(
-          find.text('Backup local criptografado'),
-          200,
-          scrollable: find.byType(Scrollable).first,
-        );
-        await settle(tester);
+        // Segurança aparece antes de Backup na tela: verifica nessa ordem
+        // pra manter um scroll só pra frente (voltar pode não achar o
+        // elemento se a lista já cresceu além dele).
         await tester.scrollUntilVisible(
           find.text('Bloqueio por PIN'),
           200,
           scrollable: find.byType(Scrollable).first,
         );
         expect(find.text('Bloqueio por PIN'), findsOneWidget);
+        await settle(tester);
+        await tester.scrollUntilVisible(
+          find.text('Backup local criptografado'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('Backup local criptografado'), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }
