@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Logos dos produtos — derivados</title>
+<link rel="stylesheet" href="base.css">
+<style>
+  /* Gera versões auxiliares das logos ORIGINAIS dos apps, sem redesenhá-las:
+     só cor (Fluxo+) e composição com o nome (horizontal). */
+  body { background: transparent; display: flex; flex-direction: column; gap: 40px; padding: 40px; align-items: flex-start; }
+  .p { display: flex; align-items: center; gap: 28px; background: transparent; }
+  .fp { width: 158px; height: 172px; }  /* proporção do fluxo_mark.png (854×930) */
+  .mk { -webkit-mask: var(--fp) center / contain no-repeat; mask: var(--fp) center / contain no-repeat; }
+  .nome { font-size: 150px; font-weight: 800; letter-spacing: -.035em; line-height: 1; }
+</style>
+</head>
+<body>
+  <div class="p" id="fluxo-plus-simbolo-lima"><div class="fp mk" style="background:var(--lima);width:854px;height:930px"></div></div>
+  <div class="p" id="fluxo-plus-simbolo-grafite"><div class="fp mk" style="background:var(--grafite);width:854px;height:930px"></div></div>
+  <div class="p" id="fluxo-plus-horizontal-lima"><div class="fp mk" style="background:var(--lima)"></div><span class="nome" style="color:var(--texto)">Fluxo+</span></div>
+  <div class="p" id="fluxo-plus-horizontal-grafite"><div class="fp mk" style="background:var(--grafite)"></div><span class="nome" style="color:var(--grafite)">Fluxo+</span></div>
+  <div class="p" id="fluxocheck-horizontal-lima"><img src="../logos/produtos/fluxocheck-icone.png" style="height:180px"><span class="nome" style="color:var(--texto)">FluxoCheck</span></div>
+  <div class="p" id="fluxocheck-horizontal-grafite"><img src="../logos/produtos/fluxocheck-icone.png" style="height:180px"><span class="nome" style="color:var(--grafite)">FluxoCheck</span></div>
+</body>
+</html>

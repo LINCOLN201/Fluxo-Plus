@@ -5,7 +5,7 @@
 // Requer o pacote `playwright` (local ou global: NODE_PATH="$(npm root -g)").
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const require = createRequire(import.meta.url);
@@ -32,7 +32,21 @@ for (const svg of logos) {
 }
 console.log(`${logos.length} logos em logos/png/`);
 
-// 2. Templates → PNG
+// 2. Logos dos produtos: só derivados das logos ORIGINAIS (cor e composição).
+//    Chromium não aplica `mask` com imagem de file://; o Fluxo+ vai como data URI.
+await page.goto(url('produtos.html'));
+const marcaFp = readFileSync(path.join(marca, 'logos', 'produtos', 'fluxo-plus-simbolo-branco.png')).toString('base64');
+await page.addStyleTag({ content: `:root { --fp: url(data:image/png;base64,${marcaFp}); }` });
+await page.evaluate(() => document.fonts.ready);
+const derivados = await page.$$eval('.p[id]', (els) => els.map((e) => e.id));
+for (const id of derivados) {
+  await page.locator(`#${id}`).screenshot({
+    path: path.join(marca, 'logos', 'produtos', `${id}.png`), omitBackground: true,
+  });
+}
+console.log(`${derivados.length} derivados em logos/produtos/`);
+
+// 3. Templates → PNG
 await page.goto(url('templates.html'));
 await page.evaluate(() => document.fonts.ready);
 const ids = await page.$$eval('.peca[id]', (els) => els.map((e) => e.id));
@@ -41,7 +55,7 @@ for (const id of ids) {
 }
 console.log(`${ids.length} templates em templates/`);
 
-// 3. Manual da marca → PDF (A4 paisagem)
+// 4. Manual da marca → PDF (A4 paisagem)
 await page.goto(url('manual.html'));
 await page.evaluate(() => document.fonts.ready);
 await page.pdf({

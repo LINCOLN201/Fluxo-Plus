@@ -1,8 +1,13 @@
-"""Gera todos os logos da marca Fluxo em SVG (texto convertido em curvas).
+"""Gera os logos da Fluxo (marca-mãe) em SVG, com o texto convertido em curvas.
+
+Os produtos (Fluxo+ e FluxoCheck) mantêm as próprias logos originais; elas
+ficam em logos/produtos/ e não são geradas aqui.
 
 Uso (na raiz do repo):  python3 marketing/marca/fonte/gerar_logos.py
 Requer: fonttools (pip install fonttools).
 """
+import math
+import re
 from pathlib import Path
 
 from fontTools.pens.svgPathPen import SVGPathPen
@@ -16,62 +21,88 @@ SAIDA = RAIZ / "marketing" / "marca" / "logos"
 # Paleta oficial (identidade Grafite).
 LIMA = "#C6FF5E"
 GRAFITE = "#0A0A0B"
-SUPERFICIE = "#151516"
 BRANCO = "#F2F2F0"
+SUAVE = "#8A8A8E"
 
 # ---------------------------------------------------------------------------
-# Símbolo — grade de 512. Linguagem "folha": cada forma tem um canto reto e o
-# canto oposto arredondado. Haste + braço superior formam uma só faixa que
-# flui para a direita; o braço do meio fica solto, como um canal de fluxo.
+# Símbolo "três lâminas" — grade de 512.
+# Nasce do que os dois apps têm em comum: o F feito de lâminas em forma de
+# folha (ponta afiada, lado arredondado) com um corte curvo entre elas.
+# A lâmina maior é a raiz (a Fluxo); as outras duas crescem dela, uma para
+# cada produto — e o desenho comporta o ecossistema crescendo.
+# Todas as lâminas levam a mesma inclinação de 8°, o movimento do fluxo.
 # ---------------------------------------------------------------------------
-F_HASTE = ("M104 432V212C104 136 160 80 236 80H424C424 138 386 176 328 176H240"
-           "C213 176 196 193 196 220V372C196 405 169 432 136 432Z")
-F_BRACO = "M228 244H372C372 295 336 322 290 322H228Z"
-
-# Selos dos produtos, no quadrante inferior direito (vazio no F).
-SELO_MAIS = ("M338 338h40v-40a10 10 0 0 1 10-10h28a10 10 0 0 1 10 10v40h40a10 10 0 0 1 10 10"
-             "v28a10 10 0 0 1-10 10h-40v40a10 10 0 0 1-10 10h-28a10 10 0 0 1-10-10v-40h-40"
-             "a10 10 0 0 1-10-10v-28a10 10 0 0 1 10-10z")
-SELO_CHECK_CIRCULO = (402, 386, 74)
-SELO_CHECK = "M366 388l24 24 46-54"
-
-PRODUTOS = {
-    # id: (sufixo do nome, selo)
-    "fluxo": ("", None),
-    "fluxo-plus": ("+", "mais"),
-    "fluxocheck": ("check", "check"),
-}
+LAMINAS = (
+    "M104 452C96 320 110 196 176 130C220 86 286 76 444 76C440 134 402 168 342 168"
+    "H290C240 168 212 192 204 240L188 360C178 420 150 452 104 452Z",
+    "M232 248C246 234 268 230 304 230H402C398 286 360 314 302 314H212Z",
+    "M214 344C224 334 240 330 262 330H322C318 368 294 388 256 388H200Z",
+)
+INCLINACAO = math.tan(math.radians(8))
+DESLOCAMENTO = 64  # recentraliza depois da inclinação
 
 
-def caixa(selo):
-    """Limites (x0, y0, x1, y1) do símbolo na grade de 512."""
-    return (104, 80, 424, 432) if selo is None else (104, 80, 476, 460)
+def _inclinar(x, y):
+    return x - INCLINACAO * y + DESLOCAMENTO, y
 
 
-def simbolo(cor, selo=None):
-    """Desenha o F (e o selo do produto). O check é vazado por máscara: funciona sobre qualquer fundo."""
-    partes = [f'<path fill="{cor}" d="{F_HASTE}"/>', f'<path fill="{cor}" d="{F_BRACO}"/>']
-    if selo == "mais":
-        partes.append(f'<path fill="{cor}" d="{SELO_MAIS}"/>')
-    elif selo == "check":
-        cx, cy, r = SELO_CHECK_CIRCULO
-        partes.append(
-            f'<mask id="vazado-check"><rect x="0" y="0" width="512" height="512" fill="#fff"/>'
-            f'<path fill="none" stroke="#000" stroke-width="22" stroke-linecap="round" '
-            f'stroke-linejoin="round" d="{SELO_CHECK}"/></mask>'
-            f'<circle fill="{cor}" cx="{cx}" cy="{cy}" r="{r}" mask="url(#vazado-check)"/>')
-    return "".join(partes)
+def _limites():
+    """Caixa do símbolo já inclinado, amostrando as curvas."""
+    xs, ys = [], []
+    for d in LAMINAS:
+        tokens = re.findall(r"[MCHLZ]|-?\d+(?:\.\d+)?", d)
+        i, cx, cy, cmd = 0, 0.0, 0.0, None
+        while i < len(tokens):
+            if tokens[i].isalpha():
+                cmd = tokens[i]
+                i += 1
+                if cmd == "Z":
+                    continue
+            n = lambda k: float(tokens[i + k])  # noqa: E731
+            if cmd == "M" or cmd == "L":
+                cx, cy = n(0), n(1)
+                i += 2
+                pts = [(cx, cy)]
+            elif cmd == "H":
+                cx = n(0)
+                i += 1
+                pts = [(cx, cy)]
+            elif cmd == "C":
+                p0, p1, p2, p3 = (cx, cy), (n(0), n(1)), (n(2), n(3)), (n(4), n(5))
+                i += 6
+                pts = []
+                for s in range(21):
+                    t = s / 20
+                    a, b, c, e = (1 - t) ** 3, 3 * t * (1 - t) ** 2, 3 * t * t * (1 - t), t ** 3
+                    pts.append((a * p0[0] + b * p1[0] + c * p2[0] + e * p3[0],
+                                a * p0[1] + b * p1[1] + c * p2[1] + e * p3[1]))
+                cx, cy = p3
+            for px, py in pts:
+                qx, qy = _inclinar(px, py)
+                xs.append(qx)
+                ys.append(qy)
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+X0, Y0, X1, Y1 = _limites()
+LARG, ALT = X1 - X0, Y1 - Y0
+
+
+def simbolo(cor):
+    """Grupo SVG do símbolo, com origem no canto superior esquerdo da caixa."""
+    laminas = "".join(f'<path d="{d}"/>' for d in LAMINAS)
+    return (f'<g fill="{cor}" transform="translate({-X0:.2f} {-Y0:.2f}) '
+            f'translate({DESLOCAMENTO} 0) skewX(-8)">{laminas}</g>')
 
 
 # ---------------------------------------------------------------------------
 # Logotipo — Manrope ExtraBold (800), minúsculo, espaçamento fechado.
 # ---------------------------------------------------------------------------
-_fonte = TTFont(RAIZ / "assets" / "fonts" / "Manrope-Variable.ttf")
-_fonte = instantiateVariableFont(_fonte, {"wght": 800})
+_fonte = instantiateVariableFont(TTFont(RAIZ / "assets" / "fonts" / "Manrope-Variable.ttf"),
+                                 {"wght": 800})
 _glifos = _fonte.getGlyphSet()
 _cmap = _fonte.getBestCmap()
 _upm = _fonte["head"].unitsPerEm
-ALTURA_X = _fonte["OS/2"].sxHeight
 
 
 def texto(txt, tamanho, x=0, y=0, rastreio=-0.04):
@@ -81,65 +112,54 @@ def texto(txt, tamanho, x=0, y=0, rastreio=-0.04):
     avanco = 0.0
     for ch in txt:
         nome = _cmap[ord(ch)]
-        t = TransformPen(caneta, (escala, 0, 0, -escala, x + avanco, y))
-        _glifos[nome].draw(t)
+        _glifos[nome].draw(TransformPen(caneta, (escala, 0, 0, -escala, x + avanco, y)))
         avanco += _glifos[nome].width * escala + rastreio * tamanho
     return caneta.getCommands(), avanco - rastreio * tamanho
 
 
-def svg(largura, altura, corpo, fundo=None):
-    bg = f'<rect width="100%" height="100%" fill="{fundo}"/>' if fundo else ""
+def svg(largura, altura, corpo):
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {largura:.0f} {altura:.0f}" '
-            f'width="{largura:.0f}" height="{altura:.0f}">{bg}{corpo}</svg>\n')
+            f'width="{largura:.0f}" height="{altura:.0f}">{corpo}</svg>\n')
 
 
-def horizontal(prod, cor_marca, cor_texto, fundo=None):
-    """Símbolo + nome. 'fluxo' na cor da marca, sufixo do produto na cor do texto."""
-    sufixo, selo = PRODUTOS[prod]
-    x0, y0, x1, y1 = caixa(selo)
-    esc = 160 / 352  # o F (y 80–432) sempre com 160 de altura
-    corpo = [f'<g transform="translate({-x0 * esc:.2f} {-y0 * esc:.2f}) scale({esc:.4f})">'
-             f'{simbolo(cor_marca, selo)}</g>']
-    tam = 172
-    base = 160  # linha de base do texto = pé da haste
-    x = (x1 - x0) * esc + 44
-    d, w1 = texto("fluxo", tam, x, base)
-    corpo.append(f'<path fill="{cor_marca}" d="{d}"/>')
-    largura = x + w1
-    if sufixo:
-        folga = 6 if sufixo == "+" else 16
-        d2, w2 = texto(sufixo, tam, largura + folga, base)
-        corpo.append(f'<path fill="{cor_texto}" d="{d2}"/>')
-        largura += w2 + folga
-    # +4 para a sobra óptica do "o" abaixo da linha de base
-    return svg(largura, max((y1 - y0) * esc, base + 4), "".join(corpo), fundo)
+def horizontal(cor):
+    """Símbolo + 'fluxo'. Altura do símbolo = 160; texto na linha de base do pé."""
+    esc = 160 / ALT
+    x = LARG * esc + 30
+    d, w = texto("fluxo", 172, x, 158)
+    corpo = f'<g transform="scale({esc:.4f})">{simbolo(cor)}</g><path fill="{cor}" d="{d}"/>'
+    return svg(x + w, 164, corpo)
 
 
-def icone_app(prod, fundo, cor):
-    _, selo = PRODUTOS[prod]
-    return svg(512, 512,
-               f'<rect width="512" height="512" rx="116" fill="{fundo}"/>'
-               f'<g transform="translate(64 64) scale(.75)">{simbolo(cor, selo)}</g>')
+def endosso(cor_marca, cor_texto):
+    """Assinatura de endosso para peças de produto: 'um produto [F] fluxo'."""
+    d1, w1 = texto("um produto", 64, 0, 76, rastreio=-0.01)
+    esc = 84 / ALT
+    xs = w1 + 26
+    d2, w2 = texto("fluxo", 92, xs + LARG * esc + 14, 78)
+    corpo = (f'<path fill="{cor_texto}" d="{d1}"/>'
+             f'<g transform="translate({xs:.1f} 0) scale({esc:.4f})">{simbolo(cor_marca)}</g>'
+             f'<path fill="{cor_marca}" d="{d2}"/>')
+    return svg(xs + LARG * esc + 14 + w2, 86, corpo)
+
+
+def icone_app(fundo, cor):
+    esc = 300 / ALT
+    tx, ty = (512 - LARG * esc) / 2, (512 - ALT * esc) / 2
+    return svg(512, 512, f'<rect width="512" height="512" rx="116" fill="{fundo}"/>'
+                         f'<g transform="translate({tx:.1f} {ty:.1f}) scale({esc:.4f})">{simbolo(cor)}</g>')
 
 
 def gerar():
     SAIDA.mkdir(parents=True, exist_ok=True)
     arquivos = {}
-    variantes = {
-        # nome: (cor da marca, cor do texto, fundo do arquivo)
-        "lima": (LIMA, BRANCO, None),        # para fundos escuros
-        "grafite": (GRAFITE, GRAFITE, None),  # para fundos claros / sobre lima
-        "branco": (BRANCO, BRANCO, None),     # monocromático claro
-    }
-    for prod, (_, selo) in PRODUTOS.items():
-        x0, y0, x1, y1 = caixa(selo)
-        for var, (cm, ct, fd) in variantes.items():
-            arquivos[f"{prod}-simbolo-{var}.svg"] = svg(
-                x1 - x0, y1 - y0,
-                f'<g transform="translate({-x0} {-y0})">{simbolo(cm, selo)}</g>')
-            arquivos[f"{prod}-horizontal-{var}.svg"] = horizontal(prod, cm, ct, fd)
-        arquivos[f"{prod}-icone-app.svg"] = icone_app(prod, GRAFITE, LIMA)
-        arquivos[f"{prod}-icone-app-lima.svg"] = icone_app(prod, LIMA, GRAFITE)
+    for var, cor in {"lima": LIMA, "grafite": GRAFITE, "branco": BRANCO}.items():
+        arquivos[f"fluxo-simbolo-{var}.svg"] = svg(LARG, ALT, simbolo(cor))
+        arquivos[f"fluxo-horizontal-{var}.svg"] = horizontal(cor)
+    arquivos["fluxo-endosso-lima.svg"] = endosso(LIMA, SUAVE)
+    arquivos["fluxo-endosso-grafite.svg"] = endosso(GRAFITE, "#6E6E72")
+    arquivos["fluxo-icone-app.svg"] = icone_app(GRAFITE, LIMA)
+    arquivos["fluxo-icone-app-lima.svg"] = icone_app(LIMA, GRAFITE)
     for nome, conteudo in arquivos.items():
         (SAIDA / nome).write_text(conteudo, encoding="utf-8")
     return sorted(arquivos)

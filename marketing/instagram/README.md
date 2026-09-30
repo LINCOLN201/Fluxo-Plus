@@ -42,7 +42,7 @@ node marketing/instagram/fonte/render.mjs   # requer o pacote playwright
 
 | Campo | Conteúdo |
 |---|---|
-| Foto | [`imagens/perfil.png`](imagens/perfil.png) — símbolo F da Fluxo (1080×1080, recortada em círculo) |
+| Foto | [`imagens/perfil.png`](imagens/perfil.png) — símbolo "três lâminas" da Fluxo (1080×1080, recortada em círculo) |
 | Nome | `Fluxo Ecossistema · Apps` (o nome entra na busca) |
 | Usuário | `@fluxoecossistema` |
 | Categoria | Empresa de tecnologia |
@@ -76,12 +76,13 @@ Cada app novo do ecossistema ganha um destaque próprio, com o logo dele.
 
 Siga o **[manual da marca](../marca/manual-da-marca-fluxo.pdf)**. Resumo:
 
-- **Símbolo F** da Fluxo; produtos levam um selo: **+** (Fluxo+) e **✓** (FluxoCheck).
+- **Símbolo "três lâminas"** da Fluxo no perfil e nos posts institucionais.
+- Os apps aparecem **sempre com a logo original** + a assinatura "um produto fluxo".
 - **Cores:** grafite `#0A0A0B` e lima `#C6FF5E` (≈70% grafite, 10% lima).
 - **Fonte:** Manrope — ExtraBold nos títulos, Medium nos textos.
 - **Formato:** 1080×1350 (4:5). Uma ideia por post; verde só no trecho-chave.
-- Posts institucionais assinam com o logo **fluxo**; posts de produto, com o
-  logo do produto.
+- Posts institucionais assinam com o logo **fluxo**; posts de produto, com a
+  logo do app à esquerda e "um produto fluxo" à direita.
 - Para posts novos, use os [templates](../marca/templates/) prontos.
 
 ## 5. Tom de voz
