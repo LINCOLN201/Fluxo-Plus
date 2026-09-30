@@ -8,6 +8,7 @@ import '../../../core/security/pin_service.dart';
 import '../../../core/security/screen_privacy_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/fluxo_mark.dart';
+import '../../../shared/widgets/section_header.dart';
 import '../../dashboard/data/dashboard_repository.dart';
 import '../../accounts/data/account_repository.dart';
 import '../../categories/data/category_repository.dart';
@@ -377,7 +378,7 @@ class _MobileMore extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const _MoreSectionTitle(
+          const SectionHeader(
             title: 'Organize sua vida financeira',
             subtitle: 'Tudo que você usa no dia a dia',
           ),
@@ -401,7 +402,7 @@ class _MobileMore extends StatelessWidget {
             onTap: () => onSelected(3),
           ),
           const SizedBox(height: 22),
-          const _MoreSectionTitle(
+          const SectionHeader(
             title: 'Conta e aplicativo',
             subtitle: 'Preferências, segurança e recursos',
           ),
@@ -421,27 +422,6 @@ class _MobileMore extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _MoreSectionTitle extends StatelessWidget {
-  const _MoreSectionTitle({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        ),
-        Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-      ],
     );
   }
 }

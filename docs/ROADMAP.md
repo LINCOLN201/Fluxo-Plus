@@ -242,6 +242,13 @@ está à frente do que foi pesquisado:
       valor já guardado.
 - [x] "Assinaturas" sai de dentro de "Mais" e vira aba direta na barra
       inferior (depois de "Relatórios"), a pedido do dono do produto.
+- [x] Layout de Configurações estava "jogado": títulos de seção sem
+      subtítulo (inconsistente com Relatórios e Mais, que já tinham) e
+      três cards soltos sem agrupamento no fim da tela. Criado widget
+      compartilhado `SectionHeader` (deduplicando duas implementações
+      quase idênticas) e aplicado em Configurações, com subtítulos novos
+      em toda seção e o card de atualização + "Sobre o app" unidos num
+      único card com divisor, no mesmo padrão de Segurança.
 
 ### Pós-0.6.3
 - [x] Notificação push de atualização nunca chegava a nenhum aparelho —
