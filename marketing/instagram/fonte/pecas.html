@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Peças do Instagram — Fluxo+</title>
+<style>
+  @font-face {
+    font-family: "Manrope";
+    src: url("../../../assets/fonts/Manrope-Variable.ttf") format("truetype");
+    font-weight: 200 800;
+  }
+  /* Tokens da identidade Grafite (mesmos valores de lib/core/theme/app_colors.dart). */
+  :root {
+    --bg: #0a0a0b;
+    --surface: #151516;
+    --surface-2: #1a1a1c;
+    --border: #262628;
+    --text: #f2f2f0;
+    --muted: #8a8a8e;
+    --lime: #c6ff5e;
+    --red: #ff5c5c;
+    --amber: #f2b84b;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: #333; font-family: "Manrope", sans-serif; color: var(--text);
+         display: flex; flex-wrap: wrap; gap: 40px; padding: 40px; }
+
+  .peca { position: relative; overflow: hidden; background: var(--bg);
+          -webkit-font-smoothing: antialiased; }
+  .post { width: 1080px; height: 1350px; padding: 96px 88px; display: flex; flex-direction: column; }
+  .quad { width: 1080px; height: 1080px; }
+  .story { width: 1080px; height: 1920px; }
+
+  .marca { background: var(--lime);
+           -webkit-mask: url("../../../assets/icon/fluxo_mark.png") center / contain no-repeat;
+           mask: url("../../../assets/icon/fluxo_mark.png") center / contain no-repeat; }
+  .rodape { margin-top: auto; display: flex; align-items: center; gap: 20px;
+            font-size: 30px; font-weight: 600; color: var(--muted); }
+  .rodape .marca { width: 52px; height: 57px; }
+  .rodape .arroba { margin-left: auto; }
+  .etiqueta { display: inline-block; align-self: flex-start; font-size: 26px; font-weight: 700;
+              letter-spacing: .12em; text-transform: uppercase; color: var(--lime);
+              border: 2px solid var(--lime); border-radius: 999px; padding: 10px 26px; }
+  h1 { font-size: 104px; line-height: 1.02; font-weight: 800; letter-spacing: -.035em; }
+  h1 em { font-style: normal; color: var(--lime); }
+  .sub { font-size: 40px; line-height: 1.4; color: var(--muted); font-weight: 500; }
+  .brilho { position: absolute; width: 900px; height: 900px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(198,255,94,.16), transparent 65%);
+            pointer-events: none; }
+
+  .cartao { background: var(--surface); border: 2px solid var(--border); border-radius: 36px; padding: 40px 44px; }
+  .lista { display: grid; gap: 22px; }
+  .item { display: flex; align-items: center; gap: 30px; font-size: 40px; font-weight: 600; }
+  .item svg { width: 64px; height: 64px; flex: none; color: var(--lime); }
+  .item small { display: block; font-size: 28px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+
+  .x { color: var(--red); } .ok { color: var(--lime); }
+</style>
+</head>
+<body>
+
+<!-- ========== FOTO DE PERFIL (1080x1080; o Instagram recorta em círculo) ========== -->
+<div class="peca quad" id="perfil" style="display:grid;place-items:center">
+  <div class="brilho" style="left:90px;top:90px"></div>
+  <div class="marca" style="width:520px;height:566px;position:relative;left:18px"></div>
+</div>
+
+<!-- ========== POST 01 — Apresentação ========== -->
+<div class="peca post" id="post-01">
+  <div class="brilho" style="right:-300px;top:-250px"></div>
+  <span class="etiqueta">Chegamos</span>
+  <div class="marca" style="width:220px;height:240px;margin:110px 0 64px"></div>
+  <h1>Seu dinheiro organizado, <em>no seu aparelho.</em></h1>
+  <p class="sub" style="margin-top:44px">Fluxo+ é o app de finanças pessoais gratuito, offline e de código aberto.</p>
+  <div class="rodape"><span>Android · Windows</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 02 — Privacidade ========== -->
+<div class="peca post" id="post-02">
+  <span class="etiqueta">Privacidade</span>
+  <h1 style="margin-top:90px">Seus gastos não são <em>da conta de ninguém.</em></h1>
+  <div class="cartao lista" style="margin-top:80px">
+    <div class="item"><span class="ok">✓</span> Sem criar conta nem login</div>
+    <div class="item"><span class="ok">✓</span> Dados guardados só no seu aparelho</div>
+    <div class="item"><span class="ok">✓</span> Bloqueio por PIN e biometria</div>
+    <div class="item"><span class="ok">✓</span> Backup protegido por senha</div>
+  </div>
+  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 03 — Offline ========== -->
+<div class="peca post" id="post-03" style="justify-content:center">
+  <div class="brilho" style="left:-250px;bottom:-300px"></div>
+  <svg viewBox="0 0 24 24" width="190" height="190" fill="none" stroke="#c6ff5e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="margin-top:auto">
+    <path d="M2 2l20 20"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.2-2.8"/><path d="M19 12.9a10 10 0 0 0-2.3-1.6"/><path d="M1.4 9a15 15 0 0 1 4.3-2.7"/><path d="M22.6 9A15 15 0 0 0 10.7 5"/><path d="M12 20h.01"/>
+  </svg>
+  <h1 style="margin-top:70px">Sem sinal? <em>Sem problema.</em></h1>
+  <p class="sub" style="margin-top:44px">O Fluxo+ funciona 100% sem internet. Anote o gasto na fila do mercado, no metrô ou no meio do mato.</p>
+  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 04 — Recursos ========== -->
+<div class="peca post" id="post-04">
+  <span class="etiqueta">O que tem no app</span>
+  <h1 style="margin-top:70px;font-size:92px">Tudo o que o seu mês <em>precisa.</em></h1>
+  <div class="lista" style="margin-top:70px;gap:34px">
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg><div>Painel do mês<small>Saldo, previsão e gastos por categoria</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><div>Vencimentos e parcelas<small>Saiba o que está pago e o que vem aí</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg><div>Recorrentes<small>Aluguel, salário e assinaturas no automático</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg><div>Metas com prazo<small>Veja quanto falta para chegar lá</small></div></div>
+    <div class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><div>Relatórios mensais<small>Entenda para onde o dinheiro foi</small></div></div>
+  </div>
+  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 05 — Gratuito ========== -->
+<div class="peca post" id="post-05" style="align-items:flex-start">
+  <div class="brilho" style="right:-200px;top:200px"></div>
+  <span class="etiqueta">Quanto custa?</span>
+  <div style="font-size:300px;font-weight:800;letter-spacing:-.06em;line-height:1;margin-top:110px;color:var(--lime)">R$ 0</div>
+  <h1 style="font-size:88px;margin-top:30px">Gratuito. Para sempre.</h1>
+  <p class="sub" style="margin-top:44px">Transações, contas, categorias, metas e relatórios ilimitados — sem anúncio e sem pegadinha.</p>
+  <div class="rodape" style="align-self:stretch"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 06 — Dica 50/30/20 ========== -->
+<div class="peca post" id="post-06">
+  <span class="etiqueta">Dica do Fluxo</span>
+  <h1 style="margin-top:70px;font-size:96px">A regra <em>50 · 30 · 20</em></h1>
+  <p class="sub" style="margin-top:30px">Um ponto de partida simples para dividir o que entra.</p>
+  <div style="display:flex;height:64px;border-radius:32px;overflow:hidden;margin-top:70px">
+    <div style="flex:50;background:var(--lime)"></div>
+    <div style="flex:30;background:#8fb83f"></div>
+    <div style="flex:20;background:#4d6624"></div>
+  </div>
+  <div class="lista" style="margin-top:56px;gap:30px">
+    <div class="item"><b class="ok" style="width:130px;font-size:56px">50%</b><div>Necessidades<small>Moradia, contas, mercado, transporte</small></div></div>
+    <div class="item"><b style="width:130px;font-size:56px;color:#8fb83f">30%</b><div>Desejos<small>Lazer, delivery, assinaturas</small></div></div>
+    <div class="item"><b style="width:130px;font-size:56px;color:#6f9433">20%</b><div>Futuro<small>Reserva de emergência e metas</small></div></div>
+  </div>
+  <div class="rodape"><div class="marca"></div><span>Salve para lembrar</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 07 — Vencimentos ========== -->
+<div class="peca post" id="post-07">
+  <span class="etiqueta">Vencimentos</span>
+  <h1 style="margin-top:70px;font-size:90px">Aquele boleto <em>não te pega mais</em> de surpresa.</h1>
+  <div class="lista" style="margin-top:70px">
+    <div class="cartao item" style="justify-content:space-between"><div>Aluguel<small>vence em 2 dias</small></div><b style="color:var(--amber)">R$ 1.200</b></div>
+    <div class="cartao item" style="justify-content:space-between"><div>Internet<small>paga · recorrente</small></div><b class="ok">R$ 99,90</b></div>
+    <div class="cartao item" style="justify-content:space-between"><div>Notebook<small>parcela 4 de 10</small></div><b>R$ 320</b></div>
+  </div>
+  <div class="rodape"><div class="marca"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 08 — Open source ========== -->
+<div class="peca post" id="post-08" style="justify-content:center">
+  <div class="brilho" style="left:-300px;top:-200px"></div>
+  <div style="font-size:150px;font-weight:800;color:var(--lime);letter-spacing:-.04em;margin-top:auto">&lt;/&gt;</div>
+  <h1 style="margin-top:50px">Código aberto. <em>Confiança verificável.</em></h1>
+  <p class="sub" style="margin-top:44px">Qualquer pessoa pode conferir no GitHub como o Fluxo+ trata os seus dados. Transparência não é promessa: é código.</p>
+  <div class="rodape"><div class="marca"></div><span>Licença MIT</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== POST 09 — Baixe ========== -->
+<div class="peca post" id="post-09" style="background:var(--lime);color:var(--bg)">
+  <span class="etiqueta" style="color:var(--bg);border-color:var(--bg)">Baixe agora</span>
+  <div class="marca" style="width:220px;height:240px;margin:110px 0 64px;background:var(--bg)"></div>
+  <h1>Comece hoje a organizar o seu fluxo.</h1>
+  <p class="sub" style="margin-top:44px;color:#2c3a14">Grátis para Android e Windows. Link na bio.</p>
+  <div class="rodape" style="color:#2c3a14"><span>lincoln201.github.io/Fluxo-Plus</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<!-- ========== CAPAS DOS DESTAQUES (1080x1920; só o círculo central aparece) ========== -->
+<template id="capa">
+  <div class="peca story" style="display:grid;place-items:center">
+    <div style="width:560px;height:560px;border-radius:50%;background:var(--surface);border:4px solid var(--border);display:grid;place-items:center">
+      <svg viewBox="0 0 24 24" width="260" height="260" fill="none" stroke="#c6ff5e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </div>
+  </div>
+</template>
+
+<!-- ========== MODELO DE STORY (1080x1920) ========== -->
+<div class="peca story" id="story-dica" style="padding:220px 88px 200px;display:flex;flex-direction:column">
+  <div class="brilho" style="right:-350px;top:-200px"></div>
+  <span class="etiqueta">Dica do Fluxo</span>
+  <h1 style="margin-top:90px;font-size:112px">Anote o gasto <em>na hora</em>, não no fim do mês.</h1>
+  <p class="sub" style="margin-top:56px;font-size:46px">Quem registra na hora esquece menos. No Fluxo+ leva 5 segundos — e funciona até sem sinal.</p>
+  <div class="rodape" style="font-size:36px"><div class="marca" style="width:70px;height:76px"></div><span>Fluxo+</span><span class="arroba">@fluxoplus.app</span></div>
+</div>
+
+<script>
+  // Ícones (Lucide-like) das capas de destaque.
+  const capas = {
+    'destaque-novidades': '<path d="M12 3l2.4 5.6L20 9.3l-4.3 3.9L17 19l-5-3-5 3 1.3-5.8L4 9.3l5.6-.7z"/>',
+    'destaque-dicas': '<path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/>',
+    'destaque-tutoriais': '<circle cx="12" cy="12" r="10"/><path d="M10 8l6 4-6 4z"/>',
+    'destaque-premium': '<path d="M2 8l5 5 5-8 5 8 5-5-2 11H4z"/>',
+    'destaque-duvidas': '<circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  };
+  const tpl = document.getElementById('capa');
+  for (const [id, icone] of Object.entries(capas)) {
+    const no = tpl.content.firstElementChild.cloneNode(true);
+    no.id = id;
+    no.querySelector('svg').innerHTML = icone;
+    document.body.appendChild(no);
+  }
+</script>
+</body>
+</html>
