@@ -12,6 +12,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/sync/cloud_sync_service.dart';
 import '../../../core/update/update_prompt.dart';
 import '../../../core/update/update_service.dart';
+import '../../../shared/widgets/section_header.dart';
 import 'cloud_sync_panel.dart';
 import 'local_backup_panel.dart';
 import 'security_panel.dart';
@@ -63,16 +64,16 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          Text(
-            'Perfil',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SectionHeader(
+            title: 'Perfil',
+            subtitle: 'Como o Fluxo+ te chama na saudação',
           ),
           const SizedBox(height: 12),
           _NameTile(service: cloudSyncService, onChanged: onDataChanged),
           const SizedBox(height: 24),
-          Text(
-            'Aparência',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SectionHeader(
+            title: 'Aparência',
+            subtitle: 'Tema claro ou escuro',
           ),
           const SizedBox(height: 12),
           Card(
@@ -135,9 +136,9 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Segurança',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SectionHeader(
+            title: 'Segurança',
+            subtitle: 'PIN, biometria e privacidade da tela',
           ),
           const SizedBox(height: 12),
           SecurityPanel(
@@ -149,9 +150,9 @@ class SettingsScreen extends StatelessWidget {
             identityCheck: identityCheck,
           ),
           const SizedBox(height: 24),
-          Text(
-            'Backup',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SectionHeader(
+            title: 'Backup e sincronização',
+            subtitle: 'Local, gratuito, ou automático na nuvem (Premium)',
           ),
           const SizedBox(height: 12),
           LocalBackupPanel(
@@ -173,52 +174,61 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          Text(
-            'Privacidade e dados',
-            style: Theme.of(context).textTheme.titleLarge,
+          const SectionHeader(
+            title: 'Privacidade',
+            subtitle: 'Onde seus dados ficam guardados',
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.lock_outline_rounded,
+                color: context.colors.primary,
+              ),
+              title: const Text('Dados locais'),
+              subtitle: const Text(
+                'Suas informações permanecem neste dispositivo.',
+              ),
+              trailing: Icon(
+                Icons.check_circle_rounded,
+                color: context.colors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const SectionHeader(
+            title: 'Sobre o app',
+            subtitle: 'Versão, atualizações e licença',
           ),
           const SizedBox(height: 12),
           Card(
             child: Column(
               children: [
+                _UpdatePanel(service: updateService),
+                const Divider(height: 1),
                 ListTile(
+                  onTap: () => showAboutDialog(
+                    context: context,
+                    applicationName: 'Fluxo+',
+                    applicationVersion: AppConstants.appVersion,
+                    applicationLegalese:
+                        '© 2026 Fluxo+ contributors\nLicença MIT',
+                    children: const [
+                      SizedBox(height: 12),
+                      Text(
+                        'Finanças pessoais offline-first, seguras e open source.',
+                      ),
+                    ],
+                  ),
                   leading: Icon(
-                    Icons.lock_outline_rounded,
+                    dark ? Icons.nightlight_round : Icons.wb_sunny_outlined,
                     color: context.colors.primary,
                   ),
-                  title: const Text('Dados locais'),
-                  subtitle: const Text(
-                    'Suas informações permanecem neste dispositivo.',
-                  ),
-                  trailing: Icon(Icons.check_circle_rounded,
-                      color: context.colors.primary),
+                  title: const Text('Fluxo+'),
+                  subtitle: const Text('Open source • Licença MIT'),
+                  trailing: const Icon(Icons.chevron_right_rounded),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          _UpdatePanel(service: updateService),
-          const SizedBox(height: 24),
-          Card(
-            child: ListTile(
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: 'Fluxo+',
-                applicationVersion: AppConstants.appVersion,
-                applicationLegalese: '© 2026 Fluxo+ contributors\nLicença MIT',
-                children: const [
-                  SizedBox(height: 12),
-                  Text(
-                    'Finanças pessoais offline-first, seguras e open source.',
-                  ),
-                ],
-              ),
-              leading: Icon(
-                dark ? Icons.nightlight_round : Icons.wb_sunny_outlined,
-                color: context.colors.primary,
-              ),
-              title: const Text('Fluxo+'),
-              subtitle: const Text('Open source • Licença MIT'),
             ),
           ),
         ],
@@ -271,29 +281,27 @@ class _UpdatePanelState extends State<_UpdatePanel> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: FutureBuilder<String>(
-        future: widget.service.currentVersion(),
-        builder: (context, snapshot) => ListTile(
-          leading: const Icon(Icons.system_update_rounded),
-          title: const Text('Atualização pela internet'),
-          subtitle: Text(
-            snapshot.hasData
-                ? 'Versão instalada: ${snapshot.data}'
-                : 'Consultando versão instalada…',
-          ),
-          trailing: FilledButton(
-            onPressed: _checking ? null : _check,
-            child: _checking
-                ? SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: context.colors.onPrimary,
-                    ),
-                  )
-                : const Text('Verificar'),
-          ),
+    return FutureBuilder<String>(
+      future: widget.service.currentVersion(),
+      builder: (context, snapshot) => ListTile(
+        leading: const Icon(Icons.system_update_rounded),
+        title: const Text('Atualização pela internet'),
+        subtitle: Text(
+          snapshot.hasData
+              ? 'Versão instalada: ${snapshot.data}'
+              : 'Consultando versão instalada…',
+        ),
+        trailing: FilledButton(
+          onPressed: _checking ? null : _check,
+          child: _checking
+              ? SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: context.colors.onPrimary,
+                  ),
+                )
+              : const Text('Verificar'),
         ),
       ),
     );

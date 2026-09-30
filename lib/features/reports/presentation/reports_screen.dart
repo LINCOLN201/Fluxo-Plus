@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/category_icons.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../shared/widgets/section_header.dart';
 import '../data/report_repository.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -72,14 +73,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const SizedBox(height: 12),
                   _MetricGrid(report: report),
                   const SizedBox(height: 20),
-                  _SectionHeader(
+                  SectionHeader(
                     title: 'Receitas e despesas',
                     subtitle: 'Comparação do que entrou e saiu no período',
                   ),
                   const SizedBox(height: 10),
                   _ComparisonCard(report: report),
                   const SizedBox(height: 20),
-                  _SectionHeader(
+                  SectionHeader(
                     title: 'Para onde foi o dinheiro',
                     subtitle: report.categories.isEmpty
                         ? 'Ainda não há despesas neste mês'
@@ -309,27 +310,6 @@ class _MetricCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
-        ),
-        Text(subtitle, style: TextStyle(color: context.colors.textMuted)),
-      ],
     );
   }
 }
