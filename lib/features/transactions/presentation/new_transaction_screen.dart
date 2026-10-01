@@ -72,8 +72,10 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
       _categories = categories;
       _accountId = widget.transaction?.accountId ??
           (accounts.isEmpty ? null : accounts.first.id);
-      _categoryId = widget.transaction?.categoryId ??
-          (categories.isEmpty ? null : categories.first.id);
+      // Sem valor pré-selecionado: categoria errada por padrão (sempre a
+      // primeira em ordem alfabética) passava despercebida sem ninguém
+      // precisar escolher nada. Agora o formulário exige a escolha.
+      _categoryId = widget.transaction?.categoryId;
       _loading = false;
     });
   }
@@ -88,7 +90,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
     if (!mounted) return;
     setState(() {
       _categories = categories;
-      _categoryId = categories.isEmpty ? null : categories.first.id;
+      _categoryId = null;
       _loading = false;
     });
   }
