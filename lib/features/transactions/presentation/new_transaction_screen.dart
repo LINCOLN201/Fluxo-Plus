@@ -233,7 +233,7 @@ class _NewTransactionScreenState extends State<NewTransactionScreen> {
                             validator: (value) {
                               final amount =
                                   AppFormatters.parseCurrency(value ?? '');
-                              return amount == null || amount <= 0
+                              return amount == null || amount < 0.01
                                   ? 'Informe um valor maior que zero'
                                   : null;
                             },

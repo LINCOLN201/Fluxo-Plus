@@ -91,6 +91,30 @@ class _AccountsScreenState extends State<AccountsScreen> {
   }
 
   Future<void> _delete(AccountBalance item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir conta?'),
+        content: Text(
+          'Deseja excluir a conta "${item.account.name}"? '
+          'Esta ação não pode ser desfeita.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     final deleted = await widget.repository.delete(item.account.id!);
     if (!mounted) return;
     if (!deleted) {

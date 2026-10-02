@@ -8,6 +8,7 @@ class Category {
     required this.icon,
     required this.color,
     this.isDefault = false,
+    this.isSubscription = false,
   });
 
   final int? id;
@@ -16,6 +17,7 @@ class Category {
   final String icon;
   final int color;
   final bool isDefault;
+  final bool isSubscription;
 
   factory Category.fromMap(Map<String, Object?> map) => Category(
         id: map['id'] as int,
@@ -23,7 +25,8 @@ class Category {
         type: TransactionType.values.byName(map['type'] as String),
         icon: map['icon'] as String,
         color: map['color'] as int,
-        isDefault: (map['is_default'] as int) == 1,
+        isDefault: (map['is_default'] as int? ?? 0) == 1,
+        isSubscription: (map['is_subscription'] as int? ?? 0) == 1,
       );
 
   Map<String, Object?> toMap() => {
@@ -33,5 +36,6 @@ class Category {
         'icon': icon,
         'color': color,
         'is_default': isDefault ? 1 : 0,
+        'is_subscription': isSubscription ? 1 : 0,
       };
 }

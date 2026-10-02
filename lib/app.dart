@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -211,9 +212,13 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   }
 
   Future<bool> _unlock() async {
-    final success = await widget.biometricService.authenticate();
-    if (mounted && success) setState(() => _unlocked = true);
-    return success;
+    try {
+      final success = await widget.biometricService.authenticate();
+      if (mounted && success) setState(() => _unlocked = true);
+      return success;
+    } on PlatformException {
+      return false;
+    }
   }
 
   Future<bool> _unlockWithPin(String pin) async {
@@ -230,7 +235,11 @@ class _FluxoAppState extends State<FluxoApp> with WidgetsBindingObserver {
   Future<bool> _changeBiometric(bool enabled) async {
     // Ligar ou desligar exige a biometria: ninguém desativa o bloqueio
     // com o aparelho de outra pessoa na mão.
-    if (!await widget.biometricService.authenticate()) return false;
+    try {
+      if (!await widget.biometricService.authenticate()) return false;
+    } on PlatformException {
+      return false;
+    }
     await widget.database.db.insert(
       'settings',
       {'key': 'biometric_enabled', 'value': enabled ? 'true' : 'false'},

@@ -183,7 +183,8 @@ class _GoalsScreenState extends State<GoalsScreen> {
         id: goal.id,
         name: goal.name,
         targetAmount: goal.targetAmount,
-        currentAmount: goal.currentAmount + added,
+        currentAmount:
+            (goal.currentAmount + added).clamp(0.0, goal.targetAmount),
         deadline: goal.deadline,
         createdAt: goal.createdAt,
       ),
@@ -238,6 +239,23 @@ class _GoalsScreenState extends State<GoalsScreen> {
       body: FutureBuilder<List<Goal>>(
         future: _goals,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 40),
+                  const SizedBox(height: 12),
+                  const Text('Erro ao carregar metas.'),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => setState(_reload),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            );
+          }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }

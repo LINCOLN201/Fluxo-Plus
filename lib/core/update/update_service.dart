@@ -158,7 +158,12 @@ class UpdateService {
     var received = 0;
     final total = response.contentLength ?? 0;
     try {
-      await for (final chunk in response.stream) {
+      await for (final chunk in response.stream.timeout(
+        const Duration(minutes: 5),
+        onTimeout: (_) => throw StateError(
+          'Tempo limite excedido ao baixar a atualização.',
+        ),
+      )) {
         sink.add(chunk);
         received += chunk.length;
         if (total > 0) onProgress?.call(received / total);

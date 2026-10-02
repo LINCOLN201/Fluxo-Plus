@@ -140,12 +140,36 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 ? AppColors.light.income.toARGB32()
                 : AppColors.light.expense.toARGB32()),
         isDefault: category?.isDefault ?? false,
+        isSubscription: category?.isSubscription ?? false,
       ),
     );
     setState(_reload);
   }
 
   Future<void> _delete(CategoryUsage usage) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Excluir categoria?'),
+        content: Text(
+          'Deseja excluir a categoria "${usage.category.name}"?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     final deleted = await widget.repository.delete(usage.category.id!);
     if (!mounted) return;
     if (!deleted) {
