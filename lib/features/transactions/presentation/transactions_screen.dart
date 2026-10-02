@@ -335,6 +335,7 @@ class _Filters extends StatelessWidget {
               const (-1, 'Categorias'),
               ...categories
                   .where((item) => type == null || item.type == type)
+                  .where((item) => item.name != 'Assinaturas')
                   .map((item) => (item.id!, item.name)),
             ],
             onChanged: (value) => onCategory(value == -1 ? null : value),
