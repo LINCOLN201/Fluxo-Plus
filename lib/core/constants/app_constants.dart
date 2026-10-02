@@ -1,6 +1,6 @@
 abstract final class AppConstants {
   static const appName = 'Fluxo+';
-  static const appVersion = '0.6.0';
+  static const appVersion = '0.6.13';
   static const databaseName = 'fluxo_plus.db';
   static const databaseVersion = 7;
 
