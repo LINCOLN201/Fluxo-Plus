@@ -155,7 +155,7 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
     );
-    if (mounted) setState(() => _dashboardRevision++);
+    // Dashboard já é atualizado via onChanged dentro da NotificationCenterScreen.
   }
 
   Future<void> _handleBack() async {

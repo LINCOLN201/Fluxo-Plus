@@ -90,10 +90,12 @@ class LocalBackupService {
       );
     }
     try {
+      const maxIterations = 2000000;
+      final rawIterations = (envelope['iterations'] as num).toInt();
       final key = await _deriveKey(
         password,
         base64Decode(envelope['salt'] as String),
-        (envelope['iterations'] as num).toInt(),
+        rawIterations.clamp(1, maxIterations),
       );
       return await AesGcm.with256bits().decrypt(
         SecretBox(

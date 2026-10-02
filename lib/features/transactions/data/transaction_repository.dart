@@ -47,9 +47,9 @@ class TransactionRepository {
       conditions.add('t.category_id = ?');
       arguments.add(categoryId);
     } else {
-      // Assinaturas já têm tela própria; sem isso, apareciam duplicadas
-      // aqui e lá, sem nenhuma informação a mais na lista geral.
-      conditions.add("c.name != 'Assinaturas'");
+      // Assinaturas têm tela própria; filtrar pelo flag estável evita
+      // dependência do nome da categoria (D1).
+      conditions.add('c.is_subscription = 0');
     }
     if (payment == PaymentFilter.pending) {
       conditions.add('t.is_paid = 0');
@@ -290,11 +290,12 @@ class TransactionRepository {
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
       INNER JOIN accounts a ON a.id = t.account_id
-      WHERE t.type = 'expense' AND t.is_paid = 0 AND t.date < ?
-        AND c.name != 'Assinaturas'
+      WHERE t.type = 'expense' AND t.is_paid = 0
+        AND c.is_subscription = 0
+        AND t.date >= ? AND t.date < ?
       ORDER BY t.date ASC, t.id ASC
       ''',
-      [end.toIso8601String()],
+      [start.toIso8601String(), end.toIso8601String()],
     );
     return rows.map(TransactionRecord.fromMap).toList();
   }
@@ -311,7 +312,7 @@ class TransactionRepository {
              t.amount_cents, MIN(t.date) AS next_date
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
-      WHERE c.name = 'Assinaturas' AND t.recurring_group IS NOT NULL
+      WHERE c.is_subscription = 1 AND t.recurring_group IS NOT NULL
         AND t.is_paid = 0
       GROUP BY t.recurring_group
       ORDER BY next_date ASC

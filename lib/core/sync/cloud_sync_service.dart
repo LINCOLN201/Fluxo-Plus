@@ -186,12 +186,28 @@ class CloudSyncService {
     String newPassword,
   ) async {
     _requireClient();
+    // verifyOTP consome o token de recuperação. Se updateUser falhar depois,
+    // o token já foi gasto e não há como repetir o fluxo completo — por isso
+    // distinguimos os dois erros para a mensagem ser acionável.
     try {
       await _client!.auth.verifyOTP(
         email: email,
         token: code.trim(),
         type: OtpType.recovery,
       );
+    } on AuthException catch (error) {
+      throw CloudSyncException(_friendlyAuthMessage(error.message));
+    } catch (e, st) {
+      ErrorReporter.record(
+        e,
+        st,
+        reason: 'CloudSyncService.confirmPasswordReset.verifyOTP',
+      );
+      throw const CloudSyncException(
+        'Código inválido ou expirado. Solicite um novo código.',
+      );
+    }
+    try {
       await _client.auth.updateUser(UserAttributes(password: newPassword));
     } on AuthException catch (error) {
       throw CloudSyncException(_friendlyAuthMessage(error.message));
@@ -199,10 +215,11 @@ class CloudSyncService {
       ErrorReporter.record(
         e,
         st,
-        reason: 'CloudSyncService.confirmPasswordReset',
+        reason: 'CloudSyncService.confirmPasswordReset.updateUser',
       );
       throw const CloudSyncException(
-        'Não foi possível redefinir a senha. Verifique sua internet.',
+        'Código aceito, mas não foi possível salvar a nova senha. '
+        'Tente entrar com a nova senha diretamente.',
       );
     }
   }
