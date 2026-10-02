@@ -1,7 +1,7 @@
 name: fluxo_plus
 description: Finanças pessoais modernas, seguras e offline-first.
 publish_to: none
-version: 0.6.12+28
+version: 0.6.13+29
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
