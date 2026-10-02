@@ -331,7 +331,7 @@ class AppDatabase {
         );
       }
       await database.execute(
-        "UPDATE categories SET is_subscription = 1 "
+        'UPDATE categories SET is_subscription = 1 '
         "WHERE name = 'Assinaturas' AND type = 'expense'",
       );
       final check = await database.query(
@@ -356,7 +356,7 @@ class AppDatabase {
       // categoria "Assinaturas" (ex: build v0.6.12 onde a migração v6 não
       // atualizou o flag). UPDATE idempotente — não faz nada em bancos saudáveis.
       await database.execute(
-        "UPDATE categories SET is_subscription = 1 "
+        'UPDATE categories SET is_subscription = 1 '
         "WHERE name = 'Assinaturas' AND type = 'expense'",
       );
       final check = await database.query(
