@@ -291,6 +291,7 @@ class TransactionRepository {
       INNER JOIN categories c ON c.id = t.category_id
       INNER JOIN accounts a ON a.id = t.account_id
       WHERE t.type = 'expense' AND t.is_paid = 0 AND t.date < ?
+        AND c.name != 'Assinaturas'
       ORDER BY t.date ASC, t.id ASC
       ''',
       [end.toIso8601String()],
