@@ -309,7 +309,10 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       }
       final category = categories.firstWhere(
         (item) => item.isSubscription,
-        orElse: () => categories.first,
+        orElse: () => categories.firstWhere(
+          (item) => item.name == 'Assinaturas',
+          orElse: () => categories.first,
+        ),
       );
       final name = _isCustom ? _customName.text.trim() : _selected.name;
       final now = DateTime.now();

@@ -320,15 +320,61 @@ class AppDatabase {
       });
     }
     if (oldVersion < 6) {
-      await database.transaction((txn) async {
-        await txn.execute(
+      // Verifica se a coluna já existe antes de tentar adicioná-la: builds de
+      // desenvolvimento de branches paralelas podem tê-la adicionado com
+      // schema version 5 ou sem rodar o UPDATE abaixo, deixando o flag em 0.
+      final cols = await database.rawQuery("PRAGMA table_info('categories')");
+      if (!cols.any((c) => c['name'] == 'is_subscription')) {
+        await database.execute(
           'ALTER TABLE categories '
           'ADD COLUMN is_subscription INTEGER NOT NULL DEFAULT 0',
         );
-        await txn.execute(
-          "UPDATE categories SET is_subscription = 1 WHERE name = 'Assinaturas'",
-        );
-      });
+      }
+      await database.execute(
+        "UPDATE categories SET is_subscription = 1 "
+        "WHERE name = 'Assinaturas' AND type = 'expense'",
+      );
+      final check = await database.query(
+        'categories',
+        columns: ['id'],
+        where: "name = 'Assinaturas' AND type = 'expense'",
+        limit: 1,
+      );
+      if (check.isEmpty) {
+        await database.insert('categories', {
+          'name': 'Assinaturas',
+          'type': 'expense',
+          'icon': 'subscriptions',
+          'color': CategoryPalette.defaults['Assinaturas'],
+          'is_default': 1,
+          'is_subscription': 1,
+        });
+      }
+    }
+    if (oldVersion < 7) {
+      // Repara bancos que vieram do schema 6 sem is_subscription = 1 na
+      // categoria "Assinaturas" (ex: build v0.6.12 onde a migração v6 não
+      // atualizou o flag). UPDATE idempotente — não faz nada em bancos saudáveis.
+      await database.execute(
+        "UPDATE categories SET is_subscription = 1 "
+        "WHERE name = 'Assinaturas' AND type = 'expense'",
+      );
+      final check = await database.query(
+        'categories',
+        columns: ['id'],
+        where: "name = 'Assinaturas' AND type = 'expense'",
+        limit: 1,
+      );
+      if (check.isEmpty) {
+        await database.insert('categories', {
+          'name': 'Assinaturas',
+          'type': 'expense',
+          'icon': 'subscriptions',
+          'color': CategoryPalette.defaults['Assinaturas'],
+          'is_default': 1,
+          'is_subscription': 1,
+        });
+      }
     }
   }
 
