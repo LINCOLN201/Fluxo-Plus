@@ -37,6 +37,7 @@ abstract final class AppTheme {
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,
         surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
       ),
       textTheme: TextTheme(
         headlineMedium: TextStyle(
@@ -113,6 +114,7 @@ abstract final class AppTheme {
         backgroundColor: colors.background,
         foregroundColor: colors.textPrimary,
         surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
       ),
       textTheme: TextTheme(
         headlineMedium: TextStyle(
@@ -124,7 +126,7 @@ abstract final class AppTheme {
           fontWeight: FontWeight.w700,
         ),
         bodyLarge: TextStyle(color: colors.textPrimary),
-        bodyMedium: TextStyle(color: colors.textPrimary),
+        bodyMedium: TextStyle(color: colors.textMuted),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
@@ -139,11 +141,11 @@ abstract final class AppTheme {
         fillColor: colors.surface,
         labelStyle: TextStyle(color: colors.textMuted),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: colors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: colors.border),
         ),
       ),
