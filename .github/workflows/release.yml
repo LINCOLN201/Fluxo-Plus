@@ -205,9 +205,75 @@ jobs:
           path: build/symbols
           retention-days: 180
 
+  linux:
+    name: Linux
+    needs: verify-main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_REF }}
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      # Pacotes exigidos pelo build Linux do Flutter (GTK, toolchain nativa);
+      # o runner ubuntu-latest não vem com eles por padrão.
+      - name: Instalar dependências do build Linux
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            libsecret-1-dev libjsoncpp-dev
+      - run: flutter config --enable-linux-desktop
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      # Mesma checagem dos jobs android e windows: sem ela, o Linux publicava
+      # sem nenhuma garantia de que o Supabase configurado está de pé.
+      - name: Confirmar conexão com o Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "Secrets do Supabase não configurados — pulando checagem."
+            exit 0
+          fi
+          if curl -sf -o /dev/null --max-time 15 \
+              -H "apikey: $SUPABASE_PUBLISHABLE_KEY" \
+              "$SUPABASE_URL/auth/v1/settings"; then
+            echo "Conectou no Supabase configurado."
+          else
+            echo "Não conseguiu conectar no Supabase configurado — confira o Secret SUPABASE_URL (projeto pausado, apagado ou endereço errado)."
+            exit 1
+          fi
+      - name: Gerar aplicativo Linux
+        run: |
+          version="${RELEASE_REF#v}"
+          flutter build linux --release \
+            --build-name="$version" \
+            --build-number="${{ github.run_number }}" \
+            --obfuscate --split-debug-info=build/symbols \
+            --dart-define=UPDATE_REPOSITORY=${{ github.repository }} \
+            --dart-define=SUPABASE_URL=${{ secrets.SUPABASE_URL }} \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+      - name: Compactar distribuição
+        run: |
+          tar -C build/linux/x64/release/bundle -czf fluxo-plus-linux.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-linux
+          path: fluxo-plus-linux.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fluxo-plus-linux-symbols
+          path: build/symbols
+          retention-days: 180
+
   release:
     name: GitHub Release
-    needs: [android, windows]
+    needs: [android, windows, linux]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -230,6 +296,7 @@ jobs:
         run: |
           sha256sum fluxo-plus-android.apk > fluxo-plus-android.apk.sha256
           sha256sum fluxo-plus-windows.zip > fluxo-plus-windows.zip.sha256
+          sha256sum fluxo-plus-linux.tar.gz > fluxo-plus-linux.tar.gz.sha256
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_REF }}
@@ -240,6 +307,8 @@ jobs:
             fluxo-plus-android.apk.sha256
             fluxo-plus-windows.zip
             fluxo-plus-windows.zip.sha256
+            fluxo-plus-linux.tar.gz
+            fluxo-plus-linux.tar.gz.sha256
 
   notify:
     name: Avisar quem já instalou (push)

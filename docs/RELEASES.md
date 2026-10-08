@@ -6,7 +6,7 @@
 O Fluxo+ continua totalmente funcional sem internet. Quando uma versão pública
 é compilada pelo GitHub Actions, o endereço do repositório é incorporado ao app.
 Ao iniciar com conexão, ele consulta a última GitHub Release e oferece o arquivo
-correto para Windows ou Android.
+correto para Windows, Linux ou Android.
 
 ## 1. Criar o repositório
 
@@ -58,7 +58,8 @@ Cada push para `dev` executa o workflow
 - análise estática;
 - testes automatizados;
 - compilação de APK de teste;
-- compilação do aplicativo Windows de teste.
+- compilação do aplicativo Windows de teste;
+- compilação do aplicativo Linux de teste.
 
 Os builds de teste ficam disponíveis como artefatos temporários por sete dias.
 Não crie uma tag enquanto essas verificações estiverem pendentes ou falhando.
@@ -83,6 +84,7 @@ O workflow `.github/workflows/release.yml` executa análise e testes, gera:
 
 - `fluxo-plus-android.apk`;
 - `fluxo-plus-windows.zip`;
+- `fluxo-plus-linux.tar.gz`;
 - uma GitHub Release com notas automáticas.
 
 Antes de criar a tag, escreva `docs/releases/vX.Y.Z.md` com as novidades em
@@ -97,18 +99,21 @@ Resumindo: `dev` → CI verde → Pull Request → `main` → tag → publicaç�
 
 O workflow de release também verifica se o commit marcado pela tag pertence à
 `main`. Uma tag criada diretamente na `dev` será recusada e não produzirá APK,
-Windows ou GitHub Release.
+Windows, Linux ou GitHub Release.
 
 ## Comportamento da atualização
 
 - Android: baixa o APK e o sistema solicita confirmação para instalar. O Android
   não permite instalação silenciosa de APK comum.
 - Windows: baixa o ZIP da versão. O usuário substitui a instalação atual.
+- Linux: baixa o `.tar.gz` da versão. O usuário extrai e substitui a instalação
+  atual (sem instalador próprio, assim como o Windows).
 - Sem conexão ou se o GitHub estiver indisponível: nenhuma mensagem aparece e
   todas as funções locais continuam disponíveis.
 
 Uma etapa futura pode trocar o ZIP do Windows por MSIX/App Installer assinado,
-permitindo instalação e atualização gerenciadas pelo próprio Windows.
+permitindo instalação e atualização gerenciadas pelo próprio Windows — e o
+`.tar.gz` do Linux por um pacote Flatpak/AppImage.
 
 ## 5. Notificação push de atualização (opcional, só Android)
 
