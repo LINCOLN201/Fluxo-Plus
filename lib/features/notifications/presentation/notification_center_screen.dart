@@ -66,6 +66,23 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       body: FutureBuilder<List<TransactionRecord>>(
         future: _alerts,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 40),
+                  const SizedBox(height: 12),
+                  const Text('Erro ao carregar avisos.'),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => setState(_reload),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            );
+          }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }

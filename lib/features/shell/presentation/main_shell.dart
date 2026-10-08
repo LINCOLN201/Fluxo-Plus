@@ -155,7 +155,7 @@ class _MainShellState extends State<MainShell> {
         ),
       ),
     );
-    if (mounted) setState(() => _dashboardRevision++);
+    // Dashboard já é atualizado via onChanged dentro da NotificationCenterScreen.
   }
 
   Future<void> _handleBack() async {
@@ -432,7 +432,7 @@ class _MoreGridTile extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -472,7 +472,7 @@ class _MorePremiumBanner extends StatelessWidget {
       margin: EdgeInsets.zero,
       color: context.colors.primary.withValues(alpha: .10),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         side: BorderSide(color: context.colors.primary.withValues(alpha: .4)),
       ),
       child: ListTile(

@@ -33,19 +33,23 @@ class DashboardRepository {
       ''',
       [start.toIso8601String(), end.toIso8601String()],
     );
-    final recentRows = await _database.db.rawQuery('''
+    final recentRows = await _database.db.rawQuery(
+      '''
       SELECT t.id, t.type, t.amount_cents, t.description, t.date, t.is_paid,
              t.installment_number, t.installment_count,
              c.name AS category_name, c.icon AS category_icon
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
+      WHERE t.date >= ? AND t.date < ?
       ORDER BY
         CASE WHEN t.is_paid = 0 THEN 0 ELSE 1 END,
         CASE WHEN t.is_paid = 0 THEN t.date END ASC,
         CASE WHEN t.is_paid = 1 THEN t.date END DESC,
         t.id DESC
       LIMIT 5
-    ''');
+      ''',
+      [start.toIso8601String(), end.toIso8601String()],
+    );
     final alertRows = await _database.db.rawQuery(
       '''
       SELECT COUNT(*) AS total

@@ -95,6 +95,23 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
       body: FutureBuilder<List<SubscriptionSummary>>(
         future: _subscriptions,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 40),
+                  const SizedBox(height: 12),
+                  const Text('Erro ao carregar assinaturas.'),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => setState(_load),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            );
+          }
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -274,11 +291,29 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
     try {
       final categories =
           await widget.repository.getCategories(TransactionType.expense);
-      final category = categories.firstWhere(
-        (item) => item.name == 'Assinaturas',
-        orElse: () => categories.first,
-      );
       final accounts = await widget.repository.getAccounts();
+      if (!mounted) return;
+      if (categories.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Crie ao menos uma categoria de despesa primeiro.'),
+          ),
+        );
+        return;
+      }
+      if (accounts.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Crie ao menos uma conta primeiro.')),
+        );
+        return;
+      }
+      final category = categories.firstWhere(
+        (item) => item.isSubscription,
+        orElse: () => categories.firstWhere(
+          (item) => item.name == 'Assinaturas',
+          orElse: () => categories.first,
+        ),
+      );
       final name = _isCustom ? _customName.text.trim() : _selected.name;
       final now = DateTime.now();
       await widget.repository.createRecurring(
@@ -355,7 +390,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
               decoration: const InputDecoration(labelText: 'Valor mensal'),
               validator: (value) {
                 final amount = AppFormatters.parseCurrency(value ?? '');
-                return amount == null || amount <= 0
+                return amount == null || amount < 0.01
                     ? 'Informe um valor válido'
                     : null;
               },

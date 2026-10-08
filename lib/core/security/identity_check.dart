@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'biometric_service.dart';
 import 'pin_service.dart';
@@ -19,8 +20,12 @@ class IdentityCheck {
 
   Future<bool> confirm(BuildContext context, {required String reason}) async {
     final pinEnabled = await pinService.isEnabled();
-    if (biometricEnabled() && await biometricService.authenticate()) {
-      return true;
+    if (biometricEnabled()) {
+      try {
+        if (await biometricService.authenticate()) return true;
+      } on PlatformException {
+        // Sensor com falha: cai para o PIN abaixo.
+      }
     }
     if (!pinEnabled) return !biometricEnabled();
     if (!context.mounted) return false;

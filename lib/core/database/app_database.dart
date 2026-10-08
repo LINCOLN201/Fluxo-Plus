@@ -177,7 +177,8 @@ class AppDatabase {
           type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
           icon TEXT NOT NULL,
           color INTEGER NOT NULL,
-          is_default INTEGER NOT NULL DEFAULT 0
+          is_default INTEGER NOT NULL DEFAULT 0,
+          is_subscription INTEGER NOT NULL DEFAULT 0
         )
       ''');
       await _createTransactionsTable(txn, 'transactions');
@@ -228,6 +229,7 @@ class AppDatabase {
           'icon': category.$3,
           'color': CategoryPalette.defaults[category.$1],
           'is_default': 1,
+          'is_subscription': category.$1 == 'Assinaturas' ? 1 : 0,
         });
       }
       await txn.insert('settings', {'key': 'theme', 'value': 'dark'});
@@ -297,21 +299,82 @@ class AppDatabase {
       await database.transaction(_upgradeToCents);
     }
     if (oldVersion < 4) {
-      await database.execute(
-        'ALTER TABLE transactions ADD COLUMN recurring_group TEXT',
-      );
-      await database.execute(
-        'CREATE INDEX idx_transactions_recurring_group '
-        'ON transactions(recurring_group)',
-      );
+      await database.transaction((txn) async {
+        await txn.execute(
+          'ALTER TABLE transactions ADD COLUMN recurring_group TEXT',
+        );
+        await txn.execute(
+          'CREATE INDEX idx_transactions_recurring_group '
+          'ON transactions(recurring_group)',
+        );
+      });
     }
     if (oldVersion < 5) {
-      await _ensureCategory(
-        database,
-        name: 'Assinaturas',
-        icon: 'subscriptions',
-        color: CategoryPalette.defaults['Assinaturas']!,
+      await database.transaction((txn) async {
+        await _ensureCategory(
+          txn,
+          name: 'Assinaturas',
+          icon: 'subscriptions',
+          color: CategoryPalette.defaults['Assinaturas']!,
+        );
+      });
+    }
+    if (oldVersion < 6) {
+      // Verifica se a coluna já existe antes de tentar adicioná-la: builds de
+      // desenvolvimento de branches paralelas podem tê-la adicionado com
+      // schema version 5 ou sem rodar o UPDATE abaixo, deixando o flag em 0.
+      final cols = await database.rawQuery("PRAGMA table_info('categories')");
+      if (!cols.any((c) => c['name'] == 'is_subscription')) {
+        await database.execute(
+          'ALTER TABLE categories '
+          'ADD COLUMN is_subscription INTEGER NOT NULL DEFAULT 0',
+        );
+      }
+      await database.execute(
+        'UPDATE categories SET is_subscription = 1 '
+        "WHERE name = 'Assinaturas' AND type = 'expense'",
       );
+      final check = await database.query(
+        'categories',
+        columns: ['id'],
+        where: "name = 'Assinaturas' AND type = 'expense'",
+        limit: 1,
+      );
+      if (check.isEmpty) {
+        await database.insert('categories', {
+          'name': 'Assinaturas',
+          'type': 'expense',
+          'icon': 'subscriptions',
+          'color': CategoryPalette.defaults['Assinaturas'],
+          'is_default': 1,
+          'is_subscription': 1,
+        });
+      }
+    }
+    if (oldVersion < 7) {
+      // Repara bancos que vieram do schema 6 sem is_subscription = 1 na
+      // categoria "Assinaturas" (ex: build v0.6.12 onde a migração v6 não
+      // atualizou o flag). UPDATE idempotente — não faz nada em bancos saudáveis.
+      await database.execute(
+        'UPDATE categories SET is_subscription = 1 '
+        "WHERE name = 'Assinaturas' AND type = 'expense'",
+      );
+      final check = await database.query(
+        'categories',
+        columns: ['id'],
+        where: "name = 'Assinaturas' AND type = 'expense'",
+        limit: 1,
+      );
+      if (check.isEmpty) {
+        await database.insert('categories', {
+          'name': 'Assinaturas',
+          'type': 'expense',
+          'icon': 'subscriptions',
+          'color': CategoryPalette.defaults['Assinaturas'],
+          'is_default': 1,
+          'is_subscription': 1,
+        });
+      }
     }
   }
 
@@ -446,8 +509,15 @@ class AppDatabase {
   }
 
   Future<bool> hasLocalData() async {
-    final rows = await db.rawQuery('SELECT COUNT(*) AS n FROM transactions');
-    return (rows.first['n'] as int? ?? 0) > 0;
+    // A fresh install has 1 seeded account and 0 transactions (sum = 1).
+    // Any real user data — a transaction OR a second account — pushes this
+    // above 1, triggering the conflict prompt instead of a silent download.
+    final rows = await db.rawQuery('''
+      SELECT
+        (SELECT COUNT(*) FROM transactions) +
+        (SELECT COUNT(*) FROM accounts) AS data_count
+    ''');
+    return ((rows.first['data_count'] as int? ?? 0)) > 1;
   }
 
   Future<Map<String, dynamic>> exportSnapshot() async {

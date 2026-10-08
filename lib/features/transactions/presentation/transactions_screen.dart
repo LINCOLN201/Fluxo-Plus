@@ -330,11 +330,22 @@ class _Filters extends StatelessWidget {
             value: categoryId ?? -1,
             label: categoryId == null
                 ? 'Categorias'
-                : categories.firstWhere((item) => item.id == categoryId).name,
+                : categories
+                    .firstWhere(
+                      (item) => item.id == categoryId,
+                      orElse: () => const Category(
+                        name: '',
+                        type: TransactionType.expense,
+                        icon: 'category',
+                        color: 0,
+                      ),
+                    )
+                    .name,
             items: [
               const (-1, 'Categorias'),
               ...categories
                   .where((item) => type == null || item.type == type)
+                  .where((item) => item.name != 'Assinaturas')
                   .map((item) => (item.id!, item.name)),
             ],
             onChanged: (value) => onCategory(value == -1 ? null : value),

@@ -47,9 +47,9 @@ class TransactionRepository {
       conditions.add('t.category_id = ?');
       arguments.add(categoryId);
     } else {
-      // Assinaturas já têm tela própria; sem isso, apareciam duplicadas
-      // aqui e lá, sem nenhuma informação a mais na lista geral.
-      conditions.add("c.name != 'Assinaturas'");
+      // Duplo filtro: flag estável + nome como fallback para bancos onde a
+      // migração v6 não setou o flag (ver app_database.dart).
+      conditions.add("(c.is_subscription = 0 AND c.name != 'Assinaturas')");
     }
     if (payment == PaymentFilter.pending) {
       conditions.add('t.is_paid = 0');
@@ -290,10 +290,12 @@ class TransactionRepository {
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
       INNER JOIN accounts a ON a.id = t.account_id
-      WHERE t.type = 'expense' AND t.is_paid = 0 AND t.date < ?
+      WHERE t.type = 'expense' AND t.is_paid = 0
+        AND (c.is_subscription = 0 AND c.name != 'Assinaturas')
+        AND t.date >= ? AND t.date < ?
       ORDER BY t.date ASC, t.id ASC
       ''',
-      [end.toIso8601String()],
+      [start.toIso8601String(), end.toIso8601String()],
     );
     return rows.map(TransactionRecord.fromMap).toList();
   }
@@ -310,8 +312,8 @@ class TransactionRepository {
              t.amount_cents, MIN(t.date) AS next_date
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
-      WHERE c.name = 'Assinaturas' AND t.recurring_group IS NOT NULL
-        AND t.is_paid = 0
+      WHERE (c.is_subscription = 1 OR c.name = 'Assinaturas')
+        AND t.recurring_group IS NOT NULL AND t.is_paid = 0
       GROUP BY t.recurring_group
       ORDER BY next_date ASC
     ''');
