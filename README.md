@@ -4,7 +4,7 @@ Aplicativo de finanças pessoais, gratuito e open source, que funciona **sem
 internet** — seus dados ficam no seu aparelho, não em algum servidor.
 
 **[Conhecer e baixar no site oficial](https://lincoln201.github.io/Fluxo-Plus/)**
-· disponível para Android e Windows.
+· disponível para Android, Windows e Linux.
 
 ## O que o Fluxo+ faz
 
@@ -94,10 +94,24 @@ O executável e suas DLLs ficam em
 `build/windows/x64/runner/Release/`. Distribua a pasta inteira, não apenas o
 `.exe`.
 
+### Gerar pacote para Linux
+
+Em um Linux com as dependências de build (`clang cmake ninja-build
+pkg-config libgtk-3-dev`):
+
+```bash
+flutter config --enable-linux-desktop
+flutter build linux --release
+```
+
+O executável e suas bibliotecas ficam em
+`build/linux/x64/release/bundle/`. Distribua a pasta inteira, não apenas o
+binário.
+
 ### Publicação e atualizações automáticas
 
-O projeto inclui GitHub Actions para validar o código e publicar APK e Windows
-automaticamente a cada tag de versão. Builds públicos consultam a última GitHub
+O projeto inclui GitHub Actions para validar o código e publicar APK, Windows
+e Linux automaticamente a cada tag de versão. Builds públicos consultam a última GitHub
 Release ao iniciar e oferecem a atualização adequada, sem afetar o modo
 offline. No Android, dá para avisar por notificação push mesmo com o app
 fechado (opcional, via Firebase Cloud Messaging — ver seção 5 de
@@ -116,8 +130,8 @@ estão documentados em [docs/MONETIZATION.md](docs/MONETIZATION.md).
 ### Fluxo de contribuição
 
 O desenvolvimento acontece na branch `dev`. Cada alteração passa por análise,
-testes e builds Android/Windows antes de entrar na `main`. A publicação só é
-iniciada depois da integração validada, por meio de uma tag de versão.
+testes e builds Android/Windows/Linux antes de entrar na `main`. A publicação
+só é iniciada depois da integração validada, por meio de uma tag de versão.
 
 O que falta, por fase, está em [docs/ROADMAP.md](docs/ROADMAP.md).
 

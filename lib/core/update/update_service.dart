@@ -49,7 +49,11 @@ class UpdateService {
 
     final assets = (data['assets'] as List<dynamic>? ?? const [])
         .cast<Map<String, dynamic>>();
-    final wantedExtension = Platform.isWindows ? '.zip' : '.apk';
+    final wantedExtension = switch (Platform.operatingSystem) {
+      'windows' => '.zip',
+      'linux' => '.tar.gz',
+      _ => '.apk',
+    };
     final asset = assets.cast<Map<String, dynamic>?>().firstWhere(
           (item) => (item?['name'] as String? ?? '').endsWith(wantedExtension),
           orElse: () => null,

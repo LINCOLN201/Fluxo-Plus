@@ -183,7 +183,7 @@ item nesta sessão de trabalho.
 - [ ] Atualizar dependências (há pacotes com versões novas incompatíveis
       com as restrições atuais).
 - [ ] Assinatura de código do Windows (evitar alerta do SmartScreen).
-- [ ] Builds de iOS/macOS/Linux no CI (hoje só Android e Windows).
+- [ ] Builds de iOS/macOS no CI (hoje Android, Windows e Linux).
 - [ ] Decidir sobre a Play Store (exige revisar as regras de cobrança do Google).
 - [ ] Voltar ao fluxo `dev` → CI → PR → `main` descrito no README.
 
@@ -249,6 +249,14 @@ está à frente do que foi pesquisado:
       quase idênticas) e aplicado em Configurações, com subtítulos novos
       em toda seção e o card de atualização + "Sobre o app" unidos num
       único card com divisor, no mesmo padrão de Segurança.
+- [x] Build e publicação para Linux (`fluxo-plus-linux.tar.gz`), nos
+      mesmos moldes do Android e do Windows: job de build em
+      `release.yml`, teste de build em `quality.yml`, hash SHA-256 e
+      card de download no site. De quebra, achado um bug real no
+      `UpdateService`: no Linux, a checagem de atualização caía no
+      `else` pensado só para Android (`Platform.isWindows ? '.zip' :
+      '.apk'`) e tentaria baixar o APK do Android por engano — corrigido
+      para escolher a extensão certa por `Platform.operatingSystem`.
 
 ### Pós-0.6.3
 - [x] Notificação push de atualização nunca chegava a nenhum aparelho —
