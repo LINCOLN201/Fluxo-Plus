@@ -36,68 +36,77 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  late Future<DashboardSummary> _summary;
+  DashboardSummary? _summary;
+  Object? _error;
   var _month = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _summary = widget.repository.load(_month);
+    _load();
   }
 
-  Future<void> _refresh() async {
-    setState(() => _summary = widget.repository.load(_month));
-    await _summary;
+  // Carrega sem derrubar o conteúdo já exibido: refresh() e troca de mês
+  // reaproveitam esta função, então o RefreshIndicator/seletor de mês
+  // continuam na tela, só a área de dados atualiza quando o load terminar.
+  Future<void> _load() async {
+    try {
+      final data = await widget.repository.load(_month);
+      if (!mounted) return;
+      setState(() {
+        _summary = data;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _error = e);
+    }
   }
+
+  Future<void> _refresh() => _load();
 
   void _changeMonth(DateTime month) {
-    setState(() {
-      _month = DateTime(month.year, month.month);
-      _summary = widget.repository.load(_month);
-    });
+    setState(() => _month = DateTime(month.year, month.month));
+    _load();
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<DashboardSummary>(
-      future: _summary,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return EmptyState(
-            icon: Icons.error_outline,
-            title: 'Não foi possível carregar',
-            message: snapshot.error.toString(),
-          );
-        }
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            return constraints.maxWidth < 700
-                ? _MobileDashboard(
-                    summary: snapshot.requireData,
-                    onRefresh: _refresh,
-                    updateAvailable: widget.updateAvailable,
-                    onNotifications: widget.onNotifications,
-                    onOpenTransactions: widget.onOpenTransactions,
-                    onOpenMore: widget.onOpenMore,
-                    userName: widget.userName,
-                    month: _month,
-                    onMonthChanged: _changeMonth,
-                  )
-                : _DesktopDashboard(
-                    summary: snapshot.requireData,
-                    onRefresh: _refresh,
-                    onAddTransaction: widget.onAddTransaction,
-                    onOpenTransactions: widget.onOpenTransactions,
-                    onNotifications: widget.onNotifications,
-                    updateAvailable: widget.updateAvailable,
-                    month: _month,
-                    onMonthChanged: _changeMonth,
-                  );
-          },
+    final summary = _summary;
+    if (summary == null) {
+      if (_error != null) {
+        return EmptyState(
+          icon: Icons.error_outline,
+          title: 'Não foi possível carregar',
+          message: _error.toString(),
         );
+      }
+      return const Center(child: CircularProgressIndicator());
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return constraints.maxWidth < 700
+            ? _MobileDashboard(
+                summary: summary,
+                onRefresh: _refresh,
+                updateAvailable: widget.updateAvailable,
+                onNotifications: widget.onNotifications,
+                onOpenTransactions: widget.onOpenTransactions,
+                onOpenMore: widget.onOpenMore,
+                userName: widget.userName,
+                month: _month,
+                onMonthChanged: _changeMonth,
+              )
+            : _DesktopDashboard(
+                summary: summary,
+                onRefresh: _refresh,
+                onAddTransaction: widget.onAddTransaction,
+                onOpenTransactions: widget.onOpenTransactions,
+                onNotifications: widget.onNotifications,
+                updateAvailable: widget.updateAvailable,
+                month: _month,
+                onMonthChanged: _changeMonth,
+              );
       },
     );
   }

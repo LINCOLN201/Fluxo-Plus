@@ -18,6 +18,16 @@ class AppDatabase {
   AppDatabase(this._factory, {DatabaseKeyService? keyService})
       : _keyService = keyService ?? DatabaseKeyService();
 
+  /// Condição SQL (tabela `categories` aliasada como `c`) que exclui a
+  /// categoria de assinaturas: flag estável + nome como fallback para
+  /// bancos onde a migração v6 não setou o flag.
+  static const excludeSubscriptionsSql =
+      "(c.is_subscription = 0 AND c.name != 'Assinaturas')";
+
+  /// Inverso de [excludeSubscriptionsSql]: só a categoria de assinaturas.
+  static const onlySubscriptionsSql =
+      "(c.is_subscription = 1 OR c.name = 'Assinaturas')";
+
   // Extensão neutra: o conteúdo é binário cifrado, não é mais JSON.
   static const _safetyCopyName = 'antes-da-restauracao.enc';
 

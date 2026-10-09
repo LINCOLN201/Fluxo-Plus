@@ -9,7 +9,15 @@ abstract final class SnapshotMigrator {
   /// (tabelas referenciadas antes das que as referenciam).
   static const columns = {
     'accounts': ['id', 'name', 'initial_balance_cents', 'created_at'],
-    'categories': ['id', 'name', 'type', 'icon', 'color', 'is_default'],
+    'categories': [
+      'id',
+      'name',
+      'type',
+      'icon',
+      'color',
+      'is_default',
+      'is_subscription',
+    ],
     'transactions': [
       'id',
       'type',

@@ -47,9 +47,7 @@ class TransactionRepository {
       conditions.add('t.category_id = ?');
       arguments.add(categoryId);
     } else {
-      // Duplo filtro: flag estável + nome como fallback para bancos onde a
-      // migração v6 não setou o flag (ver app_database.dart).
-      conditions.add("(c.is_subscription = 0 AND c.name != 'Assinaturas')");
+      conditions.add(AppDatabase.excludeSubscriptionsSql);
     }
     if (payment == PaymentFilter.pending) {
       conditions.add('t.is_paid = 0');
@@ -291,7 +289,7 @@ class TransactionRepository {
       INNER JOIN categories c ON c.id = t.category_id
       INNER JOIN accounts a ON a.id = t.account_id
       WHERE t.type = 'expense' AND t.is_paid = 0
-        AND (c.is_subscription = 0 AND c.name != 'Assinaturas')
+        AND ${AppDatabase.excludeSubscriptionsSql}
         AND t.date >= ? AND t.date < ?
       ORDER BY t.date ASC, t.id ASC
       ''',
@@ -312,7 +310,7 @@ class TransactionRepository {
              t.amount_cents, MIN(t.date) AS next_date
       FROM transactions t
       INNER JOIN categories c ON c.id = t.category_id
-      WHERE (c.is_subscription = 1 OR c.name = 'Assinaturas')
+      WHERE ${AppDatabase.onlySubscriptionsSql}
         AND t.recurring_group IS NOT NULL AND t.is_paid = 0
       GROUP BY t.recurring_group
       ORDER BY next_date ASC
