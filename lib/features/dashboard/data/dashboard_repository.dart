@@ -50,20 +50,19 @@ class DashboardRepository {
       ''',
       [start.toIso8601String(), end.toIso8601String()],
     );
+    final now = DateTime.now();
+    final alertsStart = DateTime(now.year, now.month, now.day);
+    final alertsEnd = alertsStart.add(const Duration(days: 8));
     final alertRows = await _database.db.rawQuery(
       '''
       SELECT COUNT(*) AS total
-      FROM transactions
-      WHERE type = 'expense' AND is_paid = 0
-        AND date < ?
+      FROM transactions t
+      INNER JOIN categories c ON c.id = t.category_id
+      WHERE t.type = 'expense' AND t.is_paid = 0
+        AND ${AppDatabase.excludeSubscriptionsSql}
+        AND t.date >= ? AND t.date < ?
       ''',
-      [
-        DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day + 8,
-        ).toIso8601String(),
-      ],
+      [alertsStart.toIso8601String(), alertsEnd.toIso8601String()],
     );
     final historyStart = DateTime(month.year, month.month - 4);
     final historyRows = await _database.db.rawQuery(
